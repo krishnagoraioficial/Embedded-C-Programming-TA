@@ -314,7 +314,125 @@ int main(void) {
 
 ---
 
-## 7. Important Exam Practice Questions
+### 🔍 How This Simulation Applies Week 2 Concepts
+
+This hands-on decimal-to-binary project directly translates the mathematical and memory management concepts taught in Week 2 into working hardware and firmware:
+
+#### 1. Hardware & Circuit-Level Concept Mapping
+
+| Circuit Component | Week 2 Theoretical Concept | Technical Function in System |
+| :--- | :--- | :--- |
+| **4x Physical LEDs (D2 to D5)** | **Positional Binary Number Representation** | Each LED physically maps to a power-of-two positional weight: Bit 0 ($2^0=1$), Bit 1 ($2^1=2$), Bit 2 ($2^2=4$), and Bit 3 ($2^3=8$). Together, they visualize any nibble from `0b0000` (0) to `0b1111` (15). |
+| **220Ω Current-Limiting Resistors** | **Output Stage Protection & Ohm's Law** | Protects the STM32 GPIO output push-pull stage from excessive current sinking or sourcing, maintaining the voltage level safely within the 3.3V logic threshold. |
+| **Common Ground (GND)** | **Electrical Reference Potential** | Establishes a zero-volt potential reference, ensuring that logic HIGH (+3.3V) and logic LOW (0V) correspond directly to binary `1` and `0`. |
+
+#### 2. Firmware Code-to-Concept Breakdown
+
+| Code Statement (Framework / Bare-Metal) | Week 2 Theoretical Concept | Deep-Dive Explanation |
+| :--- | :--- | :--- |
+| `int bitVal = (num >> k) & 1;` | **Right-Shift (`>>`) & Bitwise AND (`&`)** | This is the core formula from Week 2 lecture. Shifting `num` right by `k` moves the target bit into the Least Significant Bit (bit 0) position. Bitwise ANDing with `1` masks out all upper bits, isolating the single binary digit `0` or `1`. |
+| `uint8_t num;` vs `int num;` | **Fixed-Width Types (`<stdint.h>`)** | On a 32-bit ARM Cortex-M processor, a standard `int` occupies 4 bytes (32 bits). Since the value only ranges from 0 to 15, declaring `uint8_t` uses exactly 1 byte—reducing SRAM memory usage by **75%**. |
+| `static const uint8_t led_pins[4]` | **Memory Layout: Flash ROM vs. SRAM** | Declaring the pin array with `const` instructs the C linker to place it in non-volatile Flash ROM (`.rodata` section) rather than consuming precious runtime SRAM (`.data`/`.bss`). |
+| `GPIOA_BSRR_REG = (1UL << pin);`<br>`GPIOA_BSRR_REG = (1UL << (pin + 16));` | **Atomic Bit Manipulation & Race Conditions** | Unlike `ODR |= (1 << pin)` which requires a 3-step read-modify-write cycle (`LDR`, `ORR`, `STR`), writing to `BSRR` sets or resets a specific pin in **a single clock cycle without altering other pins**, preventing interrupt corruption. |
+
+---
+
+## 7. Real-World Embedded Systems Examples
+
+To appreciate how bitwise operations and data types function in industry, study these three real-world embedded applications:
+
+### Example 2.1: Automotive Engine Status & Diagnostic Trouble Code (DTC) Register 🚗
+
+* **The Real-World Scenario:** In an automotive Engine Control Unit (ECU), firmware must track numerous boolean sensor conditions (e.g., Engine Overheating, Low Oil Pressure, Check Engine MIL, O2 Sensor Fault). Creating 8 individual boolean variables would consume 8 separate bytes in memory.
+* **The Embedded Solution:** Pack all 8 status flags into a single `uint8_t` status register, manipulating individual flags using bitwise operations:
+* **Firmware Architectural Pattern:**
+  ```c
+  #include <stdint.h>
+
+  // Define bit positions for engine health flags
+  #define FLAG_CHECK_ENGINE   (0U) // Bit 0: Check engine indicator
+  #define FLAG_LOW_OIL_PRESS  (1U) // Bit 1: Oil pressure warning
+  #define FLAG_OVERHEAT       (2U) // Bit 2: Coolant over-temperature
+  #define FLAG_O2_SENSOR_FAIL (3U) // Bit 3: Oxygen sensor degraded
+
+  uint8_t engine_status = 0x00; // All flags clear at ignition
+
+  void update_engine_diagnostics(void) {
+      // 1. SET: Oil pressure dropped below 20 PSI -> Set Bit 1 without modifying others
+      engine_status |= (1U << FLAG_LOW_OIL_PRESS);
+
+      // 2. TEST: Check if Overheating (Bit 2) is active
+      if (engine_status & (1U << FLAG_OVERHEAT)) {
+          trigger_limp_home_mode();
+      }
+
+      // 3. CLEAR: Oil refilled, sensor normal -> Clear Bit 1 cleanly
+      engine_status &= ~(1U << FLAG_LOW_OIL_PRESS);
+
+      // 4. TOGGLE: Blink Check Engine light on dashboard each diagnostic cycle
+      engine_status ^= (1U << FLAG_CHECK_ENGINE);
+  }
+  ```
+
+---
+
+### Example 2.2: Smart Thermostat Temperature Offset Calibration (Signed vs. Unsigned) 🌡️
+
+* **The Real-World Scenario:** An ambient digital temperature sensor has manufacturing variances and requires a factory calibration offset between $-10^\circ\text{C}$ and $+10^\circ\text{C}$.
+* **Key Concept Connection:** 
+  * If a junior engineer mistakenly declares the offset as `uint8_t offset = -3;`, the variable underflows in unsigned arithmetic to `253`, causing the heating unit to overheat the house!
+  * Using `int8_t` from `<stdint.h>` correctly stores signed values from $-128$ to $+127$ using **Two's Complement representation**.
+* **Firmware Architectural Pattern:**
+  ```c
+  #include <stdint.h>
+
+  // Unsigned raw sensor reading (always positive: 0 to 100 degrees C)
+  uint8_t raw_temperature_celsius = 24;
+
+  // Signed calibration offset: range -128 to +127 (using two's complement)
+  int8_t factory_cal_offset = -3; 
+
+  int16_t calculate_true_temperature(void) {
+      // Promote safely to 16-bit signed integer to prevent calculation overflow
+      int16_t corrected_temp = (int16_t)raw_temperature_celsius + factory_cal_offset;
+      return corrected_temp; // Correct result: 21 deg C
+  }
+  ```
+
+---
+
+### Example 2.3: Industrial 4-Relay Power Actuator Controller ⚡
+
+* **The Real-World Scenario:** An industrial automation controller operates 4 high-power AC mechanical relays controlling factory pump motors, exhaust fans, and heaters.
+* **Key Concept Connection:**
+  * When turning ON the exhaust fan on Relay 2, firmware must **never accidentally shut off** the water cooling pump on Relay 0.
+  * Bitwise masks allow surgical activation of specific actuator channels.
+* **Firmware Architectural Pattern:**
+  ```c
+  #include <stdint.h>
+
+  #define RELAY_PUMP_BIT      (0U) // Relay 0: Water pump
+  #define RELAY_FAN_BIT       (1U) // Relay 1: Exhaust fan
+  #define RELAY_HEATER_BIT    (2U) // Relay 2: Heating element
+  #define RELAY_ALARM_BIT     (3U) // Relay 3: Siren
+
+  // Simulated hardware port register (Active-HIGH relays)
+  volatile uint8_t *p_relay_port = (volatile uint8_t *)0x40020014UL;
+
+  void activate_exhaust_fan_only(void) {
+      // Set Relay 1 HIGH without changing any other relay state
+      *p_relay_port |= (1U << RELAY_FAN_BIT);
+  }
+
+  void emergency_shutdown_heaters(void) {
+      // Clear Relay 2 LOW while keeping pumps and alarms running
+      *p_relay_port &= ~(1U << RELAY_HEATER_BIT);
+  }
+  ```
+
+---
+
+## 8. Important Exam Practice Questions
 
 ### Question 1: Significance of `stdint.h` in Embedded C
 

@@ -399,7 +399,122 @@ int main(void) {
 
 ---
 
-## 8. Important Exam Practice Questions
+### 🔍 How This Simulation Applies Week 3 Concepts
+
+The Smart Security Gate Monitor simulation directly demonstrates the core hardware interfacing and register-level programming techniques introduced in Week 3:
+
+#### 1. Hardware & Circuit-Level Concept Mapping
+
+| Circuit Component | Week 3 Theoretical Concept | Technical Function in System |
+| :--- | :--- | :--- |
+| **Pushbuttons on D8–D11** | **Active-LOW Digital Inputs & Floating Avoidance** | Connected between the GPIO pin and GND. When released, an internal pull-up resistor pulls the pin to $V_{\text{DD}}$ (3.3V / logic HIGH). When pressed, the pin is pulled directly to GND (0V / logic LOW). This prevents the pin from floating in a high-impedance state. |
+| **Internal Pull-Up Resistors** | **`PUPDR` Hardware Resistor Network** | Microcontrollers include integrated ~40 kΩ pull-up transistors on chip. Activating them eliminates the cost, PCB trace routing, and assembly of 4 external pull-up resistors on the board. |
+| **Mechanical Contact Bounce** | **Physical Switch Contact Physics** | When mechanical switch contacts slam together, microscopic metal spring leaves physically bounce for 5 to 20 ms before settling. Without debouncing, a single press would register as dozens of false security alarms! |
+| **3x Status LEDs (D2 to D4)** | **Push-Pull Output Stage** | Configured as General Purpose Outputs (`MODER = 01`). High-side MOSFET drives 3.3V to illuminate the LED, and low-side MOSFET sinks to 0V when turned off. |
+
+#### 2. Firmware Code-to-Concept Breakdown
+
+| Code Statement (Framework / Bare-Metal) | Week 3 Theoretical Concept | Deep-Dive Explanation |
+| :--- | :--- | :--- |
+| `RCC_IOPENR_REG \|= (1U << 0);` | **Peripheral Clock Gating (`RCC`)** | In STM32 processors, peripherals are unclocked by default to minimize dynamic power consumption ($P = C \cdot V^2 \cdot f$). Enabling the clock in `RCC` powers the internal flip-flops of GPIO Port A. |
+| `GPIOA_MODER_REG \|= (1UL << (pin * 2));` | **2-Bit Mode Configuration (`MODER`)** | STM32 uses two bits per pin in `MODER` (`00` = Input, `01` = Output, `10` = Alternate Function, `11` = Analog). The formula `(pin * 2)` calculates the exact bit offset for any pin. |
+| `GPIOA_PUPDR_REG \|= (1UL << (pin * 2));` | **Pull-Up / Pull-Down Register (`PUPDR`)** | Writing `01` into the 2-bit field enables the internal pull-up resistor, ensuring the input stays cleanly at +3.3V when no button is pressed. |
+| `!(GPIOA_IDR_REG & (1UL << pin))` | **Input Data Register (`IDR`) Reading** | Reads the physical logic state latched by the input Schmitt trigger. Since active buttons pull the line LOW, the inverted bit test detects a pressed switch. |
+| `delay(50);` / software delay loop | **Mechanical Debounce Filtering** | Introduces a 50 ms stabilization window, allowing mechanical oscillations to die down before confirming the valid gate breach event. |
+| `GPIOA_BSRR_REG = (1UL << pin);` | **Single-Cycle Atomic Pin Control** | Directly alters the output state without performing a read-modify-write on `ODR`, ensuring complete immunity to interrupt race conditions. |
+
+---
+
+## 8. Real-World Embedded Systems Examples
+
+Understanding how microcontrollers interface with external switches, sensors, and actuators is foundational to embedded product development:
+
+### Example 3.1: Factory Emergency Stop (E-Stop) Button 🛑
+
+* **The Real-World Scenario:** In heavy manufacturing plants, industrial cutting presses and conveyor belts feature large red Emergency Stop (E-Stop) mushroom buttons.
+* **Fail-Safe Electrical Design:**
+  * The button uses a **Normally Closed (NC)** mechanical contact wired to a GPIO input configured with an internal pull-up resistor.
+  * In normal operation, current flows to ground (Active-LOW). If an operator hits the button—or if an electrical wire is accidentally cut or severed—the circuit opens, the pull-up pulls the pin HIGH, and the firmware halts all motors instantly!
+* **Firmware Architectural Pattern:**
+  ```c
+  #include <stdint.h>
+
+  #define ESTOP_PIN   (0U) // Pin PA0 connected to NC E-Stop switch
+
+  void check_safety_interlock(void) {
+      // Direct 1-cycle read of Input Data Register
+      uint32_t estop_tripped = (GPIOA->IDR & (1UL << ESTOP_PIN));
+      
+      if (estop_tripped) {
+          // Wire cut OR button pressed: Trigger immediate hardware shutdown!
+          HALT_ALL_MOTOR_DRIVES();
+          ENGAGE_SAFETY_BRAKES();
+      }
+  }
+  ```
+
+---
+
+### Example 3.2: Medical Infusion Pump Optical Drop Counter 💧
+
+* **The Real-World Scenario:** In hospital intensive care units, an intravenous (IV) infusion pump delivers medication drop by drop into a patient's bloodstream. An infrared optical sensor monitors the clear drip chamber.
+* **Key Concept Connection:**
+  * When a fluid drop falls between the infrared emitter and phototransistor, the light beam is briefly broken for approximately 8 to 15 milliseconds.
+  * The microcontroller pin uses an internal pull-up resistor and software edge-filtering to count drops reliably, ignoring electrical noise and pump vibrations.
+* **Firmware Architectural Pattern:**
+  ```c
+  #include <stdint.h>
+
+  volatile uint32_t drop_count = 0;
+  uint8_t previous_sensor_state = 1; // Idle HIGH
+
+  void poll_drop_sensor(void) {
+      // Read optical phototransistor pin
+      uint8_t current_sensor_state = (GPIOB->IDR & (1UL << 3)) ? 1 : 0;
+      
+      // Detect Falling Edge: Sensor transitions from HIGH (light clear) to LOW (drop blocking beam)
+      if (previous_sensor_state == 1 && current_sensor_state == 0) {
+          drop_count++;
+          calculate_infusion_flow_rate(drop_count);
+      }
+      
+      previous_sensor_state = current_sensor_state;
+  }
+  ```
+
+---
+
+### Example 3.3: Automotive Vehicle Door-Ajar Warning System 🚘
+
+* **The Real-World Scenario:** Every passenger door on an automobile contains a spring-loaded momentary switch that closes to ground when the door latches shut.
+* **Power Conservation & Clock Management:**
+  * When the car is parked with the engine off, the body control module (BCM) microcontroller sleeps to avoid draining the 12V car battery.
+  * When any door opens, the change on the pull-up GPIO line triggers an interrupt that wakes the MCU, re-enables the GPIO peripheral clock in `RCC`, and illuminates the cabin interior light.
+* **Firmware Architectural Pattern:**
+  ```c
+  #define DOOR_FRONT_LEFT   (0U) // PA0
+  #define DOOR_FRONT_RIGHT  (1U) // PA1
+  #define DOOR_REAR_LEFT    (2U) // PA2
+  #define DOOR_REAR_RIGHT   (3U) // PA3
+
+  uint8_t scan_vehicle_doors(void) {
+      // Read 4 lower pins of Port A simultaneously
+      uint16_t port_state = (uint16_t)(GPIOA->IDR & 0x000F);
+      
+      // Any pin reading HIGH means that door switch is OPEN (unlatched)
+      if (port_state != 0x0000) {
+          TURN_ON_CABIN_DOME_LIGHT();
+          DISPLAY_DOOR_AJAR_WARNING_ON_DASHBOARD(port_state);
+          return 1; // Door open
+      }
+      
+      return 0; // All doors securely closed
+  }
+  ```
+
+---
+
+## 9. Important Exam Practice Questions
 
 ### Question 1: Necessity of RCC Peripheral Clock Gating
 

@@ -349,6 +349,28 @@ int main(void) {
 
 :::
 
+### 🔍 How Mini-Project 1 (Dimmer) Applies Week 4 Concepts
+
+This project binds together two core analog-digital interfaces taught in Week 4:
+
+#### 1. Hardware & Circuit-Level Concept Mapping
+
+| Circuit Component | Week 4 Theoretical Concept | Technical Function in System |
+| :--- | :--- | :--- |
+| **Potentiometer on A0 (PA0)** | **Variable Voltage Divider ($V_{\text{in}}$)** | Acts as an adjustable voltage divider: $V_{\text{out}} = V_{\text{DD}} \cdot \frac{R_2}{R_1 + R_2}$. By rotating the wiper, the user smoothly varies the input potential continuously between $0\text{V}$ and $+3.3\text{V}$. |
+| **STM32 ADC1 Peripheral** | **Successive Approximation ADC (SAR)** | Samples the continuous analog voltage on Channel 0, holds it on an internal capacitor, and performs a binary search to quantize the voltage into a **10-bit digital representation** ($0$ to $1023$). |
+| **LED on D3 (PB0)** | **Modulated Actuator & Human Eye Integration** | The human eye cannot perceive flicker above ~60–100 Hz. By pulsing the LED at 1 kHz, the eye's photoreceptors integrate the pulses into an apparent, smooth brightness directly proportional to the duty cycle. |
+| **220Ω Resistor** | **Safe Operating Area (SOA) Current Limit** | Ensures that peak forward current through the LED does not exceed 15 mA during the HIGH phase of the PWM waveform. |
+
+#### 2. Firmware Code-to-Concept Breakdown
+
+| Code Statement (Framework / Bare-Metal) | Week 4 Theoretical Concept | Deep-Dive Explanation |
+| :--- | :--- | :--- |
+| `analogRead(knobPin);`<br>`adc_read();` | **10-Bit ADC Sampling & Quantization** | The ADC divides the $3.3\text{V}$ reference range into $2^{10} = 1024$ discrete voltage steps. Quantization step: $Q = \frac{3.3\text{V}}{1024} \approx 3.22\text{ mV}$. A reading of $512$ represents $\approx 1.65\text{V}$. |
+| `int ledBrightness = map(knobReading, 0, 1023, 0, 255);`<br>`knob_reading >> 2;` | **Resolution Domain Translation (10-bit to 8-bit)** | Translates from the ADC input domain ($0..1023$) to the PWM timer counter domain ($0..255$). In bare-metal C, bitwise right-shift by 2 (`>> 2`) achieves exact integer division by 4 in a **single CPU clock cycle** without needing slow software floating-point division. |
+| `analogWrite(ledPin, ledBrightness);`<br>`TIM3_CCR3 = led_brightness;` | **Pulse Width Modulation (PWM) Duty Cycle** | The hardware timer counter (`CNT`) continuously counts up to the Auto-Reload value (`ARR = 255`). Whenever `CNT < CCR3`, the output pin is HIGH; when `CNT >= CCR3`, it drops LOW. Changing `CCR3` modulates the **Duty Cycle**: $D = \frac{\text{CCR3}}{\text{ARR}} \times 100\%$. |
+| `TIM3_CCMR1 \|= (6UL << 12);` | **Timer Output Compare Mode 1** | Selects hardware PWM Mode 1 (`110` in bitfield `OC3M`), commanding timer hardware to automatically toggle the physical pin without CPU intervention. |
+
 ---
 
 ## 6. Mini-Project 2: The Non-Blocking Metronome (Timers & ADC) ⏱️🎵
@@ -602,7 +624,116 @@ int main(void) {
 
 ---
 
-## 7. Important Exam Practice Questions
+### 🔍 How Mini-Project 2 (Metronome) Applies Week 4 Concepts
+
+This project showcases how hardware timers liberate the CPU from blocking execution:
+
+#### 1. Hardware & Circuit-Level Concept Mapping
+
+| Circuit Component | Week 4 Theoretical Concept | Technical Function in System |
+| :--- | :--- | :--- |
+| **Tempo Dial (A0 / PA0)** | **Dynamic Parameter Input** | Provides a continuous analog voltage ($0\text{V}$ to $3.3\text{V}$) corresponding to tempo intervals ($100\text{ ms}$ to $2000\text{ ms}$). |
+| **Metronome LED (D3 / PB0)** | **Periodic Event Indicator** | Toggles state at each timer expiration event, providing visual feedback of the programmed tempo. |
+| **Common GND & Power Rails** | **Voltage Reference Stability** | Ensures that analog readings are not skewed by ground bounce when the LED turns on and off. |
+
+#### 2. Firmware Code-to-Concept Breakdown
+
+| Code Statement (Framework / Bare-Metal) | Week 4 Theoretical Concept | Deep-Dive Explanation |
+| :--- | :--- | :--- |
+| `int interval = map(rawTempo, 0, 1023, 100, 2000);` | **Linear Interpolation / Scaling** | Maps the digitized input domain ($[0, 1023]$) onto the desired physical time domain ($[100\text{ ms}, 2000\text{ ms}]$). |
+| `unsigned long currentMillis = millis();`<br>`get_millis();` | **Hardware Timer Ticks (`SysTick`)** | Instead of wasting millions of CPU clock cycles in empty `delay()` loops, the ARM Cortex-M **SysTick 24-bit down-counter** decrements in the background at 48 MHz, generating an interrupt every 1 ms to maintain an accurate system clock. |
+| `if (currentMillis - previousMillis >= interval)` | **Non-Blocking Delta Timing** | Computes elapsed time using unsigned modular arithmetic: `(current - previous)`. This formula is mathematically **immune to timer overflow/rollover** (which occurs after ~49.7 days on 32-bit `millis`). |
+| `GPIOB_BSRR_REG = (1UL << pin);` | **Atomic Output State Toggle** | In bare-metal C, toggling the LED state via `BSRR` executes in a single cycle without disabling interrupts or risking data races with background ADC conversions. |
+
+---
+
+## 7. Real-World Embedded Systems Examples
+
+Timers, ADCs, and PWM are the trifecta of modern embedded control. Study these three industry-standard applications:
+
+### Example 4.1: Automotive Ambient Light Automatic Headlight Dimmer 🚗💡
+
+* **The Real-World Scenario:** Luxury vehicles feature automatic headlamps that continuously sense external ambient light levels. When driving into an underpass, tunnel, or during twilight, the headlights automatically illuminate and smoothly scale their brightness.
+* **Key Concept Connection:**
+  * An ambient light photodiode produces a voltage proportional to lux, sampled by a **12-bit ADC**.
+  * The microcontroller maps this reading to an inverse **1 kHz PWM duty cycle** driving high-power LED driver MOSFETs. Smooth duty cycle increments prevent abrupt illumination steps that could distract the driver.
+* **Firmware Architectural Pattern:**
+  ```c
+  #include <stdint.h>
+
+  void update_headlight_illumination(void) {
+      // 1. Sample ambient brightness (0 = Pitch Black, 4095 = Bright Sunlight)
+      uint16_t ambient_lux = read_adc_channel(ADC_CHANNEL_LIGHT_SENSOR);
+      
+      // 2. Inverse mapping: Darker ambient requires brighter headlights
+      uint16_t target_pwm_duty = 4095 - ambient_lux;
+      
+      // 3. Update Hardware Timer Compare Register (CCR) controlling LED drivers
+      TIM1->CCR1 = target_pwm_duty; 
+  }
+  ```
+
+---
+
+### Example 4.2: Hospital ICU Vital Signs Heartbeat Metronome ❤️🔊
+
+* **The Real-World Scenario:** In an intensive care unit (ICU) bedside patient monitor, an audio beep and flashing heart icon synchronize with the patient's electrocardiogram (ECG) heart rate (e.g., 60 to 180 beats per minute).
+* **The Non-Blocking Requirement:**
+  * If the firmware used `delay()` to time the beeps, the processor would be completely paralyzed and unable to process urgent incoming arrhythmia alarms or nurse touch-screen inputs!
+  * Using a **non-blocking SysTick timer state machine**, the monitor tracks beep duration and heartbeat intervals cooperatively.
+* **Firmware Architectural Pattern:**
+  ```c
+  uint32_t last_heartbeat_timestamp = 0;
+  uint32_t beat_interval_ms = 857; // 70 Beats Per Minute (60,000 / 70)
+
+  void process_vital_signs(void) {
+      uint32_t now = get_systick_millis();
+      
+      // Non-blocking timer check
+      if (now - last_heartbeat_timestamp >= beat_interval_ms) {
+          last_heartbeat_timestamp = now;
+          
+          TRIGGER_HEARTBEAT_AUDIO_BEEP();
+          FLASH_CARDIAC_LED_ON_DISPLAY();
+      }
+      
+      // CPU remains 100% available to evaluate emergency alarms and touch inputs
+      check_blood_oxygen_saturation();
+      service_touchscreen_events();
+  }
+  ```
+
+---
+
+### Example 4.3: Drone Brushless Motor Electronic Speed Controller (ESC) 🚁
+
+* **The Real-World Scenario:** A quadcopter flight controller must dynamically adjust the rotational speeds of 4 high-RPM brushless motors hundreds of times per second to remain stable in turbulent winds.
+* **Hardware Timer PWM Generation:**
+  * The flight computer runs a hardware timer generating standard servo PWM pulses at **400 Hz** (period $T = 2.5\text{ ms}$).
+  * Pulse widths between **1000 $\mu\text{s}$** (0% throttle) and **2000 $\mu\text{s}$** (100% throttle) command the Electronic Speed Controllers with sub-microsecond precision.
+* **Firmware Architectural Pattern:**
+  ```c
+  #define THROTTLE_MIN_PULSE_US   (1000U)
+  #define THROTTLE_MAX_PULSE_US   (2000U)
+
+  void set_motor_thrust(uint8_t motor_id, float throttle_percentage) {
+      // Calculate pulse width in microseconds (1000 to 2000 us)
+      uint32_t pulse_us = THROTTLE_MIN_PULSE_US + 
+                          (uint32_t)(throttle_percentage * 10.0f);
+      
+      // Update Timer Capture/Compare Register directly
+      switch(motor_id) {
+          case 0: TIM2->CCR1 = pulse_us; break; // Motor Front-Left
+          case 1: TIM2->CCR2 = pulse_us; break; // Motor Front-Right
+          case 2: TIM2->CCR3 = pulse_us; break; // Motor Rear-Left
+          case 3: TIM2->CCR4 = pulse_us; break; // Motor Rear-Right
+      }
+  }
+  ```
+
+---
+
+## 8. Important Exam Practice Questions
 
 ### Question 1: Timer Overflow Frequency Calculation
 
