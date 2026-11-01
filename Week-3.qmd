@@ -1,14 +1,496 @@
 ---
-title: "Week 3: Intermediate STM32 Programming and Architecture"
+title: "Week 3: Intermediate STM32 Programming & Architecture"
 ---
 
-## Overview
+## 1. ARM Cortex-M Bus Architecture & Interconnect
 
-ARM Cortex-M core, bus architecture (AHB/APB), clock gating via RCC, GPIO configuration (MODER, ODR, IDR, BSRR).
+Modern 32-bit microcontrollers, such as the **STM32** family powered by ARM Cortex-M processor cores, use a multi-master interconnect matrix and layered bus hierarchy to connect the CPU core to memory and peripheral blocks.
 
-::: {.callout-tip}
-### 📌 Coming Up
-This module is part of the CS2101 syllabus outline. Detailed lecture notes, integrated interactive simulations, and question banks will be added here.
+```text
++-----------------------------------------------------------------+
+|                   ARM Cortex-M Processor Core                   |
++-----------------------------------------------------------------+
+          |                                 |
+     [I-Bus: Code]                     [D-Bus: Data]
+          |                                 |
+          v                                 v
++-----------------------------------------------------------------+
+|                    Advanced High-Performance Bus                |
+|                             (AHB)                               |
++-----------------------------------------------------------------+
+          |                     |                     |
+     [Flash ROM]             [SRAM]             [Bridge to APB]
+    (0x0800 0000)        (0x2000 0000)                |
+                                                      v
+                                        +-------------------------+
+                                        |  Advanced Peripheral    |
+                                        |       Bus (APB)         |
+                                        +-------------------------+
+                                                      |
+                                          +---------------------+
+                                          | Peripherals:        |
+                                          | - GPIO Ports (A, B) |
+                                          | - Hardware Timers   |
+                                          | - UART / SPI / I2C  |
+                                          +---------------------+
+```
+
+### Bus Segmentation Purpose
+- **AHB (Advanced High-Performance Bus):** Runs at high clock frequency to connect the CPU to critical high-speed blocks (Flash memory, SRAM, DMA controllers).
+- **APB (Advanced Peripheral Bus):** Clocked at lower or divided frequencies to minimize dynamic power dissipation when accessing slower communication and control peripherals (GPIO, Timers, UART, I2C).
+
+---
+
+## 2. Memory Map & Address Space Decoding
+
+The ARM architecture provides a flat, unified **4-Gigabyte (32-bit)** address space spanning from `0x0000 0000` to `0xFFFF FFFF`. Every component—Flash, RAM, and hardware peripherals—occupies a dedicated address segment.
+
+```text
+ 0x0000 0000 +-----------------------------------------------+
+             | Boot Memory / Alias Space                     |
+ 0x0800 0000 +-----------------------------------------------+
+             | Flash Program Memory (e.g., 32 KB - 512 KB)   |
+ 0x2000 0000 +-----------------------------------------------+
+             | SRAM Working Memory (e.g., 12 KB - 128 KB)    |
+ 0x4000 0000 +-----------------------------------------------+
+             | Peripheral Registers (Timers, ADC, UART, SPI) |
+ 0x5000 0000 +-----------------------------------------------+
+             | GPIO Port Registers (GPIOA, GPIOB, etc.)      |
+ 0xE000 0000 +-----------------------------------------------+
+             | System Control Space & NVIC (Core Peripherals)|
+ 0xFFFF FFFF +-----------------------------------------------+
+```
+
+### Memory Address Calculation Example
+If an embedded processor has **256 KB of SRAM** starting at base address `0x00100000`:
+- $256\text{ KB} = 256 \times 1024\text{ bytes} = 262,144\text{ bytes} = \text{0x00040000}$ in hexadecimal.
+- $\text{Ending Address} = \text{Base Address} + \text{Size} - 1$
+- $\text{Ending Address} = \text{0x00100000} + \text{0x00040000} - 1 = \mathbf{\text{0x0013FFFF}}$
+
+---
+
+## 3. Peripheral Clock Gating (RCC)
+
+In STM32 microcontrollers, **all peripheral clocks are disabled by default** upon system reset to minimize power consumption. 
+
+Before configuring or accessing any peripheral register (such as a GPIO port or Timer), firmware **must explicitly enable its clock** in the **RCC (Reset and Clock Control)** register. Writing to a peripheral register without enabling its clock will result in a silent failure or a processor HardFault exception.
+
+```c
+#include <stdint.h>
+
+// On STM32C0 series, GPIOA clock enable is bit 0 in RCC_IOPENR
+#define RCC_IOPENR_REG      (*(volatile uint32_t *)(0x40021034UL))
+#define RCC_GPIOA_EN_BIT    (0U)
+
+void enable_gpioa_clock(void) {
+    // Assert Bit 0 to enable the clock to GPIO Port A
+    RCC_IOPENR_REG |= (1U << RCC_GPIOA_EN_BIT);
+}
+```
+
+---
+
+## 4. The STM32 GPIO Register Suite
+
+Every General Purpose I/O port on an STM32 microcontroller is controlled by a dedicated set of 32-bit registers:
+
+```text
+ Register Name   Full Name                      Function
+---------------------------------------------------------------------------------------------
+ GPIOx_MODER     Port Mode Register             Selects Input, Output, Alternate Func, Analog
+ GPIOx_OTYPER    Output Type Register           Selects Push-Pull or Open-Drain output mode
+ GPIOx_OSPEEDR   Output Speed Register          Selects pin slew rate / switching frequency
+ GPIOx_PUPDR     Pull-up / Pull-down Register   Selects internal pull-up, pull-down, or floating
+ GPIOx_IDR       Input Data Register            Read-only register capturing pin logic state
+ GPIOx_ODR       Output Data Register           Read/Write register storing driven pin levels
+ GPIOx_BSRR      Bit Set / Reset Register       Atomic bit setting and resetting in one write
+```
+
+### GPIO Mode Register (`MODER`) Bit Encoding
+Each I/O pin consumes **2 configuration bits** in `MODER`:
+- `00` = Digital Input (Reset state)
+- `01` = General Purpose Digital Output
+- `10` = Alternate Function (e.g., UART TX/RX, SPI SCK, PWM)
+- `11` = Analog Input (for ADC / Low power)
+
+```c
+// Configuring Pin PA5 (User LED on STM32 Nucleo) as Digital Output:
+// Clear bits [11:10], then write '01' to bit 10
+GPIOA->MODER &= ~(3UL << (2 * 5));
+GPIOA->MODER |=  (1UL << (2 * 5));
+```
+
+### Atomic Pin Control with `BSRR`
+Using `ODR |= (1 << 5)` requires a three-step **read-modify-write** cycle (`LDR`, `ORR`, `STR`), which can cause race conditions if an interrupt occurs midway. 
+
+The **Bit Set/Reset Register (`BSRR`)** allows **atomic single-cycle pin manipulation**:
+- Writing `1` to bits `[15:0]` sets the corresponding pin HIGH.
+- Writing `1` to bits `[31:16]` resets the corresponding pin LOW.
+
+```c
+// Atomic Pin Control (No read-modify-write needed)
+GPIOA->BSRR = (1UL << 5);         // Turn Pin 5 ON
+GPIOA->BSRR = (1UL << (5 + 16));  // Turn Pin 5 OFF
+```
+
+---
+
+## 5. Hardware Interfacing & Mixed-Voltage Considerations
+
+When connecting microcontroller I/O pins to external components or companion chips, engineers must observe strict electrical rules:
+
+1. **Logic Level Mismatch:**
+   - Modern microcontrollers commonly operate at **3.3V or 1.8V**, while legacy sensors or automotive modules operate at **5.0V**.
+   - Connecting a 5.0V signal directly to a non-5V-tolerant 3.3V MCU pin will forward-bias internal electrostatic discharge (ESD) protection diodes, causing **latch-up or silicon burnout**.
+   - *Solution:* Use dedicated bi-directional level-shifter ICs (e.g., TXB0108) or resistor dividers for unidirectional inputs.
+2. **Common Ground Requirement:**
+   - In any electronic system with multiple power supplies, all circuits **must share a common ground reference (0V)**. Without a common ground, voltage potentials float unpredictably, preventing reliable logic level detection.
+
+---
+
+## 6. Interactive Simulation: Smart Security Gate Monitor (Wokwi)
+
+In this project, you will build an automated monitoring system for a high-security facility. The system monitors **4 physical gates (pushbuttons)**. When a gate is breached:
+1. **Mechanical Debouncing:** Firmware filters out contact bounce noise.
+2. **UART Security Broadcast:** Microcontroller sends a timestamped alert over the serial terminal.
+3. **Binary LED Indicator:** A 3-bit binary display immediately indicates which gate (1 to 4) was triggered.
+
+### 🛠️ Hardware Circuit Setup
+* **Target Board:** STM32 Nucleo-C031C6 (ARM Cortex-M0+)
+* **4x Pushbuttons:** Connected to digital pins `D8`, `D9`, `D10`, `D11` using **internal pull-up resistors** (`INPUT_PULLUP`).
+* **3x Status LEDs:** Connected to pins `D2` (Blue), `D3` (Green), `D4` (Red) via 220Ω current-limiting resistors.
+* **Ground:** All buttons and LED cathodes tied to common `GND`.
+
+| Component | Pin / Terminal | STM32 Nucleo Pin | Electrical Configuration | Function |
+| :--- | :--- | :---: | :--- | :--- |
+| **Gate 1 Button** | Terminal 1 | `D8` | `INPUT_PULLUP` (Idle: HIGH, Active: LOW) | Security Gate 1 Sensor |
+| **Gate 2 Button** | Terminal 1 | `D9` | `INPUT_PULLUP` (Idle: HIGH, Active: LOW) | Security Gate 2 Sensor |
+| **Gate 3 Button** | Terminal 1 | `D10` | `INPUT_PULLUP` (Idle: HIGH, Active: LOW) | Security Gate 3 Sensor |
+| **Gate 4 Button** | Terminal 1 | `D11` | `INPUT_PULLUP` (Idle: HIGH, Active: LOW) | Security Gate 4 Sensor |
+| **LED 1 (Blue)** | Anode (via 220Ω) | `D2` | Push-Pull Output (`OUTPUT`) | Binary Bit 0 ($2^0$) |
+| **LED 2 (Green)** | Anode (via 220Ω) | `D3` | Push-Pull Output (`OUTPUT`) | Binary Bit 1 ($2^1$) |
+| **LED 3 (Red)** | Anode (via 220Ω) | `D4` | Push-Pull Output (`OUTPUT`) | Binary Bit 2 ($2^2$) |
+
+Click the green **Play** button inside the simulation window, open the **Serial Monitor** tab below, and click any of the pushbuttons:
+
+::: {.simulation-container}
+<iframe 
+  src="https://wokwi.com/projects/478741617992340481?embed=1" 
+  title="STM32 Nucleo Smart Security Gate Monitor"
+  loading="lazy"
+  allowfullscreen>
+</iframe>
+<div class="sim-info-bar">
+  <span><strong>Target Board:</strong> STM32 Nucleo-C031C6</span>
+  <span>Click Play, then press any Gate Button (1 to 4)</span>
+</div>
 :::
 
-[← Back to Main Page](index.qmd){.btn .btn-outline-secondary .mt-4}
+---
+
+## 7. Implementation Code: High-Level Framework vs. Bare-Metal Embedded C
+
+Compare the high-level framework code running in the simulation with the equivalent **Bare-Metal Embedded C** implementation configuring STM32 `RCC`, `MODER`, `PUPDR`, `IDR`, and `BSRR` registers:
+
+::: {.panel-tabset}
+
+### 🔷 High-Level Framework (Running in Simulation)
+
+```cpp
+// ============================================================================
+// Smart Security Gate Monitor (High-Level Framework)
+// ============================================================================
+
+// Define Button Pins
+#define GATE_1 8
+#define GATE_2 9
+#define GATE_3 10
+#define GATE_4 11
+
+// Define LED Pins
+#define LED_BIT_0 2
+#define LED_BIT_1 3
+#define LED_BIT_2 4
+
+void setup() {
+  Serial.begin(115200);
+
+  // Setup LEDs as OUTPUT
+  pinMode(LED_BIT_0, OUTPUT);
+  pinMode(LED_BIT_1, OUTPUT);
+  pinMode(LED_BIT_2, OUTPUT);
+
+  // Setup Buttons with internal pull-up resistors to prevent floating state
+  pinMode(GATE_1, INPUT_PULLUP);
+  pinMode(GATE_2, INPUT_PULLUP);
+  pinMode(GATE_3, INPUT_PULLUP);
+  pinMode(GATE_4, INPUT_PULLUP);
+
+  Serial.println("=== Security System Active ===");
+  Serial.println("Waiting for gates to open...");
+}
+
+// Display gate number in 3-bit binary using (number >> k) & 1
+void showBinary(int number) {
+  digitalWrite(LED_BIT_0, (number >> 0) & 1); 
+  digitalWrite(LED_BIT_1, (number >> 1) & 1);
+  digitalWrite(LED_BIT_2, (number >> 2) & 1); 
+}
+
+// Check button state with non-blocking software debouncing
+void checkGate(int pin, int gateNumber) {
+  // 1. Button pressed connects pin to GND (Reads LOW)
+  if (digitalRead(pin) == LOW) {      
+    
+    // 2. Simple Debounce: Wait 50ms for mechanical switch contacts to settle
+    delay(50);                        
+    
+    // 3. Confirm valid human press
+    if (digitalRead(pin) == LOW) {    
+      Serial.print("Alert! Gate ");
+      Serial.print(gateNumber);
+      Serial.println(" has been breached!");
+      
+      // Update physical binary LEDs
+      showBinary(gateNumber);         
+
+      // 4. Wait until the button is released to prevent terminal flooding
+      while (digitalRead(pin) == LOW) {
+        delay(10); 
+      }
+    }
+  }
+}
+
+void loop() {
+  // Continuously scan all 4 security gates
+  checkGate(GATE_1, 1);
+  checkGate(GATE_2, 2);
+  checkGate(GATE_3, 3);
+  checkGate(GATE_4, 4);
+}
+```
+
+---
+
+### 🔶 Equivalent Bare-Metal Embedded C (Direct Register Manipulation)
+
+```c
+// ============================================================================
+// Smart Security Gate Monitor (Bare-Metal STM32 Embedded C)
+// Direct hardware register configuration: RCC, MODER, PUPDR, IDR, BSRR
+// ============================================================================
+
+#include <stdint.h>
+
+// 1. Base Register Definitions
+#define RCC_BASE            (0x40021000UL)
+#define RCC_IOPENR_REG      (*(volatile uint32_t *)(RCC_BASE + 0x34UL))
+
+#define GPIOA_BASE          (0x50000000UL)
+#define GPIOA_MODER_REG     (*(volatile uint32_t *)(GPIOA_BASE + 0x00UL))
+#define GPIOA_PUPDR_REG     (*(volatile uint32_t *)(GPIOA_BASE + 0x0CUL))
+#define GPIOA_IDR_REG       (*(volatile uint32_t *)(GPIOA_BASE + 0x10UL))
+#define GPIOA_BSRR_REG      (*(volatile uint32_t *)(GPIOA_BASE + 0x18UL))
+
+// 2. Hardware Pin Mappings
+// Outputs: LED0 (PA0), LED1 (PA1), LED2 (PA4)
+#define LED0_PIN            (0U)
+#define LED1_PIN            (1U)
+#define LED2_PIN            (4U)
+
+// Inputs: Gate 1 (PA8), Gate 2 (PA9), Gate 3 (PA10), Gate 4 (PA11)
+#define GATE1_PIN           (8U)
+#define GATE2_PIN           (9U)
+#define GATE3_PIN           (10U)
+#define GATE4_PIN           (11U)
+
+static const uint8_t led_pins[3]   = {LED0_PIN, LED1_PIN, LED2_PIN};
+static const uint8_t gate_pins[4]  = {GATE1_PIN, GATE2_PIN, GATE3_PIN, GATE4_PIN};
+
+/**
+ * @brief Simple software delay loop for debouncing
+ */
+void delay_ms(volatile uint32_t ms) {
+    for (volatile uint32_t i = 0; i < ms * 4000; i++);
+}
+
+/**
+ * @brief Initialize RCC peripheral clocks and configure GPIO modes & pull-ups
+ */
+void security_system_init(void) {
+    // 1. Enable GPIOA peripheral clock in RCC
+    RCC_IOPENR_REG |= (1U << 0);
+
+    // 2. Configure LED Pins as Outputs ('01' in MODER)
+    for (uint8_t i = 0; i < 3; i++) {
+        uint8_t pin = led_pins[i];
+        GPIOA_MODER_REG &= ~(3UL << (pin * 2)); // Clear mode bits
+        GPIOA_MODER_REG |=  (1UL << (pin * 2)); // Mode '01' (Output)
+    }
+
+    // 3. Configure Gate Pins as Inputs ('00' in MODER) with Pull-Up ('01' in PUPDR)
+    for (uint8_t i = 0; i < 4; i++) {
+        uint8_t pin = gate_pins[i];
+        GPIOA_MODER_REG &= ~(3UL << (pin * 2)); // Mode '00' (Input)
+        
+        // Configure internal Pull-Up: Write '01' into PUPDR
+        GPIOA_PUPDR_REG &= ~(3UL << (pin * 2)); // Clear pull bits
+        GPIOA_PUPDR_REG |=  (1UL << (pin * 2)); // Set '01' (Pull-Up)
+    }
+}
+
+/**
+ * @brief Set the 3-bit binary gate indicator using atomic BSRR writes
+ */
+void display_gate_binary(uint8_t gate_num) {
+    for (uint8_t k = 0; k < 3; k++) {
+        uint8_t pin = led_pins[k];
+        if ((gate_num >> k) & 1U) {
+            GPIOA_BSRR_REG = (1UL << pin);        // Set HIGH
+        } else {
+            GPIOA_BSRR_REG = (1UL << (pin + 16U)); // Clear LOW
+        }
+    }
+}
+
+int main(void) {
+    security_system_init();
+
+    while (1) {
+        for (uint8_t g = 0; g < 4; g++) {
+            uint8_t pin = gate_pins[g];
+            
+            // Read digital input from IDR register (Active LOW: 0 when pressed)
+            if (!(GPIOA_IDR_REG & (1UL << pin))) {
+                // Software debounce: wait 50ms
+                delay_ms(50);
+                
+                // Re-verify if still pressed
+                if (!(GPIOA_IDR_REG & (1UL << pin))) {
+                    uint8_t breached_gate = g + 1; // Gate 1 to 4
+                    
+                    // Display breached gate number in binary
+                    display_gate_binary(breached_gate);
+
+                    // Wait until button release
+                    while (!(GPIOA_IDR_REG & (1UL << pin))) {
+                        delay_ms(10);
+                    }
+                }
+            }
+        }
+    }
+
+    return 0;
+}
+```
+
+:::
+
+### Hardware Register Mapping Comparison
+
+| Parameter | Arduino Framework | STM32 Bare-Metal Embedded C | Hardware Impact |
+| :--- | :--- | :--- | :--- |
+| **Clock Gating** | Implicitly handled in core startup | `RCC->IOPENR \|= (1U << 0);` | Zero power wasted on unclocked peripherals |
+| **Pull-Up Resistor** | `pinMode(pin, INPUT_PULLUP)` | `GPIOA->PUPDR \|= (1UL << (pin * 2))` | Connects internal ~40 kΩ pull-up to $V_{\text{DD}}$ |
+| **Pin Read** | `digitalRead(pin) == LOW` | `!(GPIOA->IDR & (1UL << pin))` | 1-cycle direct read of Input Data Register |
+| **Pin Write** | `digitalWrite(pin, HIGH/LOW)` | `GPIOA->BSRR = (1UL << pin)` | Atomic single-cycle set/reset (thread/ISR-safe) |
+
+---
+
+## 8. Important Exam Practice Questions
+
+### Question 1: Necessity of RCC Peripheral Clock Gating
+
+::: {.callout-note collapse="true"}
+## Click to View Question & Options
+
+In STM32 microcontrollers, what occurs if firmware attempts to configure GPIO registers without first enabling the corresponding GPIO clock in the RCC?
+
+**Options:**  
+- **A)** The microcontroller executes the instructions at half frequency  
+- **B)** The register write operations are silently ignored or trigger a bus fault exception because the peripheral hardware is unclocked  
+- **C)** The pins automatically default to open-drain mode  
+- **D)** The Flash memory contents are cleared  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: B
+**Explanation:**  
+To minimize static and dynamic power consumption, STM32 microcontrollers disable clocks to all peripheral domains by default. If the clock is disabled, the peripheral's internal registers are unpowered and will not latch any written values.
+:::
+:::
+
+---
+
+### Question 2: Memory-Mapped Address Calculation
+
+::: {.callout-note collapse="true"}
+## Click to View Question & Options
+
+A microcontroller has **256 KB of SRAM** mapped to its address space starting at base address `0x00100000`. What is the hexadecimal ending address of this memory block?
+
+**Options:**  
+- **A)** `0x00120000`  
+- **B)** `0x0013FFFF`  
+- **C)** `0x00140000`  
+- **D)** `0x001FFFFF`  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: B
+**Explanation:**  
+$256\text{ KB} = 256 \times 1024 = 262,144\text{ bytes} = \text{0x40000}$ in hexadecimal.  
+$\text{End Address} = \text{Base} + \text{Size} - 1 = \text{0x00100000} + \text{0x00040000} - 1 = \text{0x0013FFFF}$.
+:::
+:::
+
+---
+
+### Question 3: GPIO MODER Register Configuration
+
+::: {.callout-note collapse="true"}
+## Click to View Question & Options
+
+In an STM32 microcontroller, what 2-bit value must be written to the `MODER` field of a pin to configure it as a General Purpose Digital Output?
+
+**Options:**  
+- **A)** `00`  
+- **B)** `01`  
+- **C)** `10`  
+- **D)** `11`  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: B
+**Explanation:**  
+In the STM32 GPIO reference manual: `00` = Input (reset state), `01` = General purpose output, `10` = Alternate function, and `11` = Analog mode.
+:::
+:::
+
+---
+
+### Question 4: Common Ground in Mixed-Voltage Systems
+
+::: {.callout-note collapse="true"}
+## Click to View Question & Options
+
+Why is a common ground connection mandatory when interfacing a microcontroller with external sensors powered by separate power supplies?
+
+**Options:**  
+- **A)** To double the operating clock frequency of the processor  
+- **B)** To establish a common zero-volt reference potential so that logic HIGH and LOW voltage thresholds are consistently detected across all circuits  
+- **C)** To prevent the microcontroller from entering low-power sleep mode  
+- **D)** To convert digital signals into analog signals  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: B
+**Explanation:**  
+Voltage is always a relative potential difference between two points. Without a common ground reference connecting the systems, the voltage levels float unpredictably, causing erroneous digital readings and potential damage.
+:::
+:::
+
+---
+
+<div class="d-flex justify-content-between mt-4">
+  <a href="Week-2.qmd" class="seek-prev-btn">← Back to Week 2</a>
+  <a href="Week-4.qmd" class="seek-next-btn">NEXT: Week 4 — Advanced Peripheral Interfacing →</a>
+</div>

@@ -1,186 +1,313 @@
-/* Custom Styles for Embedded C Programming (CS2101) */
+/* ==========================================================================
+   IIT Madras Seek Portal Inspired Theme for Embedded C Programming (CS2101)
+   ========================================================================== */
 
-/* Modern typography enhancements */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap');
+
+:root {
+  --iitm-maroon: #800000;
+  --iitm-maroon-hover: #990000;
+  --iitm-maroon-light: #fef2f2;
+  --iitm-maroon-border: #fca5a5;
+  --seek-bg: #f8fafc;
+  --seek-card-bg: #ffffff;
+  --seek-border: #e2e8f0;
+  --seek-text-main: #1e293b;
+  --seek-text-muted: #64748b;
+  --seek-btn-dark: #374151;
+  --seek-btn-dark-hover: #1f2937;
+}
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--seek-text-main);
+  background-color: var(--seek-bg);
   letter-spacing: -0.01em;
+  line-height: 1.6;
 }
 
 code, pre {
   font-family: 'Fira Code', monospace;
+  font-size: 0.9em;
 }
 
-/* Breadcrumb bar styling matching cs3031 */
+/* ==========================================================================
+   Header & Breadcrumbs
+   ========================================================================== */
 .quarto-secondary-nav {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  font-size: 0.9rem;
+  background-color: var(--seek-card-bg) !important;
+  border-bottom: 1px solid var(--seek-border) !important;
+  padding: 0.6rem 1rem;
 }
 
 .quarto-secondary-nav .breadcrumb-item a {
-  color: #f39c12 !important;
+  color: var(--iitm-maroon) !important;
+  font-weight: 600;
   text-decoration: none;
 }
 
 .quarto-secondary-nav .breadcrumb-item.active {
-  color: #adb5bd;
+  color: var(--seek-text-muted);
 }
 
-/* Sidebar Branding & Active Indicator */
+/* ==========================================================================
+   Sidebar Navigation (Seek Portal Style)
+   ========================================================================== */
+#quarto-sidebar {
+  background-color: var(--seek-bg) !important;
+  border-right: 1px solid var(--seek-border) !important;
+}
+
 .sidebar-title {
+  color: var(--iitm-maroon) !important;
   font-weight: 700 !important;
-  letter-spacing: 0.5px;
+  font-size: 1.15rem !important;
+  letter-spacing: 0.2px;
 }
 
-.sidebar nav[role="doc-toc"] ul li a.active,
+.sidebar-item a {
+  color: var(--seek-text-main);
+  border-radius: 6px;
+  padding: 0.4rem 0.75rem;
+  transition: all 0.15s ease-in-out;
+  font-size: 0.92rem;
+}
+
+.sidebar-item a:hover {
+  background-color: #e2e8f0;
+  color: var(--iitm-maroon);
+}
+
 .sidebar-item a.active {
-  color: #f39c12 !important;
-  font-weight: 600;
+  background-color: var(--iitm-maroon-light) !important;
+  color: var(--iitm-maroon) !important;
+  font-weight: 600 !important;
+  border-left: 3px solid var(--iitm-maroon);
 }
 
-/* Right TOC active link highlighting */
+/* ==========================================================================
+   Right Table of Contents (On this page)
+   ========================================================================== */
+#quarto-margin-sidebar {
+  border-left: 1px solid var(--seek-border);
+}
+
+#quarto-margin-sidebar h2 {
+  color: var(--seek-text-muted);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+
+#quarto-margin-sidebar .nav-link {
+  color: var(--seek-text-muted) !important;
+  font-size: 0.88rem;
+  border-left: 2px solid transparent;
+  padding-left: 0.75rem;
+}
+
+#quarto-margin-sidebar .nav-link:hover {
+  color: var(--iitm-maroon) !important;
+}
+
 #quarto-margin-sidebar .nav-link.active {
-  color: #f39c12 !important;
-  border-left: 2px solid #f39c12;
+  color: var(--iitm-maroon) !important;
+  border-left-color: var(--iitm-maroon) !important;
   font-weight: 600;
 }
 
-/* Sleek Tables matching the course layout */
+/* ==========================================================================
+   Typography & Headings
+   ========================================================================== */
+h1, h2, h3, h4 {
+  color: var(--iitm-maroon);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+h1 {
+  font-size: 1.85rem;
+  margin-bottom: 1.2rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 2px solid var(--seek-border);
+}
+
+h2 {
+  font-size: 1.4rem;
+  margin-top: 1.8rem;
+  margin-bottom: 0.8rem;
+}
+
+h3 {
+  font-size: 1.15rem;
+  margin-top: 1.4rem;
+}
+
+/* ==========================================================================
+   Clean Tables (Seek Portal Style)
+   ========================================================================== */
 .table {
   width: 100%;
-  margin-top: 1.25rem;
-  margin-bottom: 1.5rem;
-  border-collapse: separate;
-  border-spacing: 0;
+  margin: 1.25rem 0;
+  background-color: var(--seek-card-bg);
+  border: 1px solid var(--seek-border);
   border-radius: 8px;
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .table th {
-  background-color: rgba(255, 255, 255, 0.04);
+  background-color: #f1f5f9;
+  color: var(--seek-text-main);
   font-weight: 600;
-  padding: 0.85rem 1rem;
+  border-bottom: 2px solid var(--seek-border);
+  padding: 0.75rem 1rem;
 }
 
 .table td {
-  padding: 0.85rem 1rem;
-  vertical-align: middle;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--seek-border);
+  color: var(--seek-text-main);
 }
 
-/* Simulation Container Styling */
-.simulation-card {
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 10px;
-  padding: 1.25rem;
-  margin: 1.5rem 0;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+.table tr:last-child td {
+  border-bottom: none;
 }
 
-.simulation-header {
+/* ==========================================================================
+   Seamless Simulation Container (Fits on page, no overflow, no scroll)
+   ========================================================================== */
+.simulation-container {
+  width: 100%;
+  max-width: 100%;
+  margin: 1.25rem 0;
+  background: var(--seek-card-bg);
+  border: 1px solid var(--seek-border);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.simulation-container iframe {
+  width: 100%;
+  height: 420px;
+  border: none;
+  display: block;
+}
+
+.sim-info-bar {
+  padding: 0.6rem 1rem;
+  background: #f1f5f9;
+  border-top: 1px solid var(--seek-border);
+  font-size: 0.82rem;
+  color: var(--seek-text-muted);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.simulation-header h4 {
-  margin: 0;
-  font-size: 1.1rem;
-  color: #f8fafc;
-  display: flex;
+/* ==========================================================================
+   Clean Architecture Diagram Card (No SVG distortion)
+   ========================================================================== */
+.diagram-box {
+  background: #f8fafc;
+  border: 1px solid var(--seek-border);
+  border-radius: 8px;
+  padding: 1.15rem 1.4rem;
+  margin: 1.2rem 0;
+  font-family: 'Fira Code', monospace;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #1e293b;
+  overflow-x: auto;
+}
+
+/* ==========================================================================
+   Bottom Navigation Buttons (Seek Portal Style)
+   ========================================================================== */
+.seek-next-btn {
+  display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-}
-
-.sim-badge {
-  background: #2563eb;
-  color: #fff;
-  font-size: 0.75rem;
+  background-color: var(--seek-btn-dark) !important;
+  color: #ffffff !important;
   font-weight: 600;
-  padding: 0.2rem 0.55rem;
-  border-radius: 20px;
-  text-transform: uppercase;
-}
-
-.simulation-iframe-wrapper {
-  position: relative;
-  width: 100%;
-  min-height: 480px;
+  font-size: 0.88rem;
+  padding: 0.6rem 1.25rem;
   border-radius: 8px;
-  overflow: hidden;
-  background: #0b0f19;
-  border: 1px dashed rgba(255, 255, 255, 0.18);
-}
-
-.simulation-iframe-wrapper iframe {
-  width: 100%;
-  height: 500px;
+  text-decoration: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+  transition: all 0.15s ease-in-out;
   border: none;
 }
 
-/* Instructions card for changing simulation */
-.sim-instructions {
-  background: rgba(30, 41, 59, 0.5);
-  border-left: 4px solid #f39c12;
-  padding: 0.9rem 1.1rem;
-  margin-top: 1rem;
-  border-radius: 0 8px 8px 0;
-  font-size: 0.88rem;
+.seek-next-btn:hover {
+  background-color: var(--seek-btn-dark-hover) !important;
+  color: #ffffff !important;
+  transform: translateY(-1px);
 }
 
-.sim-instructions code {
-  color: #f39c12;
-  background: rgba(243, 156, 18, 0.12);
-  padding: 0.15rem 0.35rem;
-  border-radius: 4px;
-}
-
-/* Practice Questions Callout Styling */
-.question-card {
-  background: rgba(30, 41, 59, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  padding: 1.25rem;
-  margin: 1.2rem 0;
-}
-
-.question-header {
+.seek-prev-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #ffffff !important;
+  color: var(--seek-text-main) !important;
   font-weight: 600;
-  font-size: 1.05rem;
-  margin-bottom: 0.75rem;
+  font-size: 0.88rem;
+  padding: 0.55rem 1.15rem;
+  border-radius: 8px;
+  text-decoration: none;
+  border: 1px solid var(--seek-border) !important;
+  transition: all 0.15s ease-in-out;
+}
+
+.seek-prev-btn:hover {
+  background-color: #f1f5f9 !important;
+  color: var(--iitm-maroon) !important;
+}
+
+/* ==========================================================================
+   Dark Mode Overrides
+   ========================================================================== */
+body.quarto-dark {
+  --seek-bg: #0b1120;
+  --seek-card-bg: #1e293b;
+  --seek-border: #334155;
+  --seek-text-main: #f1f5f9;
+  --seek-text-muted: #94a3b8;
+  --iitm-maroon: #f87171;
+  --iitm-maroon-light: rgba(239, 68, 68, 0.15);
+  background-color: var(--seek-bg);
+  color: var(--seek-text-main);
+}
+
+body.quarto-dark h1,
+body.quarto-dark h2,
+body.quarto-dark h3 {
+  color: #f87171;
+}
+
+body.quarto-dark .table th {
+  background-color: #0f172a;
+  color: #f8fafc;
+}
+
+body.quarto-dark .table td {
   color: #e2e8f0;
 }
 
-.question-meta {
-  display: inline-block;
-  font-size: 0.75rem;
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
-  background: rgba(243, 156, 18, 0.15);
-  color: #f39c12;
-  margin-bottom: 0.5rem;
+body.quarto-dark .quarto-secondary-nav {
+  background-color: #0f172a !important;
 }
 
-.options-list {
-  list-style-type: none;
-  padding-left: 0;
-  margin: 0.8rem 0;
+body.quarto-dark .diagram-box {
+  background: #0f172a;
+  color: #f1f5f9;
+  border-color: #334155;
 }
 
-.options-list li {
-  padding: 0.5rem 0.75rem;
-  margin-bottom: 0.4rem;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.options-list li.correct-answer {
-  background: rgba(34, 197, 94, 0.12);
-  border-color: rgba(34, 197, 94, 0.35);
-  font-weight: 500;
+body.quarto-dark .sim-info-bar {
+  background: #0f172a;
 }

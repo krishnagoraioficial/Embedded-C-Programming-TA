@@ -1,14 +1,661 @@
 ---
-title: "Week 4: Advanced Peripheral Interfacing"
+title: "Week 4: Advanced Peripheral Interfacing (Timers & ADC)"
 ---
 
-## Overview
+## 1. Combinational vs. Sequential Logic Elements
 
-Hardware Timers, Prescaler & Auto-Reload, PWM generation, Interrupts & NVIC priority, ADC conversion.
+In digital system design and microcontroller architecture, logic circuits are classified into two categories:
 
-::: {.callout-tip}
-### 📌 Coming Up
-This module is part of the CS2101 syllabus outline. Detailed lecture notes, integrated interactive simulations, and question banks will be added here.
+```text
+  COMBINATIONAL CIRCUIT                           SEQUENTIAL CIRCUIT
++-------------------------+                 +-------------------------------+
+| Output = f(Inputs)      |                 | Output = f(Inputs, State)     |
+| - No memory / no clock  |                 | - Contains memory (Flip-Flops)|
+| - Immediate response    |                 | - Synchronized by Clock Edge  |
+| Ex: Adders, MUX, ALU    |                 | Ex: Counters, Timers, ShiftReg|
++-------------------------+                 +-------------------------------+
+```
+
+### Why Edge-Triggered Flip-Flops are Standard
+Microcontroller registers and timers use **edge-triggered D flip-flops** rather than level-sensitive latches because they sample inputs only at the instantaneous transition of the clock signal (e.g., rising edge from 0 to 1). This eliminates race conditions and ensures clean, deterministic synchronous data movement.
+
+---
+
+## 2. Microcontroller Hardware Timers & PWM
+
+Hardware timers are autonomous peripheral blocks that count clock pulses independently of the CPU, enabling precision delays, event scheduling, and waveform generation without consuming processor cycles.
+
+```text
+ +---------------+     +--------------------+     +-----------------------+
+ | Internal Clock| ==> | Prescaler Register | ==> |   Counter Register    |
+ |  (e.g., 48MHz)|     |      (PSC)         |     |        (CNT)          |
+ +---------------+     +--------------------+     +-----------------------+
+                                                              |
+                                                              v  (When CNT == ARR)
+                                                  +-----------------------+
+                                                  |  Auto-Reload Register |
+                                                  |        (ARR)          |
+                                                  +-----------------------+
+                                                              |
+                                                              v
+                                                    [ Timer Interrupt / ]
+                                                    [  PWM Event Fired  ]
+```
+
+### Key Timer Formulas
+
+1. **Timer Overflow Frequency ($f_{\text{timer}}$):**
+   $$f_{\text{timer}} = \frac{f_{\text{CLK}}}{(\text{PSC} + 1) \times (\text{ARR} + 1)}$$
+
+2. **Timer Overflow Period ($T_{\text{overflow}}$):**
+   $$T_{\text{overflow}} = \frac{1}{f_{\text{timer}}} = \frac{(\text{PSC} + 1) \times (\text{ARR} + 1)}{f_{\text{CLK}}}$$
+
+3. **Pulse-Width Modulation (PWM) Duty Cycle:**
+   $$\text{Duty Cycle (\%)} = \frac{\text{CCR}}{\text{ARR}} \times 100\%$$
+   *(Where $\text{CCR}$ is the Capture/Compare Register value).*
+
+### Calculation Example
+If an STM32 timer operates with a **48 MHz clock**, $\text{PSC} = 47$, and $\text{ARR} = 999$:
+$$f_{\text{timer}} = \frac{48,000,000}{(47 + 1) \times (999 + 1)} = \frac{48,000,000}{48 \times 1000} = \mathbf{1,000\text{ Hz}}\ (1\text{ kHz})$$
+The timer will overflow exactly once every **1 millisecond**.
+
+---
+
+## 3. Analog-to-Digital Conversion (ADC)
+
+Microcontrollers operate on binary signals (0 or 1), but physical phenomena (temperature, pressure, audio, battery voltage) produce **continuous analog voltages**. The **Analog-to-Digital Converter (ADC)** bridges this gap through **sampling and quantization**.
+
+```text
+ Continuous Analog Signal             Sampling                   Quantization
+   (Smooth Voltage Wave)     ===>  (Discrete Time)   ===>  (Digital Binary Code)
+           ~                           | | | |                  0x03FF (10-bit)
+```
+
+### Core ADC Principles
+
+1. **Sampling Rate (Nyquist Theorem):**
+   To reconstruct an analog signal accurately without aliasing, the sampling frequency ($f_s$) must be at least twice the maximum frequency component ($f_{\text{max}}$) present in the signal:
+   $$f_s \ge 2 \times f_{\text{max}}$$
+
+2. **Quantization Levels ($N$-bit ADC):**
+   An $N$-bit ADC maps the reference voltage range into **$2^N$ distinct digital levels**:
+   - **8-bit ADC:** $2^8 = \mathbf{256}$ levels
+   - **10-bit ADC:** $2^{10} = \mathbf{1024}$ levels (e.g., 0 to 1023)
+   - **12-bit ADC (Standard STM32):** $2^{12} = \mathbf{4096}$ levels (e.g., 0 to 4095)
+
+3. **Voltage Step Resolution ($V_{\text{step}}$):**
+   $$V_{\text{step}} = \frac{V_{\text{REF}}}{2^N}$$
+   *Example:* For a 12-bit ADC with $V_{\text{REF}} = 3.3\text{V}$:
+   $$V_{\text{step}} = \frac{3.3\text{V}}{4096} \approx \mathbf{0.805\text{ mV per LSB}}$$
+
+---
+
+## 4. Microcontroller Power Management & Low-Power Modes
+
+In battery-powered IoT devices and wearable electronics, maximizing battery runtime requires aggressive power management. Microcontrollers provide multiple power modes:
+
+```text
+ Mode               CPU State       Peripherals         SRAM Content       Wakeup Latency
+-----------------------------------------------------------------------------------------
+ Run Mode           Active          Active              Retained           0 ns (Instant)
+ Sleep Mode         Halted          Active (Timers/ADC) Retained           Few Clock Cycles
+ Stop Mode          Halted          Clocks Disabled     Retained           Few Microseconds
+ Standby Mode       Powered Down    Powered Down        Lost (Except RTC)  Full Reset Startup
+```
+
+### Power Reduction Strategies in Firmware
+- **Clock Prescaling:** Reduce the main clock speed when high processing throughput is not required ($P \propto f_{\text{CLK}} \cdot V^2$).
+- **Peripheral Clock Gating:** Keep peripheral clocks turned off in RCC until immediately needed.
+- **Interrupt-Driven Sleep:** Execute tasks in response to interrupts, then immediately put the CPU to sleep with the `__WFI()` (Wait For Interrupt) instruction.
+
+---
+
+## 5. Mini-Project 1: Smart LED Dimmer (ADC to PWM Mapping) 🎛️💡
+
+### 🎯 Objective
+In this project, you connect two foundational Week 4 concepts: reading a continuously variable analog sensor (**ADC**) and outputting a continuous control signal (**Pulse Width Modulation - PWM**). 
+You will build an embedded system that samples a potentiometer's voltage and maps that value to adjust the exact duty cycle of a PWM signal, directly regulating the physical brightness of an LED.
+
+### 🛠️ Hardware Setup (Wokwi)
+The circuit connects the following components to an **STM32 Nucleo-C031C6** board:
+* **1x Potentiometer:** To simulate an analog voltage input.
+* **1x LED (Blue):** To visualize the PWM duty cycle.
+* **1x 220Ω Resistor:** Current-limiting resistor to protect the LED.
+
+### Pin Wiring Table
+| Component | Pin / Terminal | STM32 / Power Pin | Electrical Function |
+| :--- | :--- | :---: | :--- |
+| **Potentiometer** | VCC | `3V3` | 3.3V Power Rail |
+| **Potentiometer** | GND | `GND` | Ground Reference |
+| **Potentiometer** | SIG (Signal) | `A0` | Analog Input (`PA0` / ADC Channel 0) |
+| **LED** | Anode (via 220Ω Resistor) | `D3` | PWM Output (`PB0` / Timer 3 Channel 3) |
+| **LED** | Cathode | `GND` | Ground Reference |
+
+### 📝 Problem Statement & Logic Flow
+1. **Initialization (`setup`):**
+   * Start UART Serial communication at **115200 baud rate**.
+   * Configure potentiometer pin (`A0`) as `INPUT`.
+   * Configure LED pin (`D3`) as `OUTPUT`.
+   * Configure ADC resolution to 10-bit (0 to 1023) using `analogReadResolution(10);`.
+2. **Continuous Loop (`loop`):**
+   * **Read Analog Value:** Sample raw digital data from the potentiometer with `analogRead(A0)`.
+   * **Map to PWM Range:** The 10-bit ADC provides values from 0 to 1023. Standard PWM uses an 8-bit resolution (0 to 255). Use `map()` to translate the reading.
+   * **Control Brightness:** Output the mapped PWM duty cycle to the LED pin using `analogWrite()`.
+   * **Print to Terminal:** Transmit the telemetry data over UART for monitoring.
+
+```text
+--- ADC to PWM Dimmer Started ---
+ADC Input: 512 | PWM Output (Duty Cycle): 127
+ADC Input: 1023 | PWM Output (Duty Cycle): 255
+```
+
+### Interactive Simulation
+
+::: {.simulation-container}
+<iframe 
+  src="https://wokwi.com/projects/375659283936335873?embed=1" 
+  title="STM32 Nucleo ADC to PWM Smart Dimmer"
+  loading="lazy"
+  allowfullscreen>
+</iframe>
+<div class="sim-info-bar">
+  <span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span>
+  <span>Click Play, then rotate potentiometer knob on pin A0</span>
+</div>
 :::
 
-[← Back to Main Page](index.qmd){.btn .btn-outline-secondary .mt-4}
+### Implementation Code: High-Level Framework vs. Bare-Metal Embedded C
+
+::: {.panel-tabset}
+
+### 🔷 High-Level Framework (Running in Simulation)
+
+```cpp
+// ============================================================================
+// Mini-Project 1: Smart LED Dimmer (ADC to PWM Mapping)
+// ============================================================================
+
+#define POT_PIN A0   // Potentiometer wiper connected to Analog Pin A0
+#define LED_PIN D3   // Blue LED connected to PWM capable Pin D3
+
+void setup() {
+  // Start UART Serial communication at 115200 baud
+  Serial.begin(115200);
+
+  // Configure pin modes
+  pinMode(POT_PIN, INPUT);
+  pinMode(LED_PIN, OUTPUT);
+
+  // Set ADC resolution to 10-bit (0 to 1023)
+  analogReadResolution(10);
+
+  Serial.println("--- ADC to PWM Dimmer Started ---");
+}
+
+void loop() {
+  // 1. Read the 10-bit raw analog value (0 - 1023)
+  int rawADC = analogRead(POT_PIN);
+
+  // 2. Map 10-bit ADC range (0 - 1023) to 8-bit PWM duty cycle (0 - 255)
+  int pwmDuty = map(rawADC, 0, 1023, 0, 255);
+
+  // 3. Output continuous PWM signal to control LED brightness
+  analogWrite(LED_PIN, pwmDuty);
+
+  // 4. Print telemetry to UART Serial Monitor
+  Serial.print("ADC Input: ");
+  Serial.print(rawADC);
+  Serial.print(" | PWM Output (Duty Cycle): ");
+  Serial.println(pwmDuty);
+
+  delay(50); // Small telemetry update delay
+}
+```
+
+---
+
+### 🔶 Equivalent Bare-Metal Embedded C (Direct Register Manipulation)
+
+```c
+// ============================================================================
+// Mini-Project 1: Smart LED Dimmer (Bare-Metal STM32 Embedded C)
+// Hardware: STM32 Nucleo-C031C6
+// Peripherals: ADC1 (PA0), General-Purpose Timer TIM3 PWM (PB0/D3)
+// ============================================================================
+
+#include <stdint.h>
+
+// 1. STM32 Base Addresses & Memory-Mapped Registers
+#define RCC_BASE            (0x40021000UL)
+#define RCC_IOPENR          (*(volatile uint32_t *)(RCC_BASE + 0x34UL))
+#define RCC_APBENR1         (*(volatile uint32_t *)(RCC_BASE + 0x3CUL))
+#define RCC_APBENR2         (*(volatile uint32_t *)(RCC_BASE + 0x40UL))
+
+#define GPIOA_BASE          (0x50000000UL)
+#define GPIOA_MODER         (*(volatile uint32_t *)(GPIOA_BASE + 0x00UL))
+
+#define GPIOB_BASE          (0x50000400UL)
+#define GPIOB_MODER         (*(volatile uint32_t *)(GPIOB_BASE + 0x00UL))
+#define GPIOB_AFRL          (*(volatile uint32_t *)(GPIOB_BASE + 0x20UL))
+
+// Timer 3 (PWM Generation on PB0)
+#define TIM3_BASE           (0x40000400UL)
+#define TIM3_CR1            (*(volatile uint32_t *)(TIM3_BASE + 0x00UL))
+#define TIM3_CCMR1          (*(volatile uint32_t *)(TIM3_BASE + 0x18UL))
+#define TIM3_CCER           (*(volatile uint32_t *)(TIM3_BASE + 0x20UL))
+#define TIM3_PSC            (*(volatile uint32_t *)(TIM3_BASE + 0x28UL))
+#define TIM3_ARR            (*(volatile uint32_t *)(TIM3_BASE + 0x2CUL))
+#define TIM3_CCR3           (*(volatile uint32_t *)(TIM3_BASE + 0x3CUL))
+
+// ADC1 (Analog-to-Digital Converter on PA0)
+#define ADC1_BASE           (0x40012400UL)
+#define ADC1_ISR            (*(volatile uint32_t *)(ADC1_BASE + 0x00UL))
+#define ADC1_CR             (*(volatile uint32_t *)(ADC1_BASE + 0x08UL))
+#define ADC1_CFGR1          (*(volatile uint32_t *)(ADC1_BASE + 0x0CUL))
+#define ADC1_CHSELR         (*(volatile uint32_t *)(ADC1_BASE + 0x28UL))
+#define ADC1_DR             (*(volatile uint32_t *)(ADC1_BASE + 0x40UL))
+
+/**
+ * @brief Initialize ADC1 for 10-bit single-channel conversion on PA0
+ */
+void adc_init(void) {
+    // Enable GPIOA and ADC1 peripheral clocks
+    RCC_IOPENR  |= (1U << 0);  // GPIOA clock enable
+    RCC_APBENR2 |= (1U << 20); // ADC clock enable
+
+    // Configure PA0 (A0) in Analog Mode ('11' in MODER)
+    GPIOA_MODER |= (3UL << (0 * 2));
+
+    // ADC Calibration routine
+    ADC1_CR |= (1U << 31); // Start calibration (ADCAL)
+    while (ADC1_CR & (1U << 31)); // Wait until calibration completes
+
+    // Enable ADC peripheral
+    ADC1_ISR |= (1U << 0); // Clear ADRDY flag
+    ADC1_CR  |= (1U << 0); // Assert ADEN
+    while (!(ADC1_ISR & (1U << 0))); // Wait until ADC is ready
+
+    // Configure 10-bit resolution ('01' in CFGR1 RES[1:0] bits)
+    ADC1_CFGR1 &= ~(3UL << 3);
+    ADC1_CFGR1 |=  (1UL << 3); // 10-bit resolution (0 to 1023)
+
+    // Select ADC Channel 0 (connected to PA0)
+    ADC1_CHSELR = (1UL << 0);
+}
+
+/**
+ * @brief Initialize TIM3 Channel 3 to produce 1 kHz PWM on PB0 (D3)
+ */
+void pwm_timer_init(void) {
+    // Enable GPIOB and TIM3 peripheral clocks
+    RCC_IOPENR  |= (1U << 1);  // GPIOB clock enable
+    RCC_APBENR1 |= (1U << 1);  // TIM3 clock enable
+
+    // Configure PB0 as Alternate Function ('10' in MODER)
+    GPIOB_MODER &= ~(3UL << (0 * 2));
+    GPIOB_MODER |=  (2UL << (0 * 2));
+    GPIOB_AFRL  |=  (1UL << (0 * 4)); // AF1 = TIM3_CH3
+
+    // Configure Timer Prescaler and Auto-Reload for 1 kHz PWM
+    TIM3_PSC = 47;   // 48 MHz / (47 + 1) = 1 MHz timer tick frequency
+    TIM3_ARR = 255;  // 8-bit Auto-Reload period (0 to 255)
+
+    // Configure PWM Mode 1 on Channel 3 (OC3M = '110')
+    TIM3_CCMR1 |= (6UL << 12);
+    TIM3_CCER  |= (1UL << 8);  // Enable Channel 3 output (CC3E)
+
+    // Enable Timer counter
+    TIM3_CR1 |= (1U << 0);
+}
+
+/**
+ * @brief Trigger an ADC conversion and return 10-bit digitized value
+ */
+uint16_t adc_read(void) {
+    ADC1_CR |= (1U << 2); // Start conversion (ADSTART)
+    while (!(ADC1_ISR & (1U << 2))); // Wait for End of Conversion (EOC)
+    return (uint16_t)ADC1_DR;        // Return 10-bit result (0 to 1023)
+}
+
+int main(void) {
+    adc_init();
+    pwm_timer_init();
+
+    while (1) {
+        // Read 10-bit voltage from potentiometer (0 - 1023)
+        uint16_t raw_adc = adc_read();
+
+        // Convert 10-bit ADC to 8-bit PWM compare value:
+        // Efficient bitwise right-shift by 2: (1023 >> 2) = 255!
+        uint8_t pwm_duty = (uint8_t)(raw_adc >> 2);
+
+        // Update PWM duty cycle directly in Capture/Compare Register
+        TIM3_CCR3 = pwm_duty;
+
+        for (volatile uint32_t delay = 0; delay < 10000; delay++);
+    }
+
+    return 0;
+}
+```
+
+:::
+
+---
+
+## 6. Mini-Project 2: The Non-Blocking Metronome (Timers & ADC) ⏱️🎵
+
+### 🎯 Objective
+Use a timer concept to trigger an event at a highly precise interval **without stopping or blocking the CPU**. 
+You will build a visual metronome where an analog input instantly controls the blinking speed of an LED, demonstrating why blocking calls like `delay()` are detrimental to real-time responsiveness and power management.
+
+### 🛠️ Hardware & Pin Selection
+* **Tempo Dial:** 1x Potentiometer on `A0` (variable analog tempo control).
+* **Visual Tick:** 1x LED with 220Ω protective resistor on `D3` (or onboard user LED `PA5`).
+* **Power & Ground:** Connected to `3V3` and `GND`.
+
+### 🧠 Step-by-Step Firmware Architecture
+1. **Sample Sensor Data:** Read the analog tempo dial smoothly without stopping processor execution.
+2. **Map to Time Interval:** Convert the raw 10-bit ADC reading (0–1023) into an elapsed millisecond window:
+   * **Lowest dial position:** 100 ms (Fast tempo / Allegro)
+   * **Highest dial position:** 2000 ms (Slow tempo / Largo)
+3. **The Non-Blocking Timer Logic:** 
+   * If firmware executes `delay(interval)`, the CPU completely halts. It cannot sample the knob until the delay finishes, making the dial feel laggy and unresponsive.
+   * **Solution:** Use background hardware timing (`millis()` or ARM Cortex-M **SysTick timer**). Store the `previousMillis` timestamp and continuously compare against `currentMillis`.
+4. **Execute & Update:** When `(currentMillis - previousMillis) >= interval`, invert the LED state and reset the milestone.
+5. **Verify Multitasking:** When rotating the knob, the blink rate adjusts **immediately with zero lag**, proving the system is non-blocking.
+
+### Implementation Code: High-Level Framework vs. Bare-Metal Embedded C
+
+::: {.panel-tabset}
+
+### 🔷 High-Level Framework (Running in Simulation)
+
+```cpp
+// ============================================================================
+// Mini-Project 2: The Non-Blocking Metronome (High-Level Framework)
+// ============================================================================
+
+#define TEMPO_DIAL_PIN A0  // Potentiometer tempo dial
+#define METRONOME_LED  D3  // Visual tick LED (with 220Ω resistor)
+
+unsigned long previousMillis = 0;  // Stores the last time the LED toggled
+int ledState = LOW;                // Current state of the visual metronome LED
+
+void setup() {
+  Serial.begin(115200);
+
+  pinMode(TEMPO_DIAL_PIN, INPUT);
+  pinMode(METRONOME_LED, OUTPUT);
+  analogReadResolution(10); // 10-bit ADC resolution (0 to 1023)
+
+  Serial.println("=== Non-Blocking Metronome Active ===");
+  Serial.println("Rotate tempo dial to adjust flash interval instantly.");
+}
+
+void loop() {
+  // 1. Read analog tempo dial smoothly without stopping the CPU
+  int rawADC = analogRead(TEMPO_DIAL_PIN);
+
+  // 2. Map ADC reading (0 to 1023) to a practical time interval:
+  //    Lowest knob position:  100 ms (Fast tempo / Allegro)
+  //    Highest knob position: 2000 ms (Slow tempo / Largo)
+  unsigned long interval = map(rawADC, 0, 1023, 100, 2000);
+
+  // 3. Non-Blocking Timer Logic: Check elapsed time
+  unsigned long currentMillis = millis();
+
+  // If time elapsed exceeds the dynamic interval, toggle the metronome tick
+  if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis; // Reset timer milestone
+
+    // Toggle LED state
+    ledState = (ledState == LOW) ? HIGH : LOW;
+    digitalWrite(METRONOME_LED, ledState);
+
+    // Telemetry
+    Serial.print("Blink Interval: ");
+    Serial.print(interval);
+    Serial.println(" ms (Zero CPU blocking!)");
+  }
+
+  // The CPU remains completely free to run other tasks concurrently!
+}
+```
+
+---
+
+### 🔶 Equivalent Bare-Metal Embedded C (ARM Cortex-M SysTick Timer)
+
+```c
+// ============================================================================
+// Mini-Project 2: The Non-Blocking Metronome (Bare-Metal Embedded C)
+// Hardware: STM32 Nucleo-C031C6
+// Architecture: ARM Cortex-M SysTick 1ms Hardware Timer + ADC1 PA0
+// ============================================================================
+
+#include <stdint.h>
+
+// 1. Base Register Definitions
+#define RCC_BASE            (0x40021000UL)
+#define RCC_IOPENR_REG      (*(volatile uint32_t *)(RCC_BASE + 0x34UL))
+#define RCC_APBENR2_REG     (*(volatile uint32_t *)(RCC_BASE + 0x40UL))
+
+#define GPIOA_BASE          (0x50000000UL)
+#define GPIOA_MODER_REG     (*(volatile uint32_t *)(GPIOA_BASE + 0x00UL))
+#define GPIOA_BSRR_REG      (*(volatile uint32_t *)(GPIOA_BASE + 0x18UL))
+
+// ARM Cortex-M Core SysTick Timer Registers (0xE000E010)
+#define SYST_CSR            (*(volatile uint32_t *)(0xE000E010UL)) // Control & Status
+#define SYST_RVR            (*(volatile uint32_t *)(0xE000E014UL)) // Reload Value
+#define SYST_CVR            (*(volatile uint32_t *)(0xE000E018UL)) // Current Value
+
+// ADC1 Registers
+#define ADC1_BASE           (0x40012400UL)
+#define ADC1_ISR_REG        (*(volatile uint32_t *)(ADC1_BASE + 0x00UL))
+#define ADC1_CR_REG         (*(volatile uint32_t *)(ADC1_BASE + 0x08UL))
+#define ADC1_CFGR1_REG      (*(volatile uint32_t *)(ADC1_BASE + 0x0CUL))
+#define ADC1_CHSELR_REG     (*(volatile uint32_t *)(ADC1_BASE + 0x28UL))
+#define ADC1_DR_REG         (*(volatile uint32_t *)(ADC1_BASE + 0x40UL))
+
+#define LED_PIN             (5U) // PA5 (Nucleo User LED)
+
+// Global millisecond timestamp incremented by SysTick ISR
+volatile uint32_t ms_ticks = 0;
+
+/**
+ * @brief ARM Cortex-M SysTick Exception Handler (Fires every 1ms)
+ */
+void SysTick_Handler(void) {
+    ms_ticks++;
+}
+
+/**
+ * @brief Initialize 1 ms SysTick Hardware Timer
+ * CPU Clock = 48 MHz -> 48,000 cycles = 1 ms
+ */
+void systick_init(void) {
+    SYST_RVR = 48000UL - 1UL; // Set reload for 1ms tick
+    SYST_CVR = 0;             // Clear current counter
+    SYST_CSR = (1U << 2) |    // Core clock source
+               (1U << 1) |    // Enable SysTick exception interrupt
+               (1U << 0);     // Enable counter
+}
+
+uint32_t get_millis(void) {
+    return ms_ticks;
+}
+
+void metronome_init(void) {
+    // Enable GPIOA and ADC1 clocks
+    RCC_IOPENR_REG  |= (1U << 0);
+    RCC_APBENR2_REG |= (1U << 20);
+
+    // PA5 as Output ('01' in MODER) for Metronome LED
+    GPIOA_MODER_REG &= ~(3UL << (LED_PIN * 2));
+    GPIOA_MODER_REG |=  (1UL << (LED_PIN * 2));
+
+    // PA0 as Analog ('11' in MODER) for Tempo Dial Potentiometer
+    GPIOA_MODER_REG |=  (3UL << (0 * 2));
+
+    // ADC Calibration & Enable
+    ADC1_CR_REG |= (1U << 31);
+    while (ADC1_CR_REG & (1U << 31));
+    ADC1_ISR_REG |= (1U << 0);
+    ADC1_CR_REG  |= (1U << 0);
+    while (!(ADC1_ISR_REG & (1U << 0)));
+
+    // 10-bit resolution & Channel 0 selection
+    ADC1_CFGR1_REG |= (1UL << 3);
+    ADC1_CHSELR_REG = (1UL << 0);
+}
+
+uint16_t read_tempo_dial(void) {
+    ADC1_CR_REG |= (1U << 2);
+    while (!(ADC1_ISR_REG & (1U << 2)));
+    return (uint16_t)ADC1_DR_REG;
+}
+
+int main(void) {
+    metronome_init();
+    systick_init();
+
+    uint32_t previous_millis = 0;
+    uint8_t  led_state       = 0;
+
+    while (1) {
+        // 1. Read tempo dial without blocking
+        uint16_t raw_adc = read_tempo_dial();
+
+        // 2. Map 10-bit ADC (0..1023) to interval: 100ms to 2000ms
+        // Formula: interval = 100 + (raw_adc * 1900) / 1023
+        uint32_t interval = 100UL + ((uint32_t)raw_adc * 1900UL) / 1023UL;
+
+        // 3. Non-blocking elapsed time comparison
+        uint32_t current_millis = get_millis();
+        if ((current_millis - previous_millis) >= interval) {
+            previous_millis = current_millis;
+
+            // Toggle LED state using atomic BSRR register write
+            led_state = !led_state;
+            if (led_state) {
+                GPIOA_BSRR_REG = (1UL << LED_PIN);        // Turn ON
+            } else {
+                GPIOA_BSRR_REG = (1UL << (LED_PIN + 16U)); // Turn OFF
+            }
+        }
+
+        // Processor can perform sensor filtering or enter low-power WFI sleep here!
+    }
+
+    return 0;
+}
+```
+
+:::
+
+### Blocking vs. Non-Blocking Performance Comparison
+
+| Evaluation Metric | Blocking Delay (`delay()`) | Non-Blocking Hardware Timing (`millis()` / SysTick) |
+| :--- | :--- | :--- |
+| **CPU Utilization** | 100% trapped inside empty busy-wait loops | < 0.1% CPU overhead; available for multitasking |
+| **Input Responsiveness** | Dial adjustments ignored until current delay finishes | Instantaneous response with zero latency |
+| **Power Efficiency** | Constant high dynamic power consumption | Allows CPU to enter low-power sleep modes (`__WFI()`) |
+| **Multitasking Ability** | Incapable of executing parallel tasks | Scalable cooperative multitasking & event scheduling |
+
+---
+
+## 7. Important Exam Practice Questions
+
+### Question 1: Timer Overflow Frequency Calculation
+
+::: {.callout-note collapse="true"}
+## Click to View Question & Options
+
+A microcontroller timer is clocked by an internal clock source of **16 MHz**. The Prescaler (`PSC`) is set to **15**, and the Auto-Reload Register (`ARR`) is set to **999**. What is the resulting timer overflow frequency?
+
+**Options:**  
+- **A)** 100 Hz  
+- **B)** 500 Hz  
+- **C)** 1,000 Hz (1 kHz)  
+- **D)** 10,000 Hz  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: C
+**Explanation:**  
+$$f_{\text{timer}} = \frac{f_{\text{CLK}}}{(\text{PSC} + 1) \times (\text{ARR} + 1)} = \frac{16,000,000}{(15 + 1) \times (999 + 1)} = \frac{16,000,000}{16 \times 1000} = \mathbf{1,000\text{ Hz}}\ (1\text{ kHz})$$
+:::
+:::
+
+---
+
+### Question 2: ADC Quantization Resolution
+
+::: {.callout-note collapse="true"}
+## Click to View Question & Options
+
+A 10-bit Analog-to-Digital Converter (ADC) can digitize an incoming analog signal into how many distinct discrete voltage levels?
+
+**Options:**  
+- **A)** 10 levels  
+- **B)** 256 levels  
+- **C)** 1024 levels  
+- **D)** 4096 levels  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: C
+**Explanation:**  
+An $N$-bit ADC resolves an input into $2^N$ discrete numerical steps. For a 10-bit converter: $2^{10} = \mathbf{1024}$ distinct levels (ranging from 0 to 1023).
+:::
+:::
+
+---
+
+### Question 3: Combinational vs. Sequential Digital Elements
+
+::: {.callout-note collapse="true"}
+## Click to View Question & Options
+
+Which of the following is the fundamental distinguishing characteristic of a sequential digital logic element compared to a combinational element?
+
+**Options:**  
+- **A)** Sequential circuits do not require electric power to operate  
+- **B)** Sequential circuits contain memory (storage) elements such as flip-flops, so the output depends on both current inputs and previous state history  
+- **C)** Combinational circuits require a continuous clock pulse signal  
+- **D)** Sequential circuits can only process analog signals  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: B
+**Explanation:**  
+Combinational circuits (like adders and multiplexers) produce outputs based strictly on current inputs. Sequential circuits (like registers, counters, and timers) incorporate memory elements (flip-flops) and update their state based on clock transitions.
+:::
+:::
+
+---
+
+### Question 4: Microcontroller Low-Power Modes
+
+::: {.callout-note collapse="true"}
+## Click to View Question & Options
+
+In battery-powered embedded systems, which microcontroller operating mode retains SRAM contents while turning off the high-speed CPU clock until an external interrupt occurs?
+
+**Options:**  
+- **A)** Shutdown Mode  
+- **B)** Sleep / Stop Mode  
+- **C)** Factory Reset Mode  
+- **D)** Thermal Protection Mode  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: B
+**Explanation:**  
+Sleep and Stop modes gate the high-frequency clock to the CPU core while keeping SRAM powered, allowing instantaneous wakeup when an external pin change or timer interrupt triggers.
+:::
+:::
+
+---
+
+<div class="d-flex justify-content-between mt-4">
+  <a href="Week-3.qmd" class="seek-prev-btn">← Back to Week 3</a>
+  <a href="index.qmd" class="seek-next-btn">Return to Course Overview →</a>
+</div>

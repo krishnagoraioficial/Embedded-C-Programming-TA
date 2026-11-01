@@ -2,13 +2,409 @@
 title: "Week 2: Basics of Embedded C Programming"
 ---
 
-## Overview
+## 1. Why C for Embedded Systems?
 
-Bitwise operations, bit masking, shifts, volatile keyword, pointer manipulation for memory-mapped I/O, bitfields.
+The C programming language remains the preeminent language for embedded firmware development due to its unique combination of **low-level hardware access, predictable execution timing, and minimal runtime footprint**.
 
-::: {.callout-tip}
-### 📌 Coming Up
-This module is part of the CS2101 syllabus outline. Detailed lecture notes, integrated interactive simulations, and question banks will be added here.
+```text
++-------------------------------------------------------------+
+|                APPLICATION SOFTWARE (C CODE)                |
++-------------------------------------------------------------+
+                              |
+                     [Pointers & Bitmasks]
+                              v
++-------------------------------------------------------------+
+|         MEMORY-MAPPED HARDWARE PERIPHERAL REGISTERS         |
+|         (GPIO Ports, Hardware Timers, Serial UART)          |
++-------------------------------------------------------------+
+                              |
+               [Direct Bus Memory Bus Access]
+                              v
++-------------------------------------------------------------+
+|               SILICON HARDWARE / MICROCONTROLLER            |
++-------------------------------------------------------------+
+```
+
+### Core Advantages in Firmware Engineering
+1. **Direct Memory Access:** Through pointers, C can read and write directly to physical memory addresses where peripheral control registers reside.
+2. **Deterministic Execution:** Unlike interpreted or garbage-collected languages (Java, Python), C has no hidden runtime memory sweeps, ensuring deterministic real-time deadlines.
+3. **Zero Overhead:** C functions compile directly to native machine instructions without heavy runtime environments or abstraction layers.
+
+---
+
+## 2. Fixed-Width Integer Types (`stdint.h`)
+
+In standard desktop C, data types like `int` and `long` have compiler-dependent sizes (e.g., `int` can be 16 bits on an 8-bit AVR, but 32 bits on an ARM Cortex-M or x86 PC).
+
+In embedded firmware, using ambiguous types can cause **register overflow, memory waste, and portability bugs**. The `<stdint.h>` standard header defines exact-width integer types:
+
+| Standard Type | Exact Width | Signed Range | Unsigned Range | Common Embedded Use Case |
+| :--- | :---: | :--- | :--- | :--- |
+| `uint8_t` | 8 bits (1 byte) | — | 0 to 255 | 8-bit sensor readings, raw byte buffers |
+| `int8_t` | 8 bits (1 byte) | -128 to 127 | — | Small signed sensor offsets |
+| `uint16_t` | 16 bits (2 bytes) | — | 0 to 65,535 | 16-bit Timer Prescaler / ARR counts |
+| `int16_t` | 16 bits (2 bytes) | -32,768 to 32,767 | — | 16-bit ADC values, accelerometer data |
+| `uint32_t` | 32 bits (4 bytes) | — | 0 to 4,294,967,295 | 32-bit ARM Cortex memory addresses & registers |
+| `int32_t` | 32 bits (4 bytes) | -2,147,483,648 to 2,147,483,647 | — | Precision mathematical computations |
+
+```c
+#include <stdint.h>
+
+// Good Practice: Explicit, memory-efficient variable definitions
+uint8_t  device_address = 0x3C;      // Uses exactly 1 byte of RAM
+uint16_t timer_period   = 10000;     // Uses exactly 2 bytes of RAM
+uint32_t peripheral_reg = 0x40020000;// Uses exactly 4 bytes of RAM
+```
+
+---
+
+## 3. Microcontroller Memory Segments: Flash vs. SRAM
+
+A microcontroller partitions its address space into distinct memory regions:
+
+```text
+ 0x0800 0000 +---------------------------------------+
+             | FLASH ROM (Non-Volatile)              |
+             | - Code (.text segment)                |
+             | - Constants / String Literals (.rodata)|
+             | - Reset Vector Table                  |
+ 0x2000 0000 +---------------------------------------+
+             | SRAM (Volatile Working RAM)           |
+             | - Initialized Global Data (.data)     |
+             | - Uninitialized Variables (.bss)      |
+             | - Dynamic Heap (malloc)               |
+             | - Execution Stack (Local vars, ISRs)  |
+             +---------------------------------------+
+```
+
+### Why Static Memory Allocation is Preferred
+In desktop programming, dynamic memory allocation (`malloc` and `free`) is standard. In **safety-critical embedded systems**, dynamic memory is strictly avoided for three reasons:
+1. **Memory Fragmentation:** Repeated allocation and deallocation can leave gaps, causing allocation failures even when total free RAM seems adequate.
+2. **Non-Deterministic Latency:** The execution time of `malloc()` varies depending on heap state, which can violate hard real-time deadlines.
+3. **Memory Leaks:** A small memory leak in an embedded system that runs continuously for months will eventually crash the device.
+
+---
+
+## 4. Bit Manipulation & Bitmasking
+
+Control and status registers in microcontrollers pack multiple binary flags into a single 8-bit, 16-bit, or 32-bit integer. Mastering bitwise operators is essential for firmware engineering:
+
+```text
+ Operation       Operator   Syntax                      Effect on Target Bit (n)
+----------------------------------------------------------------------------------
+ Set Bit            |       REG |= (1 << n);            Forces bit n to 1
+ Clear Bit          & ~     REG &= ~(1 << n);           Forces bit n to 0
+ Toggle Bit         ^       REG ^= (1 << n);            Inverts bit n (0->1, 1->0)
+ Check Bit          &       if (REG & (1 << n))         Evaluates TRUE if bit n is 1
+ Multi-bit Mask     & ~ |   REG = (REG & ~MASK) | VAL   Replaces a field of bits
+```
+
+### Practical C Bit Manipulation Examples
+
+```c
+#include <stdint.h>
+
+#define STATUS_READY_BIT    (0U)
+#define STATUS_ERROR_BIT    (3U)
+#define STATUS_TX_ACTIVE    (7U)
+
+void configure_status(volatile uint8_t *status_reg) {
+    // 1. Set Bit 0 (READY) without altering other bits
+    *status_reg |= (1U << STATUS_READY_BIT);
+
+    // 2. Clear Bit 3 (ERROR) cleanly
+    *status_reg &= ~(1U << STATUS_ERROR_BIT);
+
+    // 3. Toggle Bit 7 (TX_ACTIVE)
+    *status_reg ^= (1U << STATUS_TX_ACTIVE);
+
+    // 4. Test if Bit 0 is set
+    if (*status_reg & (1U << STATUS_READY_BIT)) {
+        // Peripheral is ready
+    }
+}
+```
+
+---
+
+## 5. Interactive Simulation: Decimal to 4-Bit Binary Converter (Wokwi)
+
+In this hands-on project, you will apply the core bitwise theory from Week 2 (`(num >> k) & 1`) to read an integer from the Serial Monitor and display its **4-bit binary representation** on physical LEDs.
+
+### 🛠️ Hardware Circuit Setup
+* **Target Board:** STM32 Nucleo-C031C6 (ARM Cortex-M0+)
+* **4x LEDs:** Connected to digital pins `D2` through `D5` via 220Ω current-limiting resistors.
+* **Ground:** All LED cathodes connected to board `GND`.
+
+| LED Indicator | Pin Function | STM32 Pin | Bit Weight | Numerical Value |
+| :--- | :--- | :--- | :---: | :---: |
+| **LED 1 (Yellow)** | Bit 0 (LSB) | `D2` | $2^0$ | 1 |
+| **LED 2 (Blue)** | Bit 1 | `D3` | $2^1$ | 2 |
+| **LED 3 (Green)** | Bit 2 | `D4` | $2^2$ | 4 |
+| **LED 4 (Red)** | Bit 3 (MSB) | `D5` | $2^3$ | 8 |
+
+Click the green **Play** button inside the simulation window, open the **Serial Monitor** tab below the simulator, type any number between **0 and 15**, and press Enter:
+
+::: {.simulation-container}
+<iframe 
+  src="https://wokwi.com/projects/478739120334264321?embed=1" 
+  title="STM32 Nucleo Decimal to 4-Bit Binary Converter"
+  loading="lazy"
+  allowfullscreen>
+</iframe>
+<div class="sim-info-bar">
+  <span><strong>Target Board:</strong> STM32 Nucleo-C031C6</span>
+  <span>Click Play, then enter 0–15 in the Serial Monitor tab</span>
+</div>
 :::
 
-[← Back to Main Page](index.qmd){.btn .btn-outline-secondary .mt-4}
+---
+
+## 6. Implementation Code: Arduino Framework vs. Bare-Metal Embedded C
+
+Compare the high-level framework code running in the simulation with the equivalent **Bare-Metal Embedded C** implementation directly programming the microcontroller's hardware registers:
+
+::: {.panel-tabset}
+
+### 🔷 High-Level Framework (Running in Simulation)
+
+```cpp
+// ============================================================================
+// Decimal to 4-Bit Binary Converter (High-Level Framework)
+// ============================================================================
+
+#define LED_BIT_0 2  // LSB (Least Significant Bit) - Pin D2
+#define LED_BIT_1 3  // Pin D3
+#define LED_BIT_2 4  // Pin D4
+#define LED_BIT_3 5  // MSB (Most Significant Bit) - Pin D5
+
+void setup() {
+  Serial.begin(115200);
+  
+  // Configure all 4 pins as digital outputs
+  pinMode(LED_BIT_0, OUTPUT);
+  pinMode(LED_BIT_1, OUTPUT);
+  pinMode(LED_BIT_2, OUTPUT);
+  pinMode(LED_BIT_3, OUTPUT);
+  
+  Serial.println("--- Decimal to Binary Converter ---");
+  Serial.println("Enter a number between 0 and 15:");
+}
+
+void loop() {
+  // Check if user input is available on the UART Serial port
+  if (Serial.available() > 0) {
+    int num = Serial.parseInt();
+    
+    // Clear newline and carriage-return characters from the buffer
+    while (Serial.available() > 0) { 
+      Serial.read(); 
+    }
+    
+    // Validate numerical range (4 bits = 0 to 15)
+    if (num >= 0 && num <= 15) {
+      Serial.print("Received: ");
+      Serial.print(num);
+      Serial.println(" -> Updating LEDs...");
+      
+      // Extract each bit using right-shift (>>) and bitwise AND (&)
+      // Formula: (num >> k) & 1 extracts the k-th bit (0 or 1)
+      digitalWrite(LED_BIT_0, (num >> 0) & 1); 
+      digitalWrite(LED_BIT_1, (num >> 1) & 1);
+      digitalWrite(LED_BIT_2, (num >> 2) & 1);
+      digitalWrite(LED_BIT_3, (num >> 3) & 1);
+      
+    } else {
+      Serial.println("Error: Number must be between 0 and 15!");
+    }
+  }
+}
+```
+
+---
+
+### 🔶 Equivalent Bare-Metal Embedded C (Direct Register Manipulation)
+
+```c
+// ============================================================================
+// Decimal to 4-Bit Binary Converter (Bare-Metal STM32 Embedded C)
+// Direct hardware register access without framework or library overhead
+// ============================================================================
+
+#include <stdint.h>
+
+// 1. STM32 Peripheral Register Base Addresses
+#define RCC_BASE            (0x40021000UL)
+#define RCC_IOPENR_REG      (*(volatile uint32_t *)(RCC_BASE + 0x34UL))
+
+#define GPIOA_BASE          (0x50000000UL)
+#define GPIOA_MODER_REG     (*(volatile uint32_t *)(GPIOA_BASE + 0x00UL))
+#define GPIOA_ODR_REG       (*(volatile uint32_t *)(GPIOA_BASE + 0x14UL))
+#define GPIOA_BSRR_REG      (*(volatile uint32_t *)(GPIOA_BASE + 0x18UL))
+
+// 2. Pin Mapping (Pins PA0, PA1, PA4, PA5 assigned to 4 bits)
+#define LED0_PIN            (0U) // LSB
+#define LED1_PIN            (1U)
+#define LED2_PIN            (4U)
+#define LED3_PIN            (5U) // MSB
+
+static const uint8_t led_pins[4] = {LED0_PIN, LED1_PIN, LED2_PIN, LED3_PIN};
+
+/**
+ * @brief Initialize GPIO Port A clocks and configure pins as push-pull outputs
+ */
+void gpio_init(void) {
+    // Enable GPIO Port A peripheral clock (Bit 0 in RCC_IOPENR)
+    RCC_IOPENR_REG |= (1U << 0);
+
+    // Configure all 4 pins as General Purpose Output mode ('01' in MODER)
+    for (uint8_t i = 0; i < 4; i++) {
+        uint8_t pin = led_pins[i];
+        GPIOA_MODER_REG &= ~(3UL << (pin * 2)); // Clear 2-bit mode field
+        GPIOA_MODER_REG |=  (1UL << (pin * 2)); // Set '01' (Output)
+    }
+}
+
+/**
+ * @brief Output a 4-bit integer to physical LEDs atomically via BSRR register
+ * @param num Decimal integer between 0 and 15
+ */
+void display_binary_baremetal(uint8_t num) {
+    for (uint8_t k = 0; k < 4; k++) {
+        uint8_t pin = led_pins[k];
+        
+        // Extract k-th bit using right-shift and bitwise AND
+        if ((num >> k) & 1U) {
+            // Bit is 1: Set pin HIGH (Write to lower 16 bits of BSRR)
+            GPIOA_BSRR_REG = (1UL << pin);
+        } else {
+            // Bit is 0: Reset pin LOW (Write to upper 16 bits of BSRR)
+            GPIOA_BSRR_REG = (1UL << (pin + 16U));
+        }
+    }
+}
+
+int main(void) {
+    gpio_init();
+
+    // Demonstration loop: Counting 0 to 15 in binary
+    while (1) {
+        for (uint8_t count = 0; count <= 15; count++) {
+            display_binary_baremetal(count);
+            
+            // Deterministic software delay loop
+            for (volatile uint32_t delay = 0; delay < 250000; delay++);
+        }
+    }
+
+    return 0;
+}
+```
+
+:::
+
+### Architecture Comparison: High-Level vs. Bare-Metal
+
+| Metric | High-Level Framework API | Bare-Metal Embedded C |
+| :--- | :--- | :--- |
+| **Underlying Mechanism** | `digitalWrite()` branches through pin-mapping lookup tables (~40–60 CPU cycles per call) | Direct atomic write to `BSRR` register in a single machine instruction (1 CPU cycle) |
+| **Flash ROM Footprint** | ~3.8 KB (includes runtime framework, timer interrupts, serial buffering) | ~220 Bytes (pure machine code, zero library bloat) |
+| **SRAM Consumption** | ~180 Bytes (allocated dynamic buffers and struct states) | 0 Bytes dynamic RAM (registers mapped directly in hardware memory space) |
+| **Real-Time Determinism** | Variable latency due to framework interrupt servicing | 100% deterministic, cycle-accurate timing |
+
+---
+
+## 7. Important Exam Practice Questions
+
+### Question 1: Significance of `stdint.h` in Embedded C
+
+::: {.callout-note collapse="true"}
+## Click to View Question & Options
+
+Why is the `<stdint.h>` header considered essential in embedded firmware development?
+
+**Options:**  
+- **A)** It automatically optimizes recursive functions  
+- **B)** It provides exact, fixed-width integer types (`uint8_t`, `uint16_t`, `uint32_t`) ensuring consistent data sizes across different processor architectures  
+- **C)** It contains math libraries for calculating trigonometric functions  
+- **D)** It enables dynamic memory allocation in RAM  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: B
+**Explanation:**  
+Embedded microcontrollers have different native word sizes (8-bit, 16-bit, 32-bit). Using `<stdint.h>` guarantees that a `uint8_t` is always 8 bits and a `uint32_t` is always 32 bits, preventing data corruption and memory overflow when accessing hardware registers.
+:::
+:::
+
+---
+
+### Question 2: Clearing a Specific Bit in a Register
+
+::: {.callout-note collapse="true"}
+## Click to View Question & Options
+
+Which bitwise expression correctly clears (sets to 0) bit 4 of an 8-bit register `REG` without altering any other bits?
+
+**Options:**  
+- **A)** `REG |= (1 << 4);`  
+- **B)** `REG &= ~(1 << 4);`  
+- **C)** `REG ^= (1 << 4);`  
+- **D)** `REG = (1 << 4);`  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: B
+**Explanation:**  
+`1 << 4` creates a bitmask `00010000`. Inverting it with `~` yields `11101111`. Bitwise ANDing (`&=`) with this mask forces bit 4 to 0 while leaving all other bits unchanged because `X & 1 = X`.
+:::
+:::
+
+---
+
+### Question 3: Dynamic Memory in Safety-Critical Firmware
+
+::: {.callout-note collapse="true"}
+## Click to View Question & Options
+
+Why is dynamic memory allocation (`malloc`/`free`) generally avoided in safety-critical real-time embedded systems?
+
+**Options:**  
+- **A)** Dynamic memory cannot be written to by C pointers  
+- **B)** It can lead to heap fragmentation, memory leaks, and non-deterministic execution times that jeopardize real-time deadlines  
+- **C)** Dynamic memory is stored in Flash ROM and cannot be rewritten  
+- **D)** C compilers do not support pointers in embedded mode  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: B
+**Explanation:**  
+`malloc` relies on heap management, which has unpredictable search times (violating real-time determinism) and causes fragmentation over extended runtime, potentially leading to allocation crashes.
+:::
+:::
+
+---
+
+### Question 4: Flash ROM vs. SRAM Characteristics
+
+::: {.callout-note collapse="true"}
+## Click to View Question & Options
+
+In a typical microcontroller architecture, what is stored in Flash ROM versus SRAM?
+
+**Options:**  
+- **A)** Flash ROM stores the stack; SRAM stores the compiled program code  
+- **B)** Flash ROM stores non-volatile program instructions and constant data; SRAM stores runtime variables and the stack/heap  
+- **C)** Flash ROM loses all contents when power is turned off; SRAM retains data permanently  
+- **D)** Both Flash ROM and SRAM are identical volatile memory spaces  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: B
+**Explanation:**  
+Flash memory is non-volatile and holds the program machine code (`.text`) and constants (`.rodata`). SRAM is volatile and holds active runtime data, global variables (`.data`, `.bss`), function call frames, and the stack.
+:::
+:::
+
+---
+
+<div class="d-flex justify-content-between mt-4">
+  <a href="Week-1.qmd" class="seek-prev-btn">← Back to Week 1</a>
+  <a href="Week-3.qmd" class="seek-next-btn">NEXT: Week 3 — Intermediate STM32 Programming →</a>
+</div>

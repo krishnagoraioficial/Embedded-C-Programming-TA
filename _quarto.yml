@@ -3,9 +3,9 @@ project:
   output-dir: _site
 
 website:
-  title: "ECP [CS2101]"
-  description: "Embedded C Programming - IIT Madras BS Degree in Electronic Systems"
-  search: true # search bar at the top of the sidebar
+  title: "CS2101: Embedded C"
+  description: "Embedded C Programming — IIT Madras Online Degree"
+  search: true
 
   sidebar:
     style: "docked"
@@ -52,12 +52,10 @@ website:
 
 format:
   html:
-    # Right Sidebar / Table of Contents
     toc: true
     toc-location: right
     toc-title: "On this page"
 
-    # Dark / Light Mode Toggle matching CS3031
     theme:
       light: cosmo
       dark: superhero
