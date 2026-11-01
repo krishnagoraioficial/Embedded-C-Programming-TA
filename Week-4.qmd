@@ -1,0 +1,14 @@
+---
+title: "Week 4: Advanced Peripheral Interfacing"
+---
+
+## Overview
+
+Hardware Timers, Prescaler & Auto-Reload, PWM generation, Interrupts & NVIC priority, ADC conversion.
+
+::: {.callout-tip}
+### 📌 Coming Up
+This module is part of the CS2101 syllabus outline. Detailed lecture notes, integrated interactive simulations, and question banks will be added here.
+:::
+
+[← Back to Main Page](index.qmd){.btn .btn-outline-secondary .mt-4}

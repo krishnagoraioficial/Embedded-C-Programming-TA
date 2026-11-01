@@ -1,0 +1,14 @@
+---
+title: "Week 6: Advanced Peripheral Interfacing II"
+---
+
+## Overview
+
+Direct Memory Access (DMA), Digital-to-Analog Converters (DAC), Independent & Window Watchdog timers.
+
+::: {.callout-tip}
+### 📌 Coming Up
+This module is part of the CS2101 syllabus outline. Detailed lecture notes, integrated interactive simulations, and question banks will be added here.
+:::
+
+[← Back to Main Page](index.qmd){.btn .btn-outline-secondary .mt-4}

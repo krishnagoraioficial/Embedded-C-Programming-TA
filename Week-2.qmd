@@ -1,0 +1,14 @@
+---
+title: "Week 2: Basics of Embedded C Programming"
+---
+
+## Overview
+
+Bitwise operations, bit masking, shifts, volatile keyword, pointer manipulation for memory-mapped I/O, bitfields.
+
+::: {.callout-tip}
+### 📌 Coming Up
+This module is part of the CS2101 syllabus outline. Detailed lecture notes, integrated interactive simulations, and question banks will be added here.
+:::
+
+[← Back to Main Page](index.qmd){.btn .btn-outline-secondary .mt-4}

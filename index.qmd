@@ -1,0 +1,72 @@
+---
+title: "Embedded C Programming"
+---
+
+| Field | Detail |
+| :--- | :--- |
+| **Course Code** | CS2101 |
+| **Course Name** | Embedded C Programming |
+| **Course Link** | [IIT Madras CS2101 Portal](https://study.iitm.ac.in/es/course_pages/CS2101.html) |
+| **Pre-requisites** | CS1101 — Introduction to C Programming |
+| **Co-requisites** | None |
+| **Course Credits** | 4 Credits (Foundation Level) |
+| **Program** | BS Degree in Electronic Systems, IIT Madras |
+
+---
+
+## Faculty
+
+### Prof. Nitin Chandrachoodan
+**Professor**  
+Department of Electrical Engineering  
+Indian Institute of Technology Madras  
+
+Prof. Nitin Chandrachoodan received his B.Tech in Electronics and Communication Engineering from IIT Madras in 1996, and his Ph.D. from the University of Maryland at College Park in 2002 in the area of high-level synthesis techniques for mapping DSP algorithms to architectures. He has been with the Department of Electrical Engineering at IIT Madras since 2004.
+
+His research interests include digital systems design, design automation tools and techniques, and embedded systems design with a special focus on assistive technologies.
+
+- 🌐 **Website:** [http://www.ee.iitm.ac.in/~nitin/](http://www.ee.iitm.ac.in/~nitin/)
+- 📺 **Official Course Videos:** [NPTEL / IIT Madras Playlist](https://www.youtube.com/playlist?list=PLUQpHm_JtukII_8U9pucV61MX2YE2CSUt)
+
+---
+
+## What You'll Learn
+
+This course addresses the use of microcontrollers ($\mu\text{Cs}$) to implement modern embedded systems. At the end of this course, you will be able to:
+
+1. **Architectural Selection:** Identify and distinguish types of microcontrollers, their bus architectures, memory organizations, and make informed engineering selection decisions.
+2. **Firmware Engineering:** Write, compile, execute, test, and debug low-level Embedded C programs on generic microcontroller targets.
+3. **Peripheral Interfacing:** Understand hardware interfacing of on-chip and external peripherals (GPIO, Timers, PWM, ADC, UART, SPI, I2C) and construct reliable embedded systems.
+
+---
+
+## Course Structure & Syllabus
+
+| Week | Topic | Key Focus Areas | Status |
+| :---: | :--- | :--- | :---: |
+| **[Week 1](Week-1.qmd)** | **Introduction to Embedded Systems & Microcontrollers** | MCU vs MPU, Real-Time constraints, Von Neumann vs Harvard, ARM Cortex families | [Open Notes & Sim →](Week-1.qmd) |
+| **[Week 2](Week-2.qmd)** | **Basics of Embedded C Programming** | Bitwise operators, Bitmasking, `volatile`, Memory-mapped I/O, Register pointers | Available |
+| **[Week 3](Week-3.qmd)** | **Intermediate STM32 Programming & Architecture** | ARM Cortex-M architecture, Bus matrix (AHB/APB), RCC clock gating, GPIO registers | Available |
+| **[Week 4](Week-4.qmd)** | **Advanced Peripheral Interfacing** | Hardware Timers, Prescaler, Auto-reload, PWM generation, NVIC & Interrupts, ADC | Available |
+| **Week 5** | Digital Communication Protocols | Serial communication, UART protocol, SPI bus, I2C two-wire interface | Upcoming |
+| **Week 6** | Advanced Peripheral Interfacing II | Direct Memory Access (DMA), Digital-to-Analog Converters (DAC), Watchdogs | Upcoming |
+| **Week 7** | Practice and Problem Solving | Consolidated problem sets, timing calculations, debugging scenarios | Upcoming |
+| **Week 8** | Embedded Software Design Patterns | Superloop vs Event-driven architectures, Finite State Machines (FSM) | Upcoming |
+| **Week 9** | Introduction to RTOS | Real-Time Operating Systems concepts, FreeRTOS tasks, Queues, Semaphores | Upcoming |
+| **Week 10** | Advanced Embedded C Concepts | Memory layout (Flash/SRAM, `.data`, `.bss`, stack/heap), Linker scripts, Optimization | Upcoming |
+| **Week 11** | Development Tools & Debugging | JTAG/SWD, OpenOCD, GDB debugging, Logic analyzers, In-circuit emulation | Upcoming |
+| **Week 12** | Safety, Ethics & Professional Practices | MISRA-C rules, Defensive programming, Fail-safe design, Fault tolerance | Upcoming |
+
+---
+
+## How to Use This Portal
+
+- **Weekly Notes:** Clear, structured summaries of each lecture topic with architectural diagrams, register breakdowns, and C code snippets.
+- **Embedded Simulations:** Interactive simulation tools (CircuitVerse logic/interfacing, Wokwi microcontroller playground, and register calculators) embedded directly within each week's page.
+- **Integrated Concept Checks:** Graded and practice assignment questions are integrated directly alongside their relevant concepts with collapsible explanations and video lecture timestamps.
+
+---
+
+::: {.d-flex .justify-content-end .mt-4}
+[Next: Week-1 Introduction & Microcontrollers →](Week-1.qmd){.btn .btn-primary}
+:::

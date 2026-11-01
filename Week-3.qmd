@@ -1,0 +1,14 @@
+---
+title: "Week 3: Intermediate STM32 Programming and Architecture"
+---
+
+## Overview
+
+ARM Cortex-M core, bus architecture (AHB/APB), clock gating via RCC, GPIO configuration (MODER, ODR, IDR, BSRR).
+
+::: {.callout-tip}
+### 📌 Coming Up
+This module is part of the CS2101 syllabus outline. Detailed lecture notes, integrated interactive simulations, and question banks will be added here.
+:::
+
+[← Back to Main Page](index.qmd){.btn .btn-outline-secondary .mt-4}

@@ -1,0 +1,296 @@
+---
+title: "Week 1: Introduction to Embedded Systems and Microcontrollers"
+---
+
+## 1. Overview & Core Concepts
+
+An **embedded system** is a specialized computer system designed to perform a dedicated function—or a small number of dedicated functions—often with real-time computing constraints, tightly integrated within a larger mechanical or electrical system.
+
+Unlike general-purpose personal computers (designed for open-ended multitasking, browsing, office productivity, and gaming), embedded systems are engineered for **deterministic behavior, power efficiency, reliability, and cost-effectiveness**.
+
+```
++-------------------------------------------------------------+
+|                      EMBEDDED SYSTEM                        |
+|                                                             |
+|   +----------------+      +---------------+                 |
+|   | Input Sensors  | ---> | Microcontroller| ---> Actuators |
+|   | Switches / ADC |      | (CPU+RAM+ROM) |      LEDs/Motors|
+|   +----------------+      +---------------+                 |
+|                                   |                         |
+|                         [Firmware in Flash]                 |
++-------------------------------------------------------------+
+```
+
+### Key Engineering Constraints
+Embedded system designers operate within stringent constraints:
+- **Real-Time Deadlines:** 
+  - *Hard Real-Time:* Missing a deadline results in total system failure (e.g., automotive airbag deployment, cardiac pacemaker).
+  - *Soft Real-Time:* Missing a deadline degrades performance or user experience but does not cause catastrophic failure (e.g., video streaming buffering, smartwatch step counter).
+  - *Firm Real-Time:* Infrequent deadline misses are tolerable, but late results have zero utility.
+- **Power Consumption:** Many devices operate on coin-cell batteries or energy harvesting for years (e.g., wireless sensor nodes, asset trackers).
+- **Memory Footprint:** Typically restricted to kilobytes of RAM and Flash memory compared to gigabytes on desktop computers.
+- **Cost & Form Factor:** In high-volume consumer products, shaving fractions of a cent per MCU matters significantly.
+
+---
+
+## 2. Microcontroller (MCU) vs. Microprocessor (MPU)
+
+One of the foundational architectural decisions in hardware design is choosing between an **MCU** and an **MPU**.
+
+| Attribute | Microcontroller (MCU) | Microprocessor (MPU) |
+| :--- | :--- | :--- |
+| **Core Architecture** | **All-in-One Chip:** CPU, Flash ROM, SRAM, and on-chip peripherals (Timers, ADC, UART, SPI, GPIO) integrated on a single silicon die. | **Compute Engine Only:** Standalone CPU core requiring external RAM (DDR), Flash memory (NAND/eMMC), and power management ICs (PMIC). |
+| **Primary Objective** | Fast, deterministic real-time control; compact, low-cost integration. | High computational throughput; running heavy multi-user Operating Systems (Linux, Windows, Android). |
+| **Power Consumption** | **Ultra-Low:** Micro-amps ($\mu\text{A}$) in sleep modes; runs on batteries. | **Moderate to High:** Watts to tens of Watts; often requires heatsinks or fans. |
+| **Clock Frequencies** | Typ. 8 MHz – 480 MHz (e.g., ARM Cortex-M, MSP430, AVR). | Typ. 1 GHz – 3.5+ GHz (e.g., ARM Cortex-A, Intel x86, AMD). |
+| **Firmware / OS** | Bare-metal C or lightweight Real-Time OS (FreeRTOS, Zephyr). | Full OS with virtual memory management unit (MMU). |
+| **Cost & Complexity** | Low cost ($0.50 – $5.00); 2-layer to 4-layer PCB design. | Higher cost ($15 – $100+); requires high-density 6+ layer high-speed PCB. |
+
+```
+ MICROCONTROLLER (MCU)              MICROPROCESSOR SYSTEM (MPU)
++-------------------------+        +-----------+    +---------------+
+| Single Silicon Die      |        | MPU (CPU) |<-->| External DRAM |
+|  [CPU Core]             |        +-----------+    +---------------+
+|  [SRAM]     [Flash ROM] |              |
+|  [Timers]   [GPIO Ports]|              v
+|  [ADC/DAC]  [UART/SPI]  |        +--------------------------------+
++-------------------------+        | External Peripherals, Flash... |
+                                   +--------------------------------+
+```
+
+---
+
+## 3. Computer Architectures & Memory Organization
+
+### Von Neumann vs. Harvard Architecture
+
+1. **Von Neumann Architecture:**
+   - Uses a **single shared bus** and common memory space for both program instructions and data.
+   - *Limitation:* **Von Neumann Bottleneck**—the CPU cannot read an instruction and read/write data simultaneously.
+2. **Harvard Architecture (Used in Modern MCUs):**
+   - Features **physically separate memory spaces and distinct buses** for instructions (I-Bus) and data (D-Bus).
+   - Allows the CPU to fetch the next instruction from Flash memory while concurrently reading or writing operand data to SRAM, significantly boosting instruction throughput.
+   - Most modern microcontrollers (e.g., ARM Cortex-M) implement a Modified Harvard Architecture.
+
+### Instruction Set Architecture (ISA) & Word Size
+
+The **Instruction Set Architecture (ISA)** is the abstract boundary between hardware and software—the complete specification of native machine instructions, register sets, addressing modes, and data types supported by the processor.
+
+- **8-Bit Processors (e.g., Microchip PIC, Atmel AVR ATmega328P, Intel 8051):**
+  - Process data in 8-bit chunks. Excellent for basic digital switching and ultra-low-cost sensor reading.
+  - Less suitable for floating-point calculations, DSP, or complex mathematical algorithms due to multiple instruction cycles needed for 32-bit math.
+- **16-Bit Processors (e.g., Texas Instruments MSP430):**
+  - Known for world-class ultra-low-power standby modes and flexible clocking schemes, widely used in battery-operated metering.
+- **32-Bit Processors (e.g., ARM Cortex-M, ESP32):**
+  - High performance, single-cycle 32-bit arithmetic, hardware divide, and large 4 GB address space.
+  - **ESP32:** Popular dual-core Xtensa/RISC-V 32-bit MCU with integrated Wi-Fi and Bluetooth stacks.
+  - **ARM Cortex-M Series:** The global industry standard for embedded systems.
+
+### The ARM Cortex Portfolio
+
+ARM designs IP processor cores and licenses them to silicon vendors (STMicroelectronics, NXP, Microchip, TI, Silicon Labs):
+
+- **Cortex-A (Application):** High-performance cores with MMU for rich operating systems like Linux and Android (e.g., smartphones, Raspberry Pi 4).
+- **Cortex-R (Real-Time):** High-reliability, fault-tolerant cores with hard real-time determinism (e.g., automotive braking, aircraft avionics).
+- **Cortex-M (Microcontroller):** Deterministic, low-latency, energy-efficient cores optimized for microcontrollers (e.g., Cortex-M0+, M3, M4 with FPU, M7).
+
+---
+
+## 4. Interactive Simulation: Microcontroller Running C Code
+
+Below is an interactive live simulation of an **Embedded C program executing on a microcontroller** directly in your browser.
+
+You can click **Play** (green start button), inspect the C source code, click the pushbutton on the virtual board to trigger digital input, and observe the LED and serial terminal output in real time.
+
+::: {.simulation-card}
+::: {.simulation-header}
+#### 🔬 Live Interactive Simulation: Microcontroller GPIO & C Firmware
+<span class="sim-badge">Interactive WebAssembly</span>
+:::
+
+::: {.simulation-iframe-wrapper}
+<iframe 
+  id="course-simulation-frame"
+  src="https://wokwi.com/projects/382029749508390913?embed=1" 
+  title="Interactive Embedded C Simulation"
+  allow="fullscreen">
+</iframe>
+:::
+
+::: {.sim-instructions}
+**🛠️ How to Swap or Customize This Simulation:**
+
+To replace this simulation with your own **CircuitVerse** or **Wokwi** project:
+1. Open this file (`Week-1.qmd`) in your editor.
+2. Locate the `<iframe ...>` tag above.
+3. Update the `src` attribute with your project's embed URL:
+   - For **CircuitVerse:**  
+     `src="https://circuitverse.org/users/<YOUR_USER_ID>/projects/<PROJECT_NAME>/simulator/embed?theme=default&display_title=true&fullscreen=true"`
+   - For **Wokwi:**  
+     `src="https://wokwi.com/projects/<PROJECT_ID>?embed=1"`
+4. Re-render with `quarto render` or refresh `quarto preview`.
+:::
+:::
+
+---
+
+## 5. Concept Checks & Exam Practice
+
+These questions are selected directly from your weekly **Activity Questions (AQ 1.1–1.3)**, **Practice Assignments (PA-1)**, and **Graded Assignments (GA-1)** to test your understanding of Week 1 concepts.
+
+### Concept Check 1: Embedded Systems Characteristics
+
+::: {.callout-note collapse="true"}
+## 📝 Question 1: What is an embedded system? *(AQ 1.1 / GA-1)*
+
+**Options:**  
+- **A)** A general-purpose computer for running multiple software applications  
+- **B)** A web-based application for remote access  
+- **C)** A computer system designed to perform a dedicated function within a larger system  
+- **D)** A type of gaming software for embedded controllers  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: C
+**Explanation:**  
+An embedded system is a computer system engineered to perform a specific dedicated task inside a machine or larger electrical/mechanical apparatus. Unlike general-purpose computers, it does not run arbitrary end-user applications.  
+📺 *Lecture Reference:* [IITM NPTEL Video Reference](https://youtu.be/3cqu_xnuPnw?t=96)
+:::
+:::
+
+::: {.callout-note collapse="true"}
+## 📝 Question 2: What is meant by real-time operation in embedded systems? *(AQ 1.1)*
+
+**Options:**  
+- **A)** Operating without any errors  
+- **B)** Completing operations within a predictable and specified time window  
+- **C)** Running indefinitely without power interruptions  
+- **D)** Operating at the highest possible clock speed  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: B
+**Explanation:**  
+Real-time does not necessarily mean "infinitely fast"; it means **deterministic**. The correctness of a computation depends not only on the logical correctness of the output but also on the **time at which the result is produced** before a strict deadline.
+:::
+:::
+
+::: {.callout-note collapse="true"}
+## 📝 Question 3: Which type of memory typically stores the firmware? *(GA-1)*
+
+**Options:**  
+- **A)** Volatile SRAM  
+- **B)** Non-volatile ROM / Flash Memory  
+- **C)** Cache Memory  
+- **D)** DRAM  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: B
+**Explanation:**  
+Firmware must persist when power is removed. Therefore, it is written to non-volatile memory (typically on-chip Flash memory or mask ROM) and read by the CPU upon reset.
+:::
+:::
+
+---
+
+### Concept Check 2: MCU vs. MPU Architecture
+
+::: {.callout-note collapse="true"}
+## 📝 Question 4: Primary architectural difference between an MCU and an MPU? *(AQ 1.2 / GA-1)*
+
+**Options:**  
+- **A)** Microprocessors have more on-chip peripherals integrated than microcontrollers  
+- **B)** Microcontrollers integrate CPU, memory, and peripherals on a single chip, while microprocessors require external support circuitry  
+- **C)** Microcontrollers cannot perform arithmetic computations  
+- **D)** Microprocessors only operate with analog signals  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: B
+**Explanation:**  
+A Microcontroller (MCU) is a self-contained "computer on a chip" incorporating the processing core, SRAM data memory, Flash program memory, and standard peripherals (GPIO, Timers, ADC, UART). An MPU only contains the CPU core and depends on external memory and peripheral chips connected over a high-speed system bus.
+:::
+:::
+
+::: {.callout-note collapse="true"}
+## 📝 Question 5: When would you choose an MCU over an MPU? *(GA-1 / PA-1)*
+
+**Options:**  
+- **A)** When designing a high-end AI video processing server  
+- **B)** When the system requires multi-gigabyte DDR4 memory  
+- **C)** To minimize board size, bill of materials (BOM) cost, and power consumption for dedicated control  
+- **D)** When running a full desktop Linux distribution with multiple displays  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: C
+**Explanation:**  
+MCUs are ideal for compact, battery-friendly, cost-sensitive control tasks where low power, small form factor, and deterministic hardware response are required.
+:::
+:::
+
+---
+
+### Concept Check 3: Processor Architectures & ARM Ecosystem
+
+::: {.callout-note collapse="true"}
+## 📝 Question 6: What does Instruction Set Architecture (ISA) refer to? *(AQ 1.3)*
+
+**Options:**  
+- **A)** The physical silicon packaging of the integrated circuit  
+- **B)** The set of native machine instructions and registers a processor can execute  
+- **C)** The clock frequency generated by the external crystal oscillator  
+- **D)** The printed circuit board trace width  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: B
+**Explanation:**  
+ISA defines the programmer's view of the processor: the available registers, supported data types, addressing modes, and the binary instruction set (e.g., ARMv7-M, RISC-V RV32I, AVR).
+:::
+:::
+
+::: {.callout-note collapse="true"}
+## 📝 Question 7: Which ARM Cortex family targets microcontrollers? *(AQ 1.3)*
+
+**Options:**  
+- **A)** ARM Cortex-A  
+- **B)** ARM Cortex-R  
+- **C)** ARM Cortex-M  
+- **D)** ARM SecurCore  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: C
+**Explanation:**  
+The **ARM Cortex-M** family (M0, M0+, M3, M4, M7, M33) is engineered specifically for deeply embedded microcontroller applications requiring deterministic real-time interrupt handling (NVIC), low gate count, and minimal power consumption.
+:::
+:::
+
+::: {.callout-note collapse="true"}
+## 📝 Question 8: Notable feature of the Texas Instruments MSP430? *(AQ 1.3 / PA-1)*
+
+**Options:**  
+- **A)** Running high-performance 3D graphics  
+- **B)** World-class ultra-low power consumption for battery-operated sensing  
+- **C)** Native support for 64-bit vector math  
+- **D)** Integrated dual-band 5 GHz Wi-Fi  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: B
+**Explanation:**  
+The TI MSP430 is a 16-bit RISC microcontroller architecture famous for its micro-amp active and nano-amp deep-sleep modes, making it the industry benchmark for ultra-low power devices.
+:::
+:::
+
+---
+
+## 6. Summary Checklist for Week 1
+
+Before moving to Week 2, ensure you can:
+- [x] Clearly define an embedded system and identify real-world examples.
+- [x] Differentiate between hard, soft, and firm real-time computing constraints.
+- [x] Explain the fundamental trade-offs between Microcontrollers (MCU) and Microprocessors (MPU).
+- [x] Describe why Harvard architecture avoids the Von Neumann memory access bottleneck.
+- [x] Identify the three branches of the ARM Cortex family (A, R, and M) and their application domains.
+
+---
+
+::: {.d-flex .justify-content-between .mt-4}
+[← Back to About Course](index.qmd){.btn .btn-outline-secondary}
+[Next: Week-2 Basics of Embedded C →](Week-2.qmd){.btn .btn-primary}
+:::

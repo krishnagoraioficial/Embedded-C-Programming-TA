@@ -1,0 +1,14 @@
+---
+title: "Week 11: Development Tools and Debugging Techniques"
+---
+
+## Overview
+
+In-circuit debuggers, JTAG & SWD interfaces, OpenOCD, GDB debugging techniques, Logic analyzers.
+
+::: {.callout-tip}
+### 📌 Coming Up
+This module is part of the CS2101 syllabus outline. Detailed lecture notes, integrated interactive simulations, and question banks will be added here.
+:::
+
+[← Back to Main Page](index.qmd){.btn .btn-outline-secondary .mt-4}
