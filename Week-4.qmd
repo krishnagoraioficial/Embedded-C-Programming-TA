@@ -153,8 +153,8 @@ ADC Input: 1023 | PWM Output (Duty Cycle): 255
 
 ::: {.simulation-container}
 <iframe 
-  src="https://wokwi.com/projects/479375564575416321?embed=1" 
-  title="STM32 Nucleo Smart Dimmer (ADC to PWM)"
+  src="https://wokwi.com/projects/479332809517014017?embed=1" 
+  title="STM32 Nucleo Smart LED Dimmer (ADC to PWM)"
   loading="lazy"
   allowfullscreen>
 </iframe>
