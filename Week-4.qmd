@@ -153,8 +153,8 @@ ADC Input: 1023 | PWM Output (Duty Cycle): 255
 
 ::: {.simulation-container}
 <iframe 
-  src="https://wokwi.com/projects/375659283936335873?embed=1" 
-  title="STM32 Nucleo ADC to PWM Smart Dimmer"
+  src="https://wokwi.com/projects/479375564575416321?embed=1" 
+  title="STM32 Nucleo Smart Dimmer (ADC to PWM)"
   loading="lazy"
   allowfullscreen>
 </iframe>
@@ -172,43 +172,50 @@ ADC Input: 1023 | PWM Output (Duty Cycle): 255
 
 ```cpp
 // ============================================================================
-// Mini-Project 1: Smart LED Dimmer (ADC to PWM Mapping)
+// Mini-Project 1: The Smart Dimmer Challenge (ADC to PWM)
 // ============================================================================
 
-#define POT_PIN A0   // Potentiometer wiper connected to Analog Pin A0
-#define LED_PIN D3   // Blue LED connected to PWM capable Pin D3
+// We connect the potentiometer (knob) to this analog pin
+#define knobPin A0
+
+// We connect the LED to this pin because it has PWM (dimming) support
+#define ledPin 3 
 
 void setup() {
-  // Start UART Serial communication at 115200 baud
+  // Start the serial monitor so we can see the values on our screen
   Serial.begin(115200);
-
-  // Configure pin modes
-  pinMode(POT_PIN, INPUT);
-  pinMode(LED_PIN, OUTPUT);
-
-  // Set ADC resolution to 10-bit (0 to 1023)
-  analogReadResolution(10);
-
-  Serial.println("--- ADC to PWM Dimmer Started ---");
+  
+  // Tell the board how we are using these pins
+  pinMode(knobPin, INPUT);
+  pinMode(ledPin, OUTPUT);
+  
+  // Set the ADC to 10-bit mode, which gives us readings from 0 to 1023
+  analogReadResolution(10); 
+  
+  Serial.println("--- Smart Dimmer is Ready ---");
 }
 
 void loop() {
-  // 1. Read the 10-bit raw analog value (0 - 1023)
-  int rawADC = analogRead(POT_PIN);
-
-  // 2. Map 10-bit ADC range (0 - 1023) to 8-bit PWM duty cycle (0 - 255)
-  int pwmDuty = map(rawADC, 0, 1023, 0, 255);
-
-  // 3. Output continuous PWM signal to control LED brightness
-  analogWrite(LED_PIN, pwmDuty);
-
-  // 4. Print telemetry to UART Serial Monitor
-  Serial.print("ADC Input: ");
-  Serial.print(rawADC);
-  Serial.print(" | PWM Output (Duty Cycle): ");
-  Serial.println(pwmDuty);
-
-  delay(50); // Small telemetry update delay
+  // Step 1: Read the current position of the knob
+  // Since it is 10-bit, this will be a number between 0 and 1023
+  int knobReading = analogRead(knobPin);
+  
+  // Step 2: Convert the knob reading to an LED brightness level
+  // The knob goes from 0-1023, but the LED PWM only accepts 0-255
+  // The map() function shrinks our big number range into the smaller range
+  int ledBrightness = map(knobReading, 0, 1023, 0, 255);
+  
+  // Step 3: Send that calculated brightness level to the physical LED
+  analogWrite(ledPin, ledBrightness);
+  
+  // Step 4: Print the numbers to the screen so we can check our math
+  Serial.print("Knob Reading: ");
+  Serial.print(knobReading);
+  Serial.print(" | LED Brightness: ");
+  Serial.println(ledBrightness);
+  
+  // Wait a tiny bit before reading again so the text doesn't scroll too fast
+  delay(100); 
 }
 ```
 
@@ -218,14 +225,14 @@ void loop() {
 
 ```c
 // ============================================================================
-// Mini-Project 1: Smart LED Dimmer (Bare-Metal STM32 Embedded C)
+// Mini-Project 1: Smart Dimmer (Bare-Metal STM32 Embedded C)
 // Hardware: STM32 Nucleo-C031C6
-// Peripherals: ADC1 (PA0), General-Purpose Timer TIM3 PWM (PB0/D3)
+// Pin Mapping: Knob on PA0 (ADC1_IN0), LED on PB0 (TIM3_CH3 PWM)
 // ============================================================================
 
 #include <stdint.h>
 
-// 1. STM32 Base Addresses & Memory-Mapped Registers
+// 1. STM32 Peripheral Register Base Addresses
 #define RCC_BASE            (0x40021000UL)
 #define RCC_IOPENR          (*(volatile uint32_t *)(RCC_BASE + 0x34UL))
 #define RCC_APBENR1         (*(volatile uint32_t *)(RCC_BASE + 0x3CUL))
@@ -238,7 +245,7 @@ void loop() {
 #define GPIOB_MODER         (*(volatile uint32_t *)(GPIOB_BASE + 0x00UL))
 #define GPIOB_AFRL          (*(volatile uint32_t *)(GPIOB_BASE + 0x20UL))
 
-// Timer 3 (PWM Generation on PB0)
+// Timer 3 (PWM Generation on PB0 / Arduino D3)
 #define TIM3_BASE           (0x40000400UL)
 #define TIM3_CR1            (*(volatile uint32_t *)(TIM3_BASE + 0x00UL))
 #define TIM3_CCMR1          (*(volatile uint32_t *)(TIM3_BASE + 0x18UL))
@@ -247,7 +254,7 @@ void loop() {
 #define TIM3_ARR            (*(volatile uint32_t *)(TIM3_BASE + 0x2CUL))
 #define TIM3_CCR3           (*(volatile uint32_t *)(TIM3_BASE + 0x3CUL))
 
-// ADC1 (Analog-to-Digital Converter on PA0)
+// ADC1 (Analog-to-Digital Converter on PA0 / Arduino A0)
 #define ADC1_BASE           (0x40012400UL)
 #define ADC1_ISR            (*(volatile uint32_t *)(ADC1_BASE + 0x00UL))
 #define ADC1_CR             (*(volatile uint32_t *)(ADC1_BASE + 0x08UL))
@@ -259,27 +266,27 @@ void loop() {
  * @brief Initialize ADC1 for 10-bit single-channel conversion on PA0
  */
 void adc_init(void) {
-    // Enable GPIOA and ADC1 peripheral clocks
-    RCC_IOPENR  |= (1U << 0);  // GPIOA clock enable
-    RCC_APBENR2 |= (1U << 20); // ADC clock enable
+    // 1. Enable GPIOA and ADC1 peripheral clocks
+    RCC_IOPENR  |= (1U << 0);  // Bit 0: GPIOA clock enable
+    RCC_APBENR2 |= (1U << 20); // Bit 20: ADC clock enable
 
-    // Configure PA0 (A0) in Analog Mode ('11' in MODER)
+    // 2. Configure PA0 (A0) in Analog Mode ('11' in MODER)
     GPIOA_MODER |= (3UL << (0 * 2));
 
-    // ADC Calibration routine
+    // 3. ADC Self-Calibration
     ADC1_CR |= (1U << 31); // Start calibration (ADCAL)
     while (ADC1_CR & (1U << 31)); // Wait until calibration completes
 
-    // Enable ADC peripheral
+    // 4. Enable ADC
     ADC1_ISR |= (1U << 0); // Clear ADRDY flag
     ADC1_CR  |= (1U << 0); // Assert ADEN
     while (!(ADC1_ISR & (1U << 0))); // Wait until ADC is ready
 
-    // Configure 10-bit resolution ('01' in CFGR1 RES[1:0] bits)
+    // 5. Configure 10-bit resolution ('01' in CFGR1 RES[1:0] bits)
     ADC1_CFGR1 &= ~(3UL << 3);
     ADC1_CFGR1 |=  (1UL << 3); // 10-bit resolution (0 to 1023)
 
-    // Select ADC Channel 0 (connected to PA0)
+    // 6. Select ADC Channel 0 (connected to PA0)
     ADC1_CHSELR = (1UL << 0);
 }
 
@@ -287,24 +294,24 @@ void adc_init(void) {
  * @brief Initialize TIM3 Channel 3 to produce 1 kHz PWM on PB0 (D3)
  */
 void pwm_timer_init(void) {
-    // Enable GPIOB and TIM3 peripheral clocks
-    RCC_IOPENR  |= (1U << 1);  // GPIOB clock enable
-    RCC_APBENR1 |= (1U << 1);  // TIM3 clock enable
+    // 1. Enable GPIOB and TIM3 peripheral clocks
+    RCC_IOPENR  |= (1U << 1);  // Bit 1: GPIOB clock enable
+    RCC_APBENR1 |= (1U << 1);  // Bit 1: TIM3 clock enable
 
-    // Configure PB0 as Alternate Function ('10' in MODER)
+    // 2. Configure PB0 (D3) as Alternate Function ('10' in MODER)
     GPIOB_MODER &= ~(3UL << (0 * 2));
     GPIOB_MODER |=  (2UL << (0 * 2));
     GPIOB_AFRL  |=  (1UL << (0 * 4)); // AF1 = TIM3_CH3
 
-    // Configure Timer Prescaler and Auto-Reload for 1 kHz PWM
+    // 3. Configure Timer Prescaler and Auto-Reload for 1 kHz PWM
     TIM3_PSC = 47;   // 48 MHz / (47 + 1) = 1 MHz timer tick frequency
     TIM3_ARR = 255;  // 8-bit Auto-Reload period (0 to 255)
 
-    // Configure PWM Mode 1 on Channel 3 (OC3M = '110')
+    // 4. Configure PWM Mode 1 on Channel 3 (OC3M = '110')
     TIM3_CCMR1 |= (6UL << 12);
     TIM3_CCER  |= (1UL << 8);  // Enable Channel 3 output (CC3E)
 
-    // Enable Timer counter
+    // 5. Enable Timer counter
     TIM3_CR1 |= (1U << 0);
 }
 
@@ -322,17 +329,18 @@ int main(void) {
     pwm_timer_init();
 
     while (1) {
-        // Read 10-bit voltage from potentiometer (0 - 1023)
-        uint16_t raw_adc = adc_read();
+        // Step 1: Read 10-bit analog voltage from potentiometer (0 - 1023)
+        uint16_t knob_reading = adc_read();
 
-        // Convert 10-bit ADC to 8-bit PWM compare value:
-        // Efficient bitwise right-shift by 2: (1023 >> 2) = 255!
-        uint8_t pwm_duty = (uint8_t)(raw_adc >> 2);
+        // Step 2 & 3: Map 10-bit ADC to 8-bit PWM compare value
+        // High-speed bitwise right-shift by 2: (1023 >> 2) = 255
+        uint8_t led_brightness = (uint8_t)(knob_reading >> 2);
 
         // Update PWM duty cycle directly in Capture/Compare Register
-        TIM3_CCR3 = pwm_duty;
+        TIM3_CCR3 = led_brightness;
 
-        for (volatile uint32_t delay = 0; delay < 10000; delay++);
+        // Software delay between readings
+        for (volatile uint32_t delay = 0; delay < 120000; delay++);
     }
 
     return 0;
@@ -351,8 +359,8 @@ You will build a visual metronome where an analog input instantly controls the b
 
 ### 🛠️ Hardware & Pin Selection
 * **Tempo Dial:** 1x Potentiometer on `A0` (variable analog tempo control).
-* **Visual Tick:** 1x LED with 220Ω protective resistor on `D3` (or onboard user LED `PA5`).
-* **Power & Ground:** Connected to `3V3` and `GND`.
+* **Visual Tick:** 1x LED with 220Ω protective resistor on `D3` (connected to `PB0`).
+* **Power & Ground:** Potentiometer VCC to `5V`/`3V3`, GND to `GND`. LED cathode to `GND`.
 
 ### 🧠 Step-by-Step Firmware Architecture
 1. **Sample Sensor Data:** Read the analog tempo dial smoothly without stopping processor execution.
@@ -365,6 +373,21 @@ You will build a visual metronome where an analog input instantly controls the b
 4. **Execute & Update:** When `(currentMillis - previousMillis) >= interval`, invert the LED state and reset the milestone.
 5. **Verify Multitasking:** When rotating the knob, the blink rate adjusts **immediately with zero lag**, proving the system is non-blocking.
 
+### Interactive Simulation
+
+::: {.simulation-container}
+<iframe 
+  src="https://wokwi.com/projects/479375525390123009?embed=1" 
+  title="STM32 Nucleo Non-Blocking Metronome (Timers & ADC)"
+  loading="lazy"
+  allowfullscreen>
+</iframe>
+<div class="sim-info-bar">
+  <span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span>
+  <span>Click Play, then rotate tempo knob on pin A0 to change blink speed instantly</span>
+</div>
+:::
+
 ### Implementation Code: High-Level Framework vs. Bare-Metal Embedded C
 
 ::: {.panel-tabset}
@@ -376,50 +399,53 @@ You will build a visual metronome where an analog input instantly controls the b
 // Mini-Project 2: The Non-Blocking Metronome (High-Level Framework)
 // ============================================================================
 
-#define TEMPO_DIAL_PIN A0  // Potentiometer tempo dial
-#define METRONOME_LED  D3  // Visual tick LED (with 220Ω resistor)
+// Hardware Pins
+#define tempoKnobPin A0
+#define metronomeLedPin 3
 
-unsigned long previousMillis = 0;  // Stores the last time the LED toggled
-int ledState = LOW;                // Current state of the visual metronome LED
+// Timer tracking variables
+unsigned long previousMillis = 0; 
+int ledState = LOW;
 
 void setup() {
   Serial.begin(115200);
-
-  pinMode(TEMPO_DIAL_PIN, INPUT);
-  pinMode(METRONOME_LED, OUTPUT);
-  analogReadResolution(10); // 10-bit ADC resolution (0 to 1023)
-
-  Serial.println("=== Non-Blocking Metronome Active ===");
-  Serial.println("Rotate tempo dial to adjust flash interval instantly.");
+  
+  pinMode(tempoKnobPin, INPUT);
+  pinMode(metronomeLedPin, OUTPUT);
+  
+  // Set ADC to 10-bit mode (0-1023 range)
+  analogReadResolution(10); 
+  
+  Serial.println("--- Non-Blocking Metronome Started ---");
 }
 
 void loop() {
-  // 1. Read analog tempo dial smoothly without stopping the CPU
-  int rawADC = analogRead(TEMPO_DIAL_PIN);
-
-  // 2. Map ADC reading (0 to 1023) to a practical time interval:
-  //    Lowest knob position:  100 ms (Fast tempo / Allegro)
-  //    Highest knob position: 2000 ms (Slow tempo / Largo)
-  unsigned long interval = map(rawADC, 0, 1023, 100, 2000);
-
-  // 3. Non-Blocking Timer Logic: Check elapsed time
+  // Step 1: Sample Sensor Data smoothly
+  int rawTempo = analogRead(tempoKnobPin);
+  
+  // Step 2: Map raw ADC (0-1023) to millisecond interval (100ms to 2000ms)
+  int interval = map(rawTempo, 0, 1023, 100, 2000);
+  
+  // Step 3: The Non-Blocking Timer Logic
   unsigned long currentMillis = millis();
-
-  // If time elapsed exceeds the dynamic interval, toggle the metronome tick
+  
   if (currentMillis - previousMillis >= interval) {
-    previousMillis = currentMillis; // Reset timer milestone
-
-    // Toggle LED state
-    ledState = (ledState == LOW) ? HIGH : LOW;
-    digitalWrite(METRONOME_LED, ledState);
-
-    // Telemetry
-    Serial.print("Blink Interval: ");
+    // Save the last time we blinked the LED
+    previousMillis = currentMillis;
+    
+    // Step 4: Toggle LED state
+    if (ledState == LOW) {
+      ledState = HIGH;
+    } else {
+      ledState = LOW;
+    }
+    digitalWrite(metronomeLedPin, ledState);
+    
+    // Step 5: Verify Multitasking (prints without lagging the loop)
+    Serial.print("Tick! Current Tempo: ");
     Serial.print(interval);
-    Serial.println(" ms (Zero CPU blocking!)");
+    Serial.println(" ms");
   }
-
-  // The CPU remains completely free to run other tasks concurrently!
 }
 ```
 
@@ -431,26 +457,29 @@ void loop() {
 // ============================================================================
 // Mini-Project 2: The Non-Blocking Metronome (Bare-Metal Embedded C)
 // Hardware: STM32 Nucleo-C031C6
-// Architecture: ARM Cortex-M SysTick 1ms Hardware Timer + ADC1 PA0
+// Architecture: ARM Cortex-M SysTick 1ms Timer + ADC1 (PA0) + GPIO (PB0)
 // ============================================================================
 
 #include <stdint.h>
 
-// 1. Base Register Definitions
+// 1. STM32 Base Addresses & Memory-Mapped Registers
 #define RCC_BASE            (0x40021000UL)
 #define RCC_IOPENR_REG      (*(volatile uint32_t *)(RCC_BASE + 0x34UL))
 #define RCC_APBENR2_REG     (*(volatile uint32_t *)(RCC_BASE + 0x40UL))
 
 #define GPIOA_BASE          (0x50000000UL)
 #define GPIOA_MODER_REG     (*(volatile uint32_t *)(GPIOA_BASE + 0x00UL))
-#define GPIOA_BSRR_REG      (*(volatile uint32_t *)(GPIOA_BASE + 0x18UL))
+
+#define GPIOB_BASE          (0x50000400UL)
+#define GPIOB_MODER_REG     (*(volatile uint32_t *)(GPIOB_BASE + 0x00UL))
+#define GPIOB_BSRR_REG      (*(volatile uint32_t *)(GPIOB_BASE + 0x18UL))
 
 // ARM Cortex-M Core SysTick Timer Registers (0xE000E010)
 #define SYST_CSR            (*(volatile uint32_t *)(0xE000E010UL)) // Control & Status
 #define SYST_RVR            (*(volatile uint32_t *)(0xE000E014UL)) // Reload Value
 #define SYST_CVR            (*(volatile uint32_t *)(0xE000E018UL)) // Current Value
 
-// ADC1 Registers
+// ADC1 Registers (PA0 / Analog Channel 0)
 #define ADC1_BASE           (0x40012400UL)
 #define ADC1_ISR_REG        (*(volatile uint32_t *)(ADC1_BASE + 0x00UL))
 #define ADC1_CR_REG         (*(volatile uint32_t *)(ADC1_BASE + 0x08UL))
@@ -458,7 +487,10 @@ void loop() {
 #define ADC1_CHSELR_REG     (*(volatile uint32_t *)(ADC1_BASE + 0x28UL))
 #define ADC1_DR_REG         (*(volatile uint32_t *)(ADC1_BASE + 0x40UL))
 
-#define LED_PIN             (5U) // PA5 (Nucleo User LED)
+// Hardware Pin Definitions matching Wokwi circuit:
+// Tempo Dial Potentiometer = PA0 (A0)
+// Metronome LED = PB0 (D3)
+#define METRONOME_LED_PIN   (0U) // PB0
 
 // Global millisecond timestamp incremented by SysTick ISR
 volatile uint32_t ms_ticks = 0;
@@ -472,80 +504,85 @@ void SysTick_Handler(void) {
 
 /**
  * @brief Initialize 1 ms SysTick Hardware Timer
- * CPU Clock = 48 MHz -> 48,000 cycles = 1 ms
+ * CPU Clock = 48 MHz -> 48,000 clock cycles = 1 ms
  */
 void systick_init(void) {
-    SYST_RVR = 48000UL - 1UL; // Set reload for 1ms tick
+    SYST_RVR = 48000UL - 1UL; // Set reload value for 1ms tick
     SYST_CVR = 0;             // Clear current counter
-    SYST_CSR = (1U << 2) |    // Core clock source
-               (1U << 1) |    // Enable SysTick exception interrupt
-               (1U << 0);     // Enable counter
+    SYST_CSR = (1U << 2) |    // Bit 2: Core processor clock source
+               (1U << 1) |    // Bit 1: Enable SysTick exception interrupt
+               (1U << 0);     // Bit 0: Enable counter
 }
 
 uint32_t get_millis(void) {
     return ms_ticks;
 }
 
-void metronome_init(void) {
-    // Enable GPIOA and ADC1 clocks
-    RCC_IOPENR_REG  |= (1U << 0);
-    RCC_APBENR2_REG |= (1U << 20);
+void metronome_hardware_init(void) {
+    // 1. Enable GPIOA, GPIOB, and ADC1 peripheral clocks
+    RCC_IOPENR_REG  |= (1U << 0);  // GPIOA clock enable (PA0)
+    RCC_IOPENR_REG  |= (1U << 1);  // GPIOB clock enable (PB0)
+    RCC_APBENR2_REG |= (1U << 20); // ADC clock enable
 
-    // PA5 as Output ('01' in MODER) for Metronome LED
-    GPIOA_MODER_REG &= ~(3UL << (LED_PIN * 2));
-    GPIOA_MODER_REG |=  (1UL << (LED_PIN * 2));
+    // 2. Configure PB0 (D3) as Output ('01' in MODER) for Metronome LED
+    GPIOB_MODER_REG &= ~(3UL << (METRONOME_LED_PIN * 2));
+    GPIOB_MODER_REG |=  (1UL << (METRONOME_LED_PIN * 2));
 
-    // PA0 as Analog ('11' in MODER) for Tempo Dial Potentiometer
+    // 3. Configure PA0 (A0) as Analog ('11' in MODER) for Tempo Dial
     GPIOA_MODER_REG |=  (3UL << (0 * 2));
 
-    // ADC Calibration & Enable
-    ADC1_CR_REG |= (1U << 31);
+    // 4. ADC Calibration & Enable
+    ADC1_CR_REG |= (1U << 31); // Start calibration (ADCAL)
     while (ADC1_CR_REG & (1U << 31));
-    ADC1_ISR_REG |= (1U << 0);
-    ADC1_CR_REG  |= (1U << 0);
+
+    ADC1_ISR_REG |= (1U << 0); // Clear ADRDY
+    ADC1_CR_REG  |= (1U << 0); // Assert ADEN
     while (!(ADC1_ISR_REG & (1U << 0)));
 
-    // 10-bit resolution & Channel 0 selection
-    ADC1_CFGR1_REG |= (1UL << 3);
-    ADC1_CHSELR_REG = (1UL << 0);
+    // 5. Configure 10-bit resolution & Channel 0 selection
+    ADC1_CFGR1_REG &= ~(3UL << 3);
+    ADC1_CFGR1_REG |=  (1UL << 3); // 10-bit mode (0 to 1023)
+    ADC1_CHSELR_REG =  (1UL << 0); // Channel 0
 }
 
 uint16_t read_tempo_dial(void) {
-    ADC1_CR_REG |= (1U << 2);
-    while (!(ADC1_ISR_REG & (1U << 2)));
-    return (uint16_t)ADC1_DR_REG;
+    ADC1_CR_REG |= (1U << 2); // Start ADC conversion (ADSTART)
+    while (!(ADC1_ISR_REG & (1U << 2))); // Wait for EOC
+    return (uint16_t)ADC1_DR_REG;        // Return 10-bit reading (0 to 1023)
 }
 
 int main(void) {
-    metronome_init();
+    metronome_hardware_init();
     systick_init();
 
     uint32_t previous_millis = 0;
     uint8_t  led_state       = 0;
 
     while (1) {
-        // 1. Read tempo dial without blocking
-        uint16_t raw_adc = read_tempo_dial();
+        // Step 1: Read analog tempo dial smoothly without stopping the CPU
+        uint16_t raw_tempo = read_tempo_dial();
 
-        // 2. Map 10-bit ADC (0..1023) to interval: 100ms to 2000ms
-        // Formula: interval = 100 + (raw_adc * 1900) / 1023
-        uint32_t interval = 100UL + ((uint32_t)raw_adc * 1900UL) / 1023UL;
+        // Step 2: Map 10-bit ADC (0..1023) to interval: 100ms to 2000ms
+        // Formula: interval = 100 + (raw_tempo * (2000 - 100)) / 1023
+        uint32_t interval = 100UL + ((uint32_t)raw_tempo * 1900UL) / 1023UL;
 
-        // 3. Non-blocking elapsed time comparison
+        // Step 3: Non-blocking elapsed time comparison
         uint32_t current_millis = get_millis();
         if ((current_millis - previous_millis) >= interval) {
-            previous_millis = current_millis;
+            previous_millis = current_millis; // Update last blink time
 
-            // Toggle LED state using atomic BSRR register write
+            // Step 4: Toggle LED state atomically via BSRR register on PB0
             led_state = !led_state;
             if (led_state) {
-                GPIOA_BSRR_REG = (1UL << LED_PIN);        // Turn ON
+                // Set PB0 HIGH (Write to lower 16 bits of BSRR)
+                GPIOB_BSRR_REG = (1UL << METRONOME_LED_PIN);
             } else {
-                GPIOA_BSRR_REG = (1UL << (LED_PIN + 16U)); // Turn OFF
+                // Reset PB0 LOW (Write to upper 16 bits of BSRR)
+                GPIOB_BSRR_REG = (1UL << (METRONOME_LED_PIN + 16U));
             }
         }
 
-        // Processor can perform sensor filtering or enter low-power WFI sleep here!
+        // The CPU remains completely free to execute background tasks!
     }
 
     return 0;
