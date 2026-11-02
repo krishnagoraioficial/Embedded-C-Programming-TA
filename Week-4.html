@@ -1,0 +1,2002 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.19">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Week 4: Advanced Peripheral Interfacing (Timers &amp; ADC) – CS2101: Embedded C</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-9e4d0c1ab0475ae3d85677ae0d9d1730.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-3a903d85c7a032a9d62605f072b49e96.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-9e4d0c1ab0475ae3d85677ae0d9d1730.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar docked quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./Week-4.html">Week-4</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">CS2101: Embedded C</a> 
+        <div class="sidebar-tools-main">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">About the Course</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Week-1</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Week-2</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-3.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Week-3</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-4.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Week-4</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-5.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Week-5</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-6.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Week-6</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-7.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Week-7</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-8.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Week-8</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-9.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Week-9</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-10.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Week-10</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-11.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Week-11</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-12.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Week-12</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#combinational-vs.-sequential-logic-elements" id="toc-combinational-vs.-sequential-logic-elements" class="nav-link active" data-scroll-target="#combinational-vs.-sequential-logic-elements">1. Combinational vs.&nbsp;Sequential Logic Elements</a>
+  <ul class="collapse">
+  <li><a href="#why-edge-triggered-flip-flops-are-standard" id="toc-why-edge-triggered-flip-flops-are-standard" class="nav-link" data-scroll-target="#why-edge-triggered-flip-flops-are-standard">Why Edge-Triggered Flip-Flops are Standard</a></li>
+  </ul></li>
+  <li><a href="#microcontroller-hardware-timers-pwm" id="toc-microcontroller-hardware-timers-pwm" class="nav-link" data-scroll-target="#microcontroller-hardware-timers-pwm">2. Microcontroller Hardware Timers &amp; PWM</a>
+  <ul class="collapse">
+  <li><a href="#key-timer-formulas" id="toc-key-timer-formulas" class="nav-link" data-scroll-target="#key-timer-formulas">Key Timer Formulas</a></li>
+  <li><a href="#calculation-example" id="toc-calculation-example" class="nav-link" data-scroll-target="#calculation-example">Calculation Example</a></li>
+  </ul></li>
+  <li><a href="#analog-to-digital-conversion-adc" id="toc-analog-to-digital-conversion-adc" class="nav-link" data-scroll-target="#analog-to-digital-conversion-adc">3. Analog-to-Digital Conversion (ADC)</a>
+  <ul class="collapse">
+  <li><a href="#core-adc-principles" id="toc-core-adc-principles" class="nav-link" data-scroll-target="#core-adc-principles">Core ADC Principles</a></li>
+  </ul></li>
+  <li><a href="#microcontroller-power-management-low-power-modes" id="toc-microcontroller-power-management-low-power-modes" class="nav-link" data-scroll-target="#microcontroller-power-management-low-power-modes">4. Microcontroller Power Management &amp; Low-Power Modes</a>
+  <ul class="collapse">
+  <li><a href="#power-reduction-strategies-in-firmware" id="toc-power-reduction-strategies-in-firmware" class="nav-link" data-scroll-target="#power-reduction-strategies-in-firmware">Power Reduction Strategies in Firmware</a></li>
+  </ul></li>
+  <li><a href="#mini-project-1-smart-led-dimmer-adc-to-pwm-mapping" id="toc-mini-project-1-smart-led-dimmer-adc-to-pwm-mapping" class="nav-link" data-scroll-target="#mini-project-1-smart-led-dimmer-adc-to-pwm-mapping">5. Mini-Project 1: Smart LED Dimmer (ADC to PWM Mapping) 🎛️💡</a>
+  <ul class="collapse">
+  <li><a href="#objective" id="toc-objective" class="nav-link" data-scroll-target="#objective">🎯 Objective</a></li>
+  <li><a href="#hardware-setup-wokwi" id="toc-hardware-setup-wokwi" class="nav-link" data-scroll-target="#hardware-setup-wokwi">🛠️ Hardware Setup (Wokwi)</a></li>
+  <li><a href="#pin-wiring-table" id="toc-pin-wiring-table" class="nav-link" data-scroll-target="#pin-wiring-table">Pin Wiring Table</a></li>
+  <li><a href="#problem-statement-logic-flow" id="toc-problem-statement-logic-flow" class="nav-link" data-scroll-target="#problem-statement-logic-flow">📝 Problem Statement &amp; Logic Flow</a></li>
+  <li><a href="#interactive-simulation" id="toc-interactive-simulation" class="nav-link" data-scroll-target="#interactive-simulation">Interactive Simulation</a></li>
+  <li><a href="#implementation-code-high-level-framework-vs.-bare-metal-embedded-c" id="toc-implementation-code-high-level-framework-vs.-bare-metal-embedded-c" class="nav-link" data-scroll-target="#implementation-code-high-level-framework-vs.-bare-metal-embedded-c">Implementation Code: High-Level Framework vs.&nbsp;Bare-Metal Embedded C</a></li>
+  <li><a href="#how-mini-project-1-dimmer-applies-week-4-concepts" id="toc-how-mini-project-1-dimmer-applies-week-4-concepts" class="nav-link" data-scroll-target="#how-mini-project-1-dimmer-applies-week-4-concepts">🔍 How Mini-Project 1 (Dimmer) Applies Week 4 Concepts</a></li>
+  </ul></li>
+  <li><a href="#mini-project-2-the-non-blocking-metronome-timers-adc" id="toc-mini-project-2-the-non-blocking-metronome-timers-adc" class="nav-link" data-scroll-target="#mini-project-2-the-non-blocking-metronome-timers-adc">6. Mini-Project 2: The Non-Blocking Metronome (Timers &amp; ADC) ⏱️🎵</a>
+  <ul class="collapse">
+  <li><a href="#objective-1" id="toc-objective-1" class="nav-link" data-scroll-target="#objective-1">🎯 Objective</a></li>
+  <li><a href="#hardware-pin-selection" id="toc-hardware-pin-selection" class="nav-link" data-scroll-target="#hardware-pin-selection">🛠️ Hardware &amp; Pin Selection</a></li>
+  <li><a href="#step-by-step-firmware-architecture" id="toc-step-by-step-firmware-architecture" class="nav-link" data-scroll-target="#step-by-step-firmware-architecture">🧠 Step-by-Step Firmware Architecture</a></li>
+  <li><a href="#interactive-simulation-1" id="toc-interactive-simulation-1" class="nav-link" data-scroll-target="#interactive-simulation-1">Interactive Simulation</a></li>
+  <li><a href="#implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1" id="toc-implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1" class="nav-link" data-scroll-target="#implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1">Implementation Code: High-Level Framework vs.&nbsp;Bare-Metal Embedded C</a></li>
+  <li><a href="#blocking-vs.-non-blocking-performance-comparison" id="toc-blocking-vs.-non-blocking-performance-comparison" class="nav-link" data-scroll-target="#blocking-vs.-non-blocking-performance-comparison">Blocking vs.&nbsp;Non-Blocking Performance Comparison</a></li>
+  <li><a href="#how-mini-project-2-metronome-applies-week-4-concepts" id="toc-how-mini-project-2-metronome-applies-week-4-concepts" class="nav-link" data-scroll-target="#how-mini-project-2-metronome-applies-week-4-concepts">🔍 How Mini-Project 2 (Metronome) Applies Week 4 Concepts</a></li>
+  </ul></li>
+  <li><a href="#real-world-embedded-systems-examples" id="toc-real-world-embedded-systems-examples" class="nav-link" data-scroll-target="#real-world-embedded-systems-examples">7. Real-World Embedded Systems Examples</a>
+  <ul class="collapse">
+  <li><a href="#example-4.1-automotive-ambient-light-automatic-headlight-dimmer" id="toc-example-4.1-automotive-ambient-light-automatic-headlight-dimmer" class="nav-link" data-scroll-target="#example-4.1-automotive-ambient-light-automatic-headlight-dimmer">Example 4.1: Automotive Ambient Light Automatic Headlight Dimmer 🚗💡</a></li>
+  <li><a href="#example-4.2-hospital-icu-vital-signs-heartbeat-metronome" id="toc-example-4.2-hospital-icu-vital-signs-heartbeat-metronome" class="nav-link" data-scroll-target="#example-4.2-hospital-icu-vital-signs-heartbeat-metronome">Example 4.2: Hospital ICU Vital Signs Heartbeat Metronome ❤️🔊</a></li>
+  <li><a href="#example-4.3-drone-brushless-motor-electronic-speed-controller-esc" id="toc-example-4.3-drone-brushless-motor-electronic-speed-controller-esc" class="nav-link" data-scroll-target="#example-4.3-drone-brushless-motor-electronic-speed-controller-esc">Example 4.3: Drone Brushless Motor Electronic Speed Controller (ESC) 🚁</a></li>
+  </ul></li>
+  <li><a href="#important-exam-practice-questions" id="toc-important-exam-practice-questions" class="nav-link" data-scroll-target="#important-exam-practice-questions">8. Important Exam Practice Questions</a>
+  <ul class="collapse">
+  <li><a href="#question-1-timer-overflow-frequency-calculation" id="toc-question-1-timer-overflow-frequency-calculation" class="nav-link" data-scroll-target="#question-1-timer-overflow-frequency-calculation">Question 1: Timer Overflow Frequency Calculation</a></li>
+  <li><a href="#question-2-adc-quantization-resolution" id="toc-question-2-adc-quantization-resolution" class="nav-link" data-scroll-target="#question-2-adc-quantization-resolution">Question 2: ADC Quantization Resolution</a></li>
+  <li><a href="#question-3-combinational-vs.-sequential-digital-elements" id="toc-question-3-combinational-vs.-sequential-digital-elements" class="nav-link" data-scroll-target="#question-3-combinational-vs.-sequential-digital-elements">Question 3: Combinational vs.&nbsp;Sequential Digital Elements</a></li>
+  <li><a href="#question-4-microcontroller-low-power-modes" id="toc-question-4-microcontroller-low-power-modes" class="nav-link" data-scroll-target="#question-4-microcontroller-low-power-modes">Question 4: Microcontroller Low-Power Modes</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Week 4: Advanced Peripheral Interfacing (Timers &amp; ADC)</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="combinational-vs.-sequential-logic-elements" class="level2">
+<h2 class="anchored" data-anchor-id="combinational-vs.-sequential-logic-elements">1. Combinational vs.&nbsp;Sequential Logic Elements</h2>
+<p>In digital system design and microcontroller architecture, logic circuits are classified into two categories:</p>
+<pre class="text"><code>  COMBINATIONAL CIRCUIT                           SEQUENTIAL CIRCUIT
++-------------------------+                 +-------------------------------+
+| Output = f(Inputs)      |                 | Output = f(Inputs, State)     |
+| - No memory / no clock  |                 | - Contains memory (Flip-Flops)|
+| - Immediate response    |                 | - Synchronized by Clock Edge  |
+| Ex: Adders, MUX, ALU    |                 | Ex: Counters, Timers, ShiftReg|
++-------------------------+                 +-------------------------------+</code></pre>
+<section id="why-edge-triggered-flip-flops-are-standard" class="level3">
+<h3 class="anchored" data-anchor-id="why-edge-triggered-flip-flops-are-standard">Why Edge-Triggered Flip-Flops are Standard</h3>
+<p>Microcontroller registers and timers use <strong>edge-triggered D flip-flops</strong> rather than level-sensitive latches because they sample inputs only at the instantaneous transition of the clock signal (e.g., rising edge from 0 to 1). This eliminates race conditions and ensures clean, deterministic synchronous data movement.</p>
+<hr>
+</section>
+</section>
+<section id="microcontroller-hardware-timers-pwm" class="level2">
+<h2 class="anchored" data-anchor-id="microcontroller-hardware-timers-pwm">2. Microcontroller Hardware Timers &amp; PWM</h2>
+<p>Hardware timers are autonomous peripheral blocks that count clock pulses independently of the CPU, enabling precision delays, event scheduling, and waveform generation without consuming processor cycles.</p>
+<pre class="text"><code> +---------------+     +--------------------+     +-----------------------+
+ | Internal Clock| ==&gt; | Prescaler Register | ==&gt; |   Counter Register    |
+ |  (e.g., 48MHz)|     |      (PSC)         |     |        (CNT)          |
+ +---------------+     +--------------------+     +-----------------------+
+                                                              |
+                                                              v  (When CNT == ARR)
+                                                  +-----------------------+
+                                                  |  Auto-Reload Register |
+                                                  |        (ARR)          |
+                                                  +-----------------------+
+                                                              |
+                                                              v
+                                                    [ Timer Interrupt / ]
+                                                    [  PWM Event Fired  ]</code></pre>
+<section id="key-timer-formulas" class="level3">
+<h3 class="anchored" data-anchor-id="key-timer-formulas">Key Timer Formulas</h3>
+<ol type="1">
+<li><p><strong>Timer Overflow Frequency (<span class="math inline">\(f_{\text{timer}}\)</span>):</strong> <span class="math display">\[f_{\text{timer}} = \frac{f_{\text{CLK}}}{(\text{PSC} + 1) \times (\text{ARR} + 1)}\]</span></p></li>
+<li><p><strong>Timer Overflow Period (<span class="math inline">\(T_{\text{overflow}}\)</span>):</strong> <span class="math display">\[T_{\text{overflow}} = \frac{1}{f_{\text{timer}}} = \frac{(\text{PSC} + 1) \times (\text{ARR} + 1)}{f_{\text{CLK}}}\]</span></p></li>
+<li><p><strong>Pulse-Width Modulation (PWM) Duty Cycle:</strong> <span class="math display">\[\text{Duty Cycle (\%)} = \frac{\text{CCR}}{\text{ARR}} \times 100\%\]</span> <em>(Where <span class="math inline">\(\text{CCR}\)</span> is the Capture/Compare Register value).</em></p></li>
+</ol>
+</section>
+<section id="calculation-example" class="level3">
+<h3 class="anchored" data-anchor-id="calculation-example">Calculation Example</h3>
+<p>If an STM32 timer operates with a <strong>48 MHz clock</strong>, <span class="math inline">\(\text{PSC} = 47\)</span>, and <span class="math inline">\(\text{ARR} = 999\)</span>: <span class="math display">\[f_{\text{timer}} = \frac{48,000,000}{(47 + 1) \times (999 + 1)} = \frac{48,000,000}{48 \times 1000} = \mathbf{1,000\text{ Hz}}\ (1\text{ kHz})\]</span> The timer will overflow exactly once every <strong>1 millisecond</strong>.</p>
+<hr>
+</section>
+</section>
+<section id="analog-to-digital-conversion-adc" class="level2">
+<h2 class="anchored" data-anchor-id="analog-to-digital-conversion-adc">3. Analog-to-Digital Conversion (ADC)</h2>
+<p>Microcontrollers operate on binary signals (0 or 1), but physical phenomena (temperature, pressure, audio, battery voltage) produce <strong>continuous analog voltages</strong>. The <strong>Analog-to-Digital Converter (ADC)</strong> bridges this gap through <strong>sampling and quantization</strong>.</p>
+<pre class="text"><code> Continuous Analog Signal             Sampling                   Quantization
+   (Smooth Voltage Wave)     ===&gt;  (Discrete Time)   ===&gt;  (Digital Binary Code)
+           ~                           | | | |                  0x03FF (10-bit)</code></pre>
+<section id="core-adc-principles" class="level3">
+<h3 class="anchored" data-anchor-id="core-adc-principles">Core ADC Principles</h3>
+<ol type="1">
+<li><p><strong>Sampling Rate (Nyquist Theorem):</strong> To reconstruct an analog signal accurately without aliasing, the sampling frequency (<span class="math inline">\(f_s\)</span>) must be at least twice the maximum frequency component (<span class="math inline">\(f_{\text{max}}\)</span>) present in the signal: <span class="math display">\[f_s \ge 2 \times f_{\text{max}}\]</span></p></li>
+<li><p><strong>Quantization Levels (<span class="math inline">\(N\)</span>-bit ADC):</strong> An <span class="math inline">\(N\)</span>-bit ADC maps the reference voltage range into <strong><span class="math inline">\(2^N\)</span> distinct digital levels</strong>:</p>
+<ul>
+<li><strong>8-bit ADC:</strong> <span class="math inline">\(2^8 = \mathbf{256}\)</span> levels</li>
+<li><strong>10-bit ADC:</strong> <span class="math inline">\(2^{10} = \mathbf{1024}\)</span> levels (e.g., 0 to 1023)</li>
+<li><strong>12-bit ADC (Standard STM32):</strong> <span class="math inline">\(2^{12} = \mathbf{4096}\)</span> levels (e.g., 0 to 4095)</li>
+</ul></li>
+<li><p><strong>Voltage Step Resolution (<span class="math inline">\(V_{\text{step}}\)</span>):</strong> <span class="math display">\[V_{\text{step}} = \frac{V_{\text{REF}}}{2^N}\]</span> <em>Example:</em> For a 12-bit ADC with <span class="math inline">\(V_{\text{REF}} = 3.3\text{V}\)</span>: <span class="math display">\[V_{\text{step}} = \frac{3.3\text{V}}{4096} \approx \mathbf{0.805\text{ mV per LSB}}\]</span></p></li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="microcontroller-power-management-low-power-modes" class="level2">
+<h2 class="anchored" data-anchor-id="microcontroller-power-management-low-power-modes">4. Microcontroller Power Management &amp; Low-Power Modes</h2>
+<p>In battery-powered IoT devices and wearable electronics, maximizing battery runtime requires aggressive power management. Microcontrollers provide multiple power modes:</p>
+<pre class="text"><code> Mode               CPU State       Peripherals         SRAM Content       Wakeup Latency
+-----------------------------------------------------------------------------------------
+ Run Mode           Active          Active              Retained           0 ns (Instant)
+ Sleep Mode         Halted          Active (Timers/ADC) Retained           Few Clock Cycles
+ Stop Mode          Halted          Clocks Disabled     Retained           Few Microseconds
+ Standby Mode       Powered Down    Powered Down        Lost (Except RTC)  Full Reset Startup</code></pre>
+<section id="power-reduction-strategies-in-firmware" class="level3">
+<h3 class="anchored" data-anchor-id="power-reduction-strategies-in-firmware">Power Reduction Strategies in Firmware</h3>
+<ul>
+<li><strong>Clock Prescaling:</strong> Reduce the main clock speed when high processing throughput is not required (<span class="math inline">\(P \propto f_{\text{CLK}} \cdot V^2\)</span>).</li>
+<li><strong>Peripheral Clock Gating:</strong> Keep peripheral clocks turned off in RCC until immediately needed.</li>
+<li><strong>Interrupt-Driven Sleep:</strong> Execute tasks in response to interrupts, then immediately put the CPU to sleep with the <code>__WFI()</code> (Wait For Interrupt) instruction.</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="mini-project-1-smart-led-dimmer-adc-to-pwm-mapping" class="level2">
+<h2 class="anchored" data-anchor-id="mini-project-1-smart-led-dimmer-adc-to-pwm-mapping">5. Mini-Project 1: Smart LED Dimmer (ADC to PWM Mapping) 🎛️💡</h2>
+<section id="objective" class="level3">
+<h3 class="anchored" data-anchor-id="objective">🎯 Objective</h3>
+<p>In this project, you connect two foundational Week 4 concepts: reading a continuously variable analog sensor (<strong>ADC</strong>) and outputting a continuous control signal (<strong>Pulse Width Modulation - PWM</strong>). You will build an embedded system that samples a potentiometer’s voltage and maps that value to adjust the exact duty cycle of a PWM signal, directly regulating the physical brightness of an LED.</p>
+</section>
+<section id="hardware-setup-wokwi" class="level3">
+<h3 class="anchored" data-anchor-id="hardware-setup-wokwi">🛠️ Hardware Setup (Wokwi)</h3>
+<p>The circuit connects the following components to an <strong>STM32 Nucleo-C031C6</strong> board: * <strong>1x Potentiometer:</strong> To simulate an analog voltage input. * <strong>1x LED (Blue):</strong> To visualize the PWM duty cycle. * <strong>1x 220Ω Resistor:</strong> Current-limiting resistor to protect the LED.</p>
+</section>
+<section id="pin-wiring-table" class="level3">
+<h3 class="anchored" data-anchor-id="pin-wiring-table">Pin Wiring Table</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 23%">
+<col style="width: 23%">
+<col style="width: 29%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Component</th>
+<th style="text-align: left;">Pin / Terminal</th>
+<th style="text-align: center;">STM32 / Power Pin</th>
+<th style="text-align: left;">Electrical Function</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Potentiometer</strong></td>
+<td style="text-align: left;">VCC</td>
+<td style="text-align: center;"><code>3V3</code></td>
+<td style="text-align: left;">3.3V Power Rail</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Potentiometer</strong></td>
+<td style="text-align: left;">GND</td>
+<td style="text-align: center;"><code>GND</code></td>
+<td style="text-align: left;">Ground Reference</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Potentiometer</strong></td>
+<td style="text-align: left;">SIG (Signal)</td>
+<td style="text-align: center;"><code>A0</code></td>
+<td style="text-align: left;">Analog Input (<code>PA0</code> / ADC Channel 0)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>LED</strong></td>
+<td style="text-align: left;">Anode (via 220Ω Resistor)</td>
+<td style="text-align: center;"><code>D3</code></td>
+<td style="text-align: left;">PWM Output (<code>PB0</code> / Timer 3 Channel 3)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>LED</strong></td>
+<td style="text-align: left;">Cathode</td>
+<td style="text-align: center;"><code>GND</code></td>
+<td style="text-align: left;">Ground Reference</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="problem-statement-logic-flow" class="level3">
+<h3 class="anchored" data-anchor-id="problem-statement-logic-flow">📝 Problem Statement &amp; Logic Flow</h3>
+<ol type="1">
+<li><strong>Initialization (<code>setup</code>):</strong>
+<ul>
+<li>Start UART Serial communication at <strong>115200 baud rate</strong>.</li>
+<li>Configure potentiometer pin (<code>A0</code>) as <code>INPUT</code>.</li>
+<li>Configure LED pin (<code>D3</code>) as <code>OUTPUT</code>.</li>
+<li>Configure ADC resolution to 10-bit (0 to 1023) using <code>analogReadResolution(10);</code>.</li>
+</ul></li>
+<li><strong>Continuous Loop (<code>loop</code>):</strong>
+<ul>
+<li><strong>Read Analog Value:</strong> Sample raw digital data from the potentiometer with <code>analogRead(A0)</code>.</li>
+<li><strong>Map to PWM Range:</strong> The 10-bit ADC provides values from 0 to 1023. Standard PWM uses an 8-bit resolution (0 to 255). Use <code>map()</code> to translate the reading.</li>
+<li><strong>Control Brightness:</strong> Output the mapped PWM duty cycle to the LED pin using <code>analogWrite()</code>.</li>
+<li><strong>Print to Terminal:</strong> Transmit the telemetry data over UART for monitoring.</li>
+</ul></li>
+</ol>
+<pre class="text"><code>--- ADC to PWM Dimmer Started ---
+ADC Input: 512 | PWM Output (Duty Cycle): 127
+ADC Input: 1023 | PWM Output (Duty Cycle): 255</code></pre>
+</section>
+<section id="interactive-simulation" class="level3">
+<h3 class="anchored" data-anchor-id="interactive-simulation">Interactive Simulation</h3>
+<div class="simulation-container">
+<iframe src="https://wokwi.com/projects/479332809517014017?embed=1" title="STM32 Nucleo Smart LED Dimmer (ADC to PWM)" loading="lazy" allowfullscreen="">
+</iframe>
+<div class="sim-info-bar">
+<p><span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span> <span>Click Play, then rotate potentiometer knob on pin A0</span></p>
+</div>
+</div>
+</section>
+<section id="implementation-code-high-level-framework-vs.-bare-metal-embedded-c" class="level3">
+<h3 class="anchored" data-anchor-id="implementation-code-high-level-framework-vs.-bare-metal-embedded-c">Implementation Code: High-Level Framework vs.&nbsp;Bare-Metal Embedded C</h3>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="" aria-current="page">🔷 High-Level Framework (Running in Simulation)</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">🔶 Equivalent Bare-Metal Embedded C (Direct Register Manipulation)</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Mini-Project 1: The Smart Dimmer Challenge (ADC to PWM)</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co">// We connect the potentiometer (knob) to this analog pin</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#define knobPin </span>A0</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co">// We connect the LED to this pin because it has PWM (dimming) support</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#define ledPin </span><span class="dv">3</span><span class="pp"> </span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setup<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Start the serial monitor so we can see the values on our screen</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>begin<span class="op">(</span><span class="dv">115200</span><span class="op">);</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Tell the board how we are using these pins</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>knobPin<span class="op">,</span> INPUT<span class="op">);</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>ledPin<span class="op">,</span> OUTPUT<span class="op">);</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Set the ADC to 10-bit mode, which gives us readings from 0 to 1023</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>  analogReadResolution<span class="op">(</span><span class="dv">10</span><span class="op">);</span> </span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"--- Smart Dimmer is Ready ---"</span><span class="op">);</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> loop<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Step 1: Read the current position of the knob</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Since it is 10-bit, this will be a number between 0 and 1023</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int</span> knobReading <span class="op">=</span> analogRead<span class="op">(</span>knobPin<span class="op">);</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Step 2: Convert the knob reading to an LED brightness level</span></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>  <span class="co">// The knob goes from 0-1023, but the LED PWM only accepts 0-255</span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>  <span class="co">// The map() function shrinks our big number range into the smaller range</span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int</span> ledBrightness <span class="op">=</span> map<span class="op">(</span>knobReading<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">1023</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">255</span><span class="op">);</span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Step 3: Send that calculated brightness level to the physical LED</span></span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>  analogWrite<span class="op">(</span>ledPin<span class="op">,</span> ledBrightness<span class="op">);</span></span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Step 4: Print the numbers to the screen so we can check our math</span></span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>print<span class="op">(</span><span class="st">"Knob Reading: "</span><span class="op">);</span></span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>print<span class="op">(</span>knobReading<span class="op">);</span></span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>print<span class="op">(</span><span class="st">" | LED Brightness: "</span><span class="op">);</span></span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span>ledBrightness<span class="op">);</span></span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Wait a tiny bit before reading again so the text doesn't scroll too fast</span></span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>  delay<span class="op">(</span><span class="dv">100</span><span class="op">);</span> </span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Mini-Project 1: Smart Dimmer (Bare-Metal STM32 Embedded C)</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Hardware: STM32 Nucleo-C031C6</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Pin Mapping: Knob on PA0 (ADC1_IN0), LED on PB0 (TIM3_CH3 PWM)</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdint.h&gt;</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="co">// 1. STM32 Peripheral Register Base Addresses</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#define RCC_BASE            </span><span class="op">(</span><span class="bn">0x40021000</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#define RCC_IOPENR          </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span>RCC_BASE<span class="pp"> </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x34</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#define RCC_APBENR1         </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span>RCC_BASE<span class="pp"> </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x3C</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#define RCC_APBENR2         </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span>RCC_BASE<span class="pp"> </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x40</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOA_BASE          </span><span class="op">(</span><span class="bn">0x50000000</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOA_MODER         </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">GPIOA_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x00</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOB_BASE          </span><span class="op">(</span><span class="bn">0x50000400</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOB_MODER         </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">GPIOB_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x00</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOB_AFRL          </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">GPIOB_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x20</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="co">// Timer 3 (PWM Generation on PB0 / Arduino D3)</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="pp">#define TIM3_BASE           </span><span class="op">(</span><span class="bn">0x40000400</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="pp">#define TIM3_CR1            </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">TIM3_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x00</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="pp">#define TIM3_CCMR1          </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">TIM3_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x18</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a><span class="pp">#define TIM3_CCER           </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">TIM3_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x20</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a><span class="pp">#define TIM3_PSC            </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">TIM3_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x28</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a><span class="pp">#define TIM3_ARR            </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">TIM3_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x2C</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a><span class="pp">#define TIM3_CCR3           </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">TIM3_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x3C</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a><span class="co">// ADC1 (Analog-to-Digital Converter on PA0 / Arduino A0)</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a><span class="pp">#define ADC1_BASE           </span><span class="op">(</span><span class="bn">0x40012400</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a><span class="pp">#define ADC1_ISR            </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">ADC1_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x00</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a><span class="pp">#define ADC1_CR             </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">ADC1_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x08</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a><span class="pp">#define ADC1_CFGR1          </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">ADC1_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x0C</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a><span class="pp">#define ADC1_CHSELR         </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">ADC1_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x28</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a><span class="pp">#define ADC1_DR             </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">ADC1_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x40</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a><span class="co">/**</span></span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a><span class="co"> * </span><span class="an">@brief</span><span class="co"> Initialize ADC1 for 10-bit single-channel conversion on PA0</span></span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a><span class="co"> */</span></span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> adc_init<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 1. Enable GPIOA and ADC1 peripheral clocks</span></span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a>    RCC_IOPENR  <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> <span class="dv">0</span><span class="op">);</span>  <span class="co">// Bit 0: GPIOA clock enable</span></span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a>    RCC_APBENR2 <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> <span class="dv">20</span><span class="op">);</span> <span class="co">// Bit 20: ADC clock enable</span></span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2. Configure PA0 (A0) in Analog Mode ('11' in MODER)</span></span>
+<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a>    GPIOA_MODER <span class="op">|=</span> <span class="op">(</span><span class="dv">3</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">0</span> <span class="op">*</span> <span class="dv">2</span><span class="op">));</span></span>
+<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 3. ADC Self-Calibration</span></span>
+<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a>    ADC1_CR <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> <span class="dv">31</span><span class="op">);</span> <span class="co">// Start calibration (ADCAL)</span></span>
+<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(</span>ADC1_CR <span class="op">&amp;</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> <span class="dv">31</span><span class="op">));</span> <span class="co">// Wait until calibration completes</span></span>
+<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 4. Enable ADC</span></span>
+<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a>    ADC1_ISR <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> <span class="dv">0</span><span class="op">);</span> <span class="co">// Clear ADRDY flag</span></span>
+<span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a>    ADC1_CR  <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> <span class="dv">0</span><span class="op">);</span> <span class="co">// Assert ADEN</span></span>
+<span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(!(</span>ADC1_ISR <span class="op">&amp;</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> <span class="dv">0</span><span class="op">)));</span> <span class="co">// Wait until ADC is ready</span></span>
+<span id="cb7-58"><a href="#cb7-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-59"><a href="#cb7-59" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 5. Configure 10-bit resolution ('01' in CFGR1 RES[1:0] bits)</span></span>
+<span id="cb7-60"><a href="#cb7-60" aria-hidden="true" tabindex="-1"></a>    ADC1_CFGR1 <span class="op">&amp;=</span> <span class="op">~(</span><span class="dv">3</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">3</span><span class="op">);</span></span>
+<span id="cb7-61"><a href="#cb7-61" aria-hidden="true" tabindex="-1"></a>    ADC1_CFGR1 <span class="op">|=</span>  <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">3</span><span class="op">);</span> <span class="co">// 10-bit resolution (0 to 1023)</span></span>
+<span id="cb7-62"><a href="#cb7-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-63"><a href="#cb7-63" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 6. Select ADC Channel 0 (connected to PA0)</span></span>
+<span id="cb7-64"><a href="#cb7-64" aria-hidden="true" tabindex="-1"></a>    ADC1_CHSELR <span class="op">=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb7-65"><a href="#cb7-65" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-66"><a href="#cb7-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-67"><a href="#cb7-67" aria-hidden="true" tabindex="-1"></a><span class="co">/**</span></span>
+<span id="cb7-68"><a href="#cb7-68" aria-hidden="true" tabindex="-1"></a><span class="co"> * </span><span class="an">@brief</span><span class="co"> Initialize TIM3 Channel 3 to produce 1 kHz PWM on PB0 (D3)</span></span>
+<span id="cb7-69"><a href="#cb7-69" aria-hidden="true" tabindex="-1"></a><span class="co"> */</span></span>
+<span id="cb7-70"><a href="#cb7-70" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> pwm_timer_init<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-71"><a href="#cb7-71" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 1. Enable GPIOB and TIM3 peripheral clocks</span></span>
+<span id="cb7-72"><a href="#cb7-72" aria-hidden="true" tabindex="-1"></a>    RCC_IOPENR  <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> <span class="dv">1</span><span class="op">);</span>  <span class="co">// Bit 1: GPIOB clock enable</span></span>
+<span id="cb7-73"><a href="#cb7-73" aria-hidden="true" tabindex="-1"></a>    RCC_APBENR1 <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> <span class="dv">1</span><span class="op">);</span>  <span class="co">// Bit 1: TIM3 clock enable</span></span>
+<span id="cb7-74"><a href="#cb7-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-75"><a href="#cb7-75" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2. Configure PB0 (D3) as Alternate Function ('10' in MODER)</span></span>
+<span id="cb7-76"><a href="#cb7-76" aria-hidden="true" tabindex="-1"></a>    GPIOB_MODER <span class="op">&amp;=</span> <span class="op">~(</span><span class="dv">3</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">0</span> <span class="op">*</span> <span class="dv">2</span><span class="op">));</span></span>
+<span id="cb7-77"><a href="#cb7-77" aria-hidden="true" tabindex="-1"></a>    GPIOB_MODER <span class="op">|=</span>  <span class="op">(</span><span class="dv">2</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">0</span> <span class="op">*</span> <span class="dv">2</span><span class="op">));</span></span>
+<span id="cb7-78"><a href="#cb7-78" aria-hidden="true" tabindex="-1"></a>    GPIOB_AFRL  <span class="op">|=</span>  <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">0</span> <span class="op">*</span> <span class="dv">4</span><span class="op">));</span> <span class="co">// AF1 = TIM3_CH3</span></span>
+<span id="cb7-79"><a href="#cb7-79" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-80"><a href="#cb7-80" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 3. Configure Timer Prescaler and Auto-Reload for 1 kHz PWM</span></span>
+<span id="cb7-81"><a href="#cb7-81" aria-hidden="true" tabindex="-1"></a>    TIM3_PSC <span class="op">=</span> <span class="dv">47</span><span class="op">;</span>   <span class="co">// 48 MHz / (47 + 1) = 1 MHz timer tick frequency</span></span>
+<span id="cb7-82"><a href="#cb7-82" aria-hidden="true" tabindex="-1"></a>    TIM3_ARR <span class="op">=</span> <span class="dv">255</span><span class="op">;</span>  <span class="co">// 8-bit Auto-Reload period (0 to 255)</span></span>
+<span id="cb7-83"><a href="#cb7-83" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-84"><a href="#cb7-84" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 4. Configure PWM Mode 1 on Channel 3 (OC3M = '110')</span></span>
+<span id="cb7-85"><a href="#cb7-85" aria-hidden="true" tabindex="-1"></a>    TIM3_CCMR1 <span class="op">|=</span> <span class="op">(</span><span class="dv">6</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">12</span><span class="op">);</span></span>
+<span id="cb7-86"><a href="#cb7-86" aria-hidden="true" tabindex="-1"></a>    TIM3_CCER  <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">8</span><span class="op">);</span>  <span class="co">// Enable Channel 3 output (CC3E)</span></span>
+<span id="cb7-87"><a href="#cb7-87" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-88"><a href="#cb7-88" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 5. Enable Timer counter</span></span>
+<span id="cb7-89"><a href="#cb7-89" aria-hidden="true" tabindex="-1"></a>    TIM3_CR1 <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb7-90"><a href="#cb7-90" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-91"><a href="#cb7-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-92"><a href="#cb7-92" aria-hidden="true" tabindex="-1"></a><span class="co">/**</span></span>
+<span id="cb7-93"><a href="#cb7-93" aria-hidden="true" tabindex="-1"></a><span class="co"> * </span><span class="an">@brief</span><span class="co"> Trigger an ADC conversion and return 10-bit digitized value</span></span>
+<span id="cb7-94"><a href="#cb7-94" aria-hidden="true" tabindex="-1"></a><span class="co"> */</span></span>
+<span id="cb7-95"><a href="#cb7-95" aria-hidden="true" tabindex="-1"></a><span class="dt">uint16_t</span> adc_read<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-96"><a href="#cb7-96" aria-hidden="true" tabindex="-1"></a>    ADC1_CR <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> <span class="dv">2</span><span class="op">);</span> <span class="co">// Start conversion (ADSTART)</span></span>
+<span id="cb7-97"><a href="#cb7-97" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(!(</span>ADC1_ISR <span class="op">&amp;</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> <span class="dv">2</span><span class="op">)));</span> <span class="co">// Wait for End of Conversion (EOC)</span></span>
+<span id="cb7-98"><a href="#cb7-98" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">(</span><span class="dt">uint16_t</span><span class="op">)</span>ADC1_DR<span class="op">;</span>        <span class="co">// Return 10-bit result (0 to 1023)</span></span>
+<span id="cb7-99"><a href="#cb7-99" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-100"><a href="#cb7-100" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-101"><a href="#cb7-101" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-102"><a href="#cb7-102" aria-hidden="true" tabindex="-1"></a>    adc_init<span class="op">();</span></span>
+<span id="cb7-103"><a href="#cb7-103" aria-hidden="true" tabindex="-1"></a>    pwm_timer_init<span class="op">();</span></span>
+<span id="cb7-104"><a href="#cb7-104" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-105"><a href="#cb7-105" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(</span><span class="dv">1</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-106"><a href="#cb7-106" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Step 1: Read 10-bit analog voltage from potentiometer (0 - 1023)</span></span>
+<span id="cb7-107"><a href="#cb7-107" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint16_t</span> knob_reading <span class="op">=</span> adc_read<span class="op">();</span></span>
+<span id="cb7-108"><a href="#cb7-108" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-109"><a href="#cb7-109" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Step 2 &amp; 3: Map 10-bit ADC to 8-bit PWM compare value</span></span>
+<span id="cb7-110"><a href="#cb7-110" aria-hidden="true" tabindex="-1"></a>        <span class="co">// High-speed bitwise right-shift by 2: (1023 &gt;&gt; 2) = 255</span></span>
+<span id="cb7-111"><a href="#cb7-111" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint8_t</span> led_brightness <span class="op">=</span> <span class="op">(</span><span class="dt">uint8_t</span><span class="op">)(</span>knob_reading <span class="op">&gt;&gt;</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb7-112"><a href="#cb7-112" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-113"><a href="#cb7-113" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Update PWM duty cycle directly in Capture/Compare Register</span></span>
+<span id="cb7-114"><a href="#cb7-114" aria-hidden="true" tabindex="-1"></a>        TIM3_CCR3 <span class="op">=</span> led_brightness<span class="op">;</span></span>
+<span id="cb7-115"><a href="#cb7-115" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-116"><a href="#cb7-116" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Software delay between readings</span></span>
+<span id="cb7-117"><a href="#cb7-117" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">volatile</span> <span class="dt">uint32_t</span> delay <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> delay <span class="op">&lt;</span> <span class="dv">120000</span><span class="op">;</span> delay<span class="op">++);</span></span>
+<span id="cb7-118"><a href="#cb7-118" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-119"><a href="#cb7-119" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-120"><a href="#cb7-120" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb7-121"><a href="#cb7-121" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+</section>
+<section id="how-mini-project-1-dimmer-applies-week-4-concepts" class="level3">
+<h3 class="anchored" data-anchor-id="how-mini-project-1-dimmer-applies-week-4-concepts">🔍 How Mini-Project 1 (Dimmer) Applies Week 4 Concepts</h3>
+<p>This project binds together two core analog-digital interfaces taught in Week 4:</p>
+<section id="hardware-circuit-level-concept-mapping" class="level4">
+<h4 class="anchored" data-anchor-id="hardware-circuit-level-concept-mapping">1. Hardware &amp; Circuit-Level Concept Mapping</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Circuit Component</th>
+<th style="text-align: left;">Week 4 Theoretical Concept</th>
+<th style="text-align: left;">Technical Function in System</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Potentiometer on A0 (PA0)</strong></td>
+<td style="text-align: left;"><strong>Variable Voltage Divider (<span class="math inline">\(V_{\text{in}}\)</span>)</strong></td>
+<td style="text-align: left;">Acts as an adjustable voltage divider: <span class="math inline">\(V_{\text{out}} = V_{\text{DD}} \cdot \frac{R_2}{R_1 + R_2}\)</span>. By rotating the wiper, the user smoothly varies the input potential continuously between <span class="math inline">\(0\text{V}\)</span> and <span class="math inline">\(+3.3\text{V}\)</span>.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>STM32 ADC1 Peripheral</strong></td>
+<td style="text-align: left;"><strong>Successive Approximation ADC (SAR)</strong></td>
+<td style="text-align: left;">Samples the continuous analog voltage on Channel 0, holds it on an internal capacitor, and performs a binary search to quantize the voltage into a <strong>10-bit digital representation</strong> (<span class="math inline">\(0\)</span> to <span class="math inline">\(1023\)</span>).</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>LED on D3 (PB0)</strong></td>
+<td style="text-align: left;"><strong>Modulated Actuator &amp; Human Eye Integration</strong></td>
+<td style="text-align: left;">The human eye cannot perceive flicker above ~60–100 Hz. By pulsing the LED at 1 kHz, the eye’s photoreceptors integrate the pulses into an apparent, smooth brightness directly proportional to the duty cycle.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>220Ω Resistor</strong></td>
+<td style="text-align: left;"><strong>Safe Operating Area (SOA) Current Limit</strong></td>
+<td style="text-align: left;">Ensures that peak forward current through the LED does not exceed 15 mA during the HIGH phase of the PWM waveform.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="firmware-code-to-concept-breakdown" class="level4">
+<h4 class="anchored" data-anchor-id="firmware-code-to-concept-breakdown">2. Firmware Code-to-Concept Breakdown</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Code Statement (Framework / Bare-Metal)</th>
+<th style="text-align: left;">Week 4 Theoretical Concept</th>
+<th style="text-align: left;">Deep-Dive Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>analogRead(knobPin);</code><br><code>adc_read();</code></td>
+<td style="text-align: left;"><strong>10-Bit ADC Sampling &amp; Quantization</strong></td>
+<td style="text-align: left;">The ADC divides the <span class="math inline">\(3.3\text{V}\)</span> reference range into <span class="math inline">\(2^{10} = 1024\)</span> discrete voltage steps. Quantization step: <span class="math inline">\(Q = \frac{3.3\text{V}}{1024} \approx 3.22\text{ mV}\)</span>. A reading of <span class="math inline">\(512\)</span> represents <span class="math inline">\(\approx 1.65\text{V}\)</span>.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>int ledBrightness = map(knobReading, 0, 1023, 0, 255);</code><br><code>knob_reading &gt;&gt; 2;</code></td>
+<td style="text-align: left;"><strong>Resolution Domain Translation (10-bit to 8-bit)</strong></td>
+<td style="text-align: left;">Translates from the ADC input domain (<span class="math inline">\(0..1023\)</span>) to the PWM timer counter domain (<span class="math inline">\(0..255\)</span>). In bare-metal C, bitwise right-shift by 2 (<code>&gt;&gt; 2</code>) achieves exact integer division by 4 in a <strong>single CPU clock cycle</strong> without needing slow software floating-point division.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>analogWrite(ledPin, ledBrightness);</code><br><code>TIM3_CCR3 = led_brightness;</code></td>
+<td style="text-align: left;"><strong>Pulse Width Modulation (PWM) Duty Cycle</strong></td>
+<td style="text-align: left;">The hardware timer counter (<code>CNT</code>) continuously counts up to the Auto-Reload value (<code>ARR = 255</code>). Whenever <code>CNT &lt; CCR3</code>, the output pin is HIGH; when <code>CNT &gt;= CCR3</code>, it drops LOW. Changing <code>CCR3</code> modulates the <strong>Duty Cycle</strong>: <span class="math inline">\(D = \frac{\text{CCR3}}{\text{ARR}} \times 100\%\)</span>.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>TIM3_CCMR1 \|= (6UL &lt;&lt; 12);</code></td>
+<td style="text-align: left;"><strong>Timer Output Compare Mode 1</strong></td>
+<td style="text-align: left;">Selects hardware PWM Mode 1 (<code>110</code> in bitfield <code>OC3M</code>), commanding timer hardware to automatically toggle the physical pin without CPU intervention.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+</section>
+<section id="mini-project-2-the-non-blocking-metronome-timers-adc" class="level2">
+<h2 class="anchored" data-anchor-id="mini-project-2-the-non-blocking-metronome-timers-adc">6. Mini-Project 2: The Non-Blocking Metronome (Timers &amp; ADC) ⏱️🎵</h2>
+<section id="objective-1" class="level3">
+<h3 class="anchored" data-anchor-id="objective-1">🎯 Objective</h3>
+<p>Use a timer concept to trigger an event at a highly precise interval <strong>without stopping or blocking the CPU</strong>. You will build a visual metronome where an analog input instantly controls the blinking speed of an LED, demonstrating why blocking calls like <code>delay()</code> are detrimental to real-time responsiveness and power management.</p>
+</section>
+<section id="hardware-pin-selection" class="level3">
+<h3 class="anchored" data-anchor-id="hardware-pin-selection">🛠️ Hardware &amp; Pin Selection</h3>
+<ul>
+<li><strong>Tempo Dial:</strong> 1x Potentiometer on <code>A0</code> (variable analog tempo control).</li>
+<li><strong>Visual Tick:</strong> 1x LED with 220Ω protective resistor on <code>D3</code> (connected to <code>PB0</code>).</li>
+<li><strong>Power &amp; Ground:</strong> Potentiometer VCC to <code>5V</code>/<code>3V3</code>, GND to <code>GND</code>. LED cathode to <code>GND</code>.</li>
+</ul>
+</section>
+<section id="step-by-step-firmware-architecture" class="level3">
+<h3 class="anchored" data-anchor-id="step-by-step-firmware-architecture">🧠 Step-by-Step Firmware Architecture</h3>
+<ol type="1">
+<li><strong>Sample Sensor Data:</strong> Read the analog tempo dial smoothly without stopping processor execution.</li>
+<li><strong>Map to Time Interval:</strong> Convert the raw 10-bit ADC reading (0–1023) into an elapsed millisecond window:
+<ul>
+<li><strong>Lowest dial position:</strong> 100 ms (Fast tempo / Allegro)</li>
+<li><strong>Highest dial position:</strong> 2000 ms (Slow tempo / Largo)</li>
+</ul></li>
+<li><strong>The Non-Blocking Timer Logic:</strong>
+<ul>
+<li>If firmware executes <code>delay(interval)</code>, the CPU completely halts. It cannot sample the knob until the delay finishes, making the dial feel laggy and unresponsive.</li>
+<li><strong>Solution:</strong> Use background hardware timing (<code>millis()</code> or ARM Cortex-M <strong>SysTick timer</strong>). Store the <code>previousMillis</code> timestamp and continuously compare against <code>currentMillis</code>.</li>
+</ul></li>
+<li><strong>Execute &amp; Update:</strong> When <code>(currentMillis - previousMillis) &gt;= interval</code>, invert the LED state and reset the milestone.</li>
+<li><strong>Verify Multitasking:</strong> When rotating the knob, the blink rate adjusts <strong>immediately with zero lag</strong>, proving the system is non-blocking.</li>
+</ol>
+</section>
+<section id="interactive-simulation-1" class="level3">
+<h3 class="anchored" data-anchor-id="interactive-simulation-1">Interactive Simulation</h3>
+<div class="simulation-container">
+<iframe src="https://wokwi.com/projects/479375525390123009?embed=1" title="STM32 Nucleo Non-Blocking Metronome (Timers &amp; ADC)" loading="lazy" allowfullscreen="">
+</iframe>
+<div class="sim-info-bar">
+<p><span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span> <span>Click Play, then rotate tempo knob on pin A0 to change blink speed instantly</span></p>
+</div>
+</div>
+</section>
+<section id="implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1" class="level3">
+<h3 class="anchored" data-anchor-id="implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1">Implementation Code: High-Level Framework vs.&nbsp;Bare-Metal Embedded C</h3>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">🔷 High-Level Framework (Running in Simulation)</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">🔶 Equivalent Bare-Metal Embedded C (ARM Cortex-M SysTick Timer)</a></li></ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Mini-Project 2: The Non-Blocking Metronome (High-Level Framework)</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Hardware Pins</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#define tempoKnobPin </span>A0</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#define metronomeLedPin </span><span class="dv">3</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Timer tracking variables</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="dt">unsigned</span> <span class="dt">long</span> previousMillis <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> </span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> ledState <span class="op">=</span> LOW<span class="op">;</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setup<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>begin<span class="op">(</span><span class="dv">115200</span><span class="op">);</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>tempoKnobPin<span class="op">,</span> INPUT<span class="op">);</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>metronomeLedPin<span class="op">,</span> OUTPUT<span class="op">);</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Set ADC to 10-bit mode (0-1023 range)</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>  analogReadResolution<span class="op">(</span><span class="dv">10</span><span class="op">);</span> </span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"--- Non-Blocking Metronome Started ---"</span><span class="op">);</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> loop<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Step 1: Sample Sensor Data smoothly</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int</span> rawTempo <span class="op">=</span> analogRead<span class="op">(</span>tempoKnobPin<span class="op">);</span></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Step 2: Map raw ADC (0-1023) to millisecond interval (100ms to 2000ms)</span></span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int</span> interval <span class="op">=</span> map<span class="op">(</span>rawTempo<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">1023</span><span class="op">,</span> <span class="dv">100</span><span class="op">,</span> <span class="dv">2000</span><span class="op">);</span></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Step 3: The Non-Blocking Timer Logic</span></span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>  <span class="dt">unsigned</span> <span class="dt">long</span> currentMillis <span class="op">=</span> millis<span class="op">();</span></span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>currentMillis <span class="op">-</span> previousMillis <span class="op">&gt;=</span> interval<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Save the last time we blinked the LED</span></span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>    previousMillis <span class="op">=</span> currentMillis<span class="op">;</span></span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Step 4: Toggle LED state</span></span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>ledState <span class="op">==</span> LOW<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>      ledState <span class="op">=</span> HIGH<span class="op">;</span></span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a>      ledState <span class="op">=</span> LOW<span class="op">;</span></span>
+<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a>    digitalWrite<span class="op">(</span>metronomeLedPin<span class="op">,</span> ledState<span class="op">);</span></span>
+<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Step 5: Verify Multitasking (prints without lagging the loop)</span></span>
+<span id="cb8-48"><a href="#cb8-48" aria-hidden="true" tabindex="-1"></a>    Serial<span class="op">.</span>print<span class="op">(</span><span class="st">"Tick! Current Tempo: "</span><span class="op">);</span></span>
+<span id="cb8-49"><a href="#cb8-49" aria-hidden="true" tabindex="-1"></a>    Serial<span class="op">.</span>print<span class="op">(</span>interval<span class="op">);</span></span>
+<span id="cb8-50"><a href="#cb8-50" aria-hidden="true" tabindex="-1"></a>    Serial<span class="op">.</span>println<span class="op">(</span><span class="st">" ms"</span><span class="op">);</span></span>
+<span id="cb8-51"><a href="#cb8-51" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb8-52"><a href="#cb8-52" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Mini-Project 2: The Non-Blocking Metronome (Bare-Metal Embedded C)</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Hardware: STM32 Nucleo-C031C6</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Architecture: ARM Cortex-M SysTick 1ms Timer + ADC1 (PA0) + GPIO (PB0)</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdint.h&gt;</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="co">// 1. STM32 Base Addresses &amp; Memory-Mapped Registers</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#define RCC_BASE            </span><span class="op">(</span><span class="bn">0x40021000</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#define RCC_IOPENR_REG      </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span>RCC_BASE<span class="pp"> </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x34</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#define RCC_APBENR2_REG     </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span>RCC_BASE<span class="pp"> </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x40</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOA_BASE          </span><span class="op">(</span><span class="bn">0x50000000</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOA_MODER_REG     </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">GPIOA_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x00</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOB_BASE          </span><span class="op">(</span><span class="bn">0x50000400</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOB_MODER_REG     </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">GPIOB_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x00</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOB_BSRR_REG      </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">GPIOB_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x18</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="co">// ARM Cortex-M Core SysTick Timer Registers (0xE000E010)</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SYST_CSR            </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="bn">0xE000E010</span><span class="bu">UL</span><span class="op">))</span><span class="pp"> </span><span class="co">// Control &amp; Status</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SYST_RVR            </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="bn">0xE000E014</span><span class="bu">UL</span><span class="op">))</span><span class="pp"> </span><span class="co">// Reload Value</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SYST_CVR            </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="bn">0xE000E018</span><span class="bu">UL</span><span class="op">))</span><span class="pp"> </span><span class="co">// Current Value</span></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a><span class="co">// ADC1 Registers (PA0 / Analog Channel 0)</span></span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a><span class="pp">#define ADC1_BASE           </span><span class="op">(</span><span class="bn">0x40012400</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a><span class="pp">#define ADC1_ISR_REG        </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">ADC1_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x00</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a><span class="pp">#define ADC1_CR_REG         </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">ADC1_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x08</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a><span class="pp">#define ADC1_CFGR1_REG      </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">ADC1_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x0C</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a><span class="pp">#define ADC1_CHSELR_REG     </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">ADC1_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x28</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a><span class="pp">#define ADC1_DR_REG         </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">ADC1_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x40</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a><span class="co">// Hardware Pin Definitions matching Wokwi circuit:</span></span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a><span class="co">// Tempo Dial Potentiometer = PA0 (A0)</span></span>
+<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a><span class="co">// Metronome LED = PB0 (D3)</span></span>
+<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a><span class="pp">#define METRONOME_LED_PIN   </span><span class="op">(</span><span class="dv">0</span><span class="bu">U</span><span class="op">)</span><span class="pp"> </span><span class="co">// PB0</span></span>
+<span id="cb9-38"><a href="#cb9-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-39"><a href="#cb9-39" aria-hidden="true" tabindex="-1"></a><span class="co">// Global millisecond timestamp incremented by SysTick ISR</span></span>
+<span id="cb9-40"><a href="#cb9-40" aria-hidden="true" tabindex="-1"></a><span class="dt">volatile</span> <span class="dt">uint32_t</span> ms_ticks <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb9-41"><a href="#cb9-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-42"><a href="#cb9-42" aria-hidden="true" tabindex="-1"></a><span class="co">/**</span></span>
+<span id="cb9-43"><a href="#cb9-43" aria-hidden="true" tabindex="-1"></a><span class="co"> * </span><span class="an">@brief</span><span class="co"> ARM Cortex-M SysTick Exception Handler (Fires every 1ms)</span></span>
+<span id="cb9-44"><a href="#cb9-44" aria-hidden="true" tabindex="-1"></a><span class="co"> */</span></span>
+<span id="cb9-45"><a href="#cb9-45" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> SysTick_Handler<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-46"><a href="#cb9-46" aria-hidden="true" tabindex="-1"></a>    ms_ticks<span class="op">++;</span></span>
+<span id="cb9-47"><a href="#cb9-47" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-48"><a href="#cb9-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-49"><a href="#cb9-49" aria-hidden="true" tabindex="-1"></a><span class="co">/**</span></span>
+<span id="cb9-50"><a href="#cb9-50" aria-hidden="true" tabindex="-1"></a><span class="co"> * </span><span class="an">@brief</span><span class="co"> Initialize 1 ms SysTick Hardware Timer</span></span>
+<span id="cb9-51"><a href="#cb9-51" aria-hidden="true" tabindex="-1"></a><span class="co"> * CPU Clock = 48 MHz -&gt; 48,000 clock cycles = 1 ms</span></span>
+<span id="cb9-52"><a href="#cb9-52" aria-hidden="true" tabindex="-1"></a><span class="co"> */</span></span>
+<span id="cb9-53"><a href="#cb9-53" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> systick_init<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-54"><a href="#cb9-54" aria-hidden="true" tabindex="-1"></a>    SYST_RVR <span class="op">=</span> <span class="dv">48000</span><span class="bu">UL</span> <span class="op">-</span> <span class="dv">1</span><span class="bu">UL</span><span class="op">;</span> <span class="co">// Set reload value for 1ms tick</span></span>
+<span id="cb9-55"><a href="#cb9-55" aria-hidden="true" tabindex="-1"></a>    SYST_CVR <span class="op">=</span> <span class="dv">0</span><span class="op">;</span>             <span class="co">// Clear current counter</span></span>
+<span id="cb9-56"><a href="#cb9-56" aria-hidden="true" tabindex="-1"></a>    SYST_CSR <span class="op">=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> <span class="dv">2</span><span class="op">)</span> <span class="op">|</span>    <span class="co">// Bit 2: Core processor clock source</span></span>
+<span id="cb9-57"><a href="#cb9-57" aria-hidden="true" tabindex="-1"></a>               <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> <span class="dv">1</span><span class="op">)</span> <span class="op">|</span>    <span class="co">// Bit 1: Enable SysTick exception interrupt</span></span>
+<span id="cb9-58"><a href="#cb9-58" aria-hidden="true" tabindex="-1"></a>               <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> <span class="dv">0</span><span class="op">);</span>     <span class="co">// Bit 0: Enable counter</span></span>
+<span id="cb9-59"><a href="#cb9-59" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-60"><a href="#cb9-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-61"><a href="#cb9-61" aria-hidden="true" tabindex="-1"></a><span class="dt">uint32_t</span> get_millis<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-62"><a href="#cb9-62" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> ms_ticks<span class="op">;</span></span>
+<span id="cb9-63"><a href="#cb9-63" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-64"><a href="#cb9-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-65"><a href="#cb9-65" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> metronome_hardware_init<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-66"><a href="#cb9-66" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 1. Enable GPIOA, GPIOB, and ADC1 peripheral clocks</span></span>
+<span id="cb9-67"><a href="#cb9-67" aria-hidden="true" tabindex="-1"></a>    RCC_IOPENR_REG  <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> <span class="dv">0</span><span class="op">);</span>  <span class="co">// GPIOA clock enable (PA0)</span></span>
+<span id="cb9-68"><a href="#cb9-68" aria-hidden="true" tabindex="-1"></a>    RCC_IOPENR_REG  <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> <span class="dv">1</span><span class="op">);</span>  <span class="co">// GPIOB clock enable (PB0)</span></span>
+<span id="cb9-69"><a href="#cb9-69" aria-hidden="true" tabindex="-1"></a>    RCC_APBENR2_REG <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> <span class="dv">20</span><span class="op">);</span> <span class="co">// ADC clock enable</span></span>
+<span id="cb9-70"><a href="#cb9-70" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-71"><a href="#cb9-71" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2. Configure PB0 (D3) as Output ('01' in MODER) for Metronome LED</span></span>
+<span id="cb9-72"><a href="#cb9-72" aria-hidden="true" tabindex="-1"></a>    GPIOB_MODER_REG <span class="op">&amp;=</span> <span class="op">~(</span><span class="dv">3</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span>METRONOME_LED_PIN <span class="op">*</span> <span class="dv">2</span><span class="op">));</span></span>
+<span id="cb9-73"><a href="#cb9-73" aria-hidden="true" tabindex="-1"></a>    GPIOB_MODER_REG <span class="op">|=</span>  <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span>METRONOME_LED_PIN <span class="op">*</span> <span class="dv">2</span><span class="op">));</span></span>
+<span id="cb9-74"><a href="#cb9-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-75"><a href="#cb9-75" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 3. Configure PA0 (A0) as Analog ('11' in MODER) for Tempo Dial</span></span>
+<span id="cb9-76"><a href="#cb9-76" aria-hidden="true" tabindex="-1"></a>    GPIOA_MODER_REG <span class="op">|=</span>  <span class="op">(</span><span class="dv">3</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">0</span> <span class="op">*</span> <span class="dv">2</span><span class="op">));</span></span>
+<span id="cb9-77"><a href="#cb9-77" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-78"><a href="#cb9-78" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 4. ADC Calibration &amp; Enable</span></span>
+<span id="cb9-79"><a href="#cb9-79" aria-hidden="true" tabindex="-1"></a>    ADC1_CR_REG <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> <span class="dv">31</span><span class="op">);</span> <span class="co">// Start calibration (ADCAL)</span></span>
+<span id="cb9-80"><a href="#cb9-80" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(</span>ADC1_CR_REG <span class="op">&amp;</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> <span class="dv">31</span><span class="op">));</span></span>
+<span id="cb9-81"><a href="#cb9-81" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-82"><a href="#cb9-82" aria-hidden="true" tabindex="-1"></a>    ADC1_ISR_REG <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> <span class="dv">0</span><span class="op">);</span> <span class="co">// Clear ADRDY</span></span>
+<span id="cb9-83"><a href="#cb9-83" aria-hidden="true" tabindex="-1"></a>    ADC1_CR_REG  <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> <span class="dv">0</span><span class="op">);</span> <span class="co">// Assert ADEN</span></span>
+<span id="cb9-84"><a href="#cb9-84" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(!(</span>ADC1_ISR_REG <span class="op">&amp;</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> <span class="dv">0</span><span class="op">)));</span></span>
+<span id="cb9-85"><a href="#cb9-85" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-86"><a href="#cb9-86" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 5. Configure 10-bit resolution &amp; Channel 0 selection</span></span>
+<span id="cb9-87"><a href="#cb9-87" aria-hidden="true" tabindex="-1"></a>    ADC1_CFGR1_REG <span class="op">&amp;=</span> <span class="op">~(</span><span class="dv">3</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">3</span><span class="op">);</span></span>
+<span id="cb9-88"><a href="#cb9-88" aria-hidden="true" tabindex="-1"></a>    ADC1_CFGR1_REG <span class="op">|=</span>  <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">3</span><span class="op">);</span> <span class="co">// 10-bit mode (0 to 1023)</span></span>
+<span id="cb9-89"><a href="#cb9-89" aria-hidden="true" tabindex="-1"></a>    ADC1_CHSELR_REG <span class="op">=</span>  <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">0</span><span class="op">);</span> <span class="co">// Channel 0</span></span>
+<span id="cb9-90"><a href="#cb9-90" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-91"><a href="#cb9-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-92"><a href="#cb9-92" aria-hidden="true" tabindex="-1"></a><span class="dt">uint16_t</span> read_tempo_dial<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-93"><a href="#cb9-93" aria-hidden="true" tabindex="-1"></a>    ADC1_CR_REG <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> <span class="dv">2</span><span class="op">);</span> <span class="co">// Start ADC conversion (ADSTART)</span></span>
+<span id="cb9-94"><a href="#cb9-94" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(!(</span>ADC1_ISR_REG <span class="op">&amp;</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> <span class="dv">2</span><span class="op">)));</span> <span class="co">// Wait for EOC</span></span>
+<span id="cb9-95"><a href="#cb9-95" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">(</span><span class="dt">uint16_t</span><span class="op">)</span>ADC1_DR_REG<span class="op">;</span>        <span class="co">// Return 10-bit reading (0 to 1023)</span></span>
+<span id="cb9-96"><a href="#cb9-96" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-97"><a href="#cb9-97" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-98"><a href="#cb9-98" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-99"><a href="#cb9-99" aria-hidden="true" tabindex="-1"></a>    metronome_hardware_init<span class="op">();</span></span>
+<span id="cb9-100"><a href="#cb9-100" aria-hidden="true" tabindex="-1"></a>    systick_init<span class="op">();</span></span>
+<span id="cb9-101"><a href="#cb9-101" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-102"><a href="#cb9-102" aria-hidden="true" tabindex="-1"></a>    <span class="dt">uint32_t</span> previous_millis <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb9-103"><a href="#cb9-103" aria-hidden="true" tabindex="-1"></a>    <span class="dt">uint8_t</span>  led_state       <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb9-104"><a href="#cb9-104" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-105"><a href="#cb9-105" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(</span><span class="dv">1</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-106"><a href="#cb9-106" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Step 1: Read analog tempo dial smoothly without stopping the CPU</span></span>
+<span id="cb9-107"><a href="#cb9-107" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint16_t</span> raw_tempo <span class="op">=</span> read_tempo_dial<span class="op">();</span></span>
+<span id="cb9-108"><a href="#cb9-108" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-109"><a href="#cb9-109" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Step 2: Map 10-bit ADC (0..1023) to interval: 100ms to 2000ms</span></span>
+<span id="cb9-110"><a href="#cb9-110" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Formula: interval = 100 + (raw_tempo * (2000 - 100)) / 1023</span></span>
+<span id="cb9-111"><a href="#cb9-111" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint32_t</span> interval <span class="op">=</span> <span class="dv">100</span><span class="bu">UL</span> <span class="op">+</span> <span class="op">((</span><span class="dt">uint32_t</span><span class="op">)</span>raw_tempo <span class="op">*</span> <span class="dv">1900</span><span class="bu">UL</span><span class="op">)</span> <span class="op">/</span> <span class="dv">1023</span><span class="bu">UL</span><span class="op">;</span></span>
+<span id="cb9-112"><a href="#cb9-112" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-113"><a href="#cb9-113" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Step 3: Non-blocking elapsed time comparison</span></span>
+<span id="cb9-114"><a href="#cb9-114" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint32_t</span> current_millis <span class="op">=</span> get_millis<span class="op">();</span></span>
+<span id="cb9-115"><a href="#cb9-115" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">((</span>current_millis <span class="op">-</span> previous_millis<span class="op">)</span> <span class="op">&gt;=</span> interval<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-116"><a href="#cb9-116" aria-hidden="true" tabindex="-1"></a>            previous_millis <span class="op">=</span> current_millis<span class="op">;</span> <span class="co">// Update last blink time</span></span>
+<span id="cb9-117"><a href="#cb9-117" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-118"><a href="#cb9-118" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Step 4: Toggle LED state atomically via BSRR register on PB0</span></span>
+<span id="cb9-119"><a href="#cb9-119" aria-hidden="true" tabindex="-1"></a>            led_state <span class="op">=</span> <span class="op">!</span>led_state<span class="op">;</span></span>
+<span id="cb9-120"><a href="#cb9-120" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>led_state<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-121"><a href="#cb9-121" aria-hidden="true" tabindex="-1"></a>                <span class="co">// Set PB0 HIGH (Write to lower 16 bits of BSRR)</span></span>
+<span id="cb9-122"><a href="#cb9-122" aria-hidden="true" tabindex="-1"></a>                GPIOB_BSRR_REG <span class="op">=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> METRONOME_LED_PIN<span class="op">);</span></span>
+<span id="cb9-123"><a href="#cb9-123" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb9-124"><a href="#cb9-124" aria-hidden="true" tabindex="-1"></a>                <span class="co">// Reset PB0 LOW (Write to upper 16 bits of BSRR)</span></span>
+<span id="cb9-125"><a href="#cb9-125" aria-hidden="true" tabindex="-1"></a>                GPIOB_BSRR_REG <span class="op">=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span>METRONOME_LED_PIN <span class="op">+</span> <span class="dv">16</span><span class="bu">U</span><span class="op">));</span></span>
+<span id="cb9-126"><a href="#cb9-126" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb9-127"><a href="#cb9-127" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb9-128"><a href="#cb9-128" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-129"><a href="#cb9-129" aria-hidden="true" tabindex="-1"></a>        <span class="co">// The CPU remains completely free to execute background tasks!</span></span>
+<span id="cb9-130"><a href="#cb9-130" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-131"><a href="#cb9-131" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-132"><a href="#cb9-132" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb9-133"><a href="#cb9-133" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+</section>
+<section id="blocking-vs.-non-blocking-performance-comparison" class="level3">
+<h3 class="anchored" data-anchor-id="blocking-vs.-non-blocking-performance-comparison">Blocking vs.&nbsp;Non-Blocking Performance Comparison</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Evaluation Metric</th>
+<th style="text-align: left;">Blocking Delay (<code>delay()</code>)</th>
+<th style="text-align: left;">Non-Blocking Hardware Timing (<code>millis()</code> / SysTick)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>CPU Utilization</strong></td>
+<td style="text-align: left;">100% trapped inside empty busy-wait loops</td>
+<td style="text-align: left;">&lt; 0.1% CPU overhead; available for multitasking</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Input Responsiveness</strong></td>
+<td style="text-align: left;">Dial adjustments ignored until current delay finishes</td>
+<td style="text-align: left;">Instantaneous response with zero latency</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Power Efficiency</strong></td>
+<td style="text-align: left;">Constant high dynamic power consumption</td>
+<td style="text-align: left;">Allows CPU to enter low-power sleep modes (<code>__WFI()</code>)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Multitasking Ability</strong></td>
+<td style="text-align: left;">Incapable of executing parallel tasks</td>
+<td style="text-align: left;">Scalable cooperative multitasking &amp; event scheduling</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="how-mini-project-2-metronome-applies-week-4-concepts" class="level3">
+<h3 class="anchored" data-anchor-id="how-mini-project-2-metronome-applies-week-4-concepts">🔍 How Mini-Project 2 (Metronome) Applies Week 4 Concepts</h3>
+<p>This project showcases how hardware timers liberate the CPU from blocking execution:</p>
+<section id="hardware-circuit-level-concept-mapping-1" class="level4">
+<h4 class="anchored" data-anchor-id="hardware-circuit-level-concept-mapping-1">1. Hardware &amp; Circuit-Level Concept Mapping</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Circuit Component</th>
+<th style="text-align: left;">Week 4 Theoretical Concept</th>
+<th style="text-align: left;">Technical Function in System</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Tempo Dial (A0 / PA0)</strong></td>
+<td style="text-align: left;"><strong>Dynamic Parameter Input</strong></td>
+<td style="text-align: left;">Provides a continuous analog voltage (<span class="math inline">\(0\text{V}\)</span> to <span class="math inline">\(3.3\text{V}\)</span>) corresponding to tempo intervals (<span class="math inline">\(100\text{ ms}\)</span> to <span class="math inline">\(2000\text{ ms}\)</span>).</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Metronome LED (D3 / PB0)</strong></td>
+<td style="text-align: left;"><strong>Periodic Event Indicator</strong></td>
+<td style="text-align: left;">Toggles state at each timer expiration event, providing visual feedback of the programmed tempo.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Common GND &amp; Power Rails</strong></td>
+<td style="text-align: left;"><strong>Voltage Reference Stability</strong></td>
+<td style="text-align: left;">Ensures that analog readings are not skewed by ground bounce when the LED turns on and off.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="firmware-code-to-concept-breakdown-1" class="level4">
+<h4 class="anchored" data-anchor-id="firmware-code-to-concept-breakdown-1">2. Firmware Code-to-Concept Breakdown</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Code Statement (Framework / Bare-Metal)</th>
+<th style="text-align: left;">Week 4 Theoretical Concept</th>
+<th style="text-align: left;">Deep-Dive Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>int interval = map(rawTempo, 0, 1023, 100, 2000);</code></td>
+<td style="text-align: left;"><strong>Linear Interpolation / Scaling</strong></td>
+<td style="text-align: left;">Maps the digitized input domain (<span class="math inline">\([0, 1023]\)</span>) onto the desired physical time domain (<span class="math inline">\([100\text{ ms}, 2000\text{ ms}]\)</span>).</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>unsigned long currentMillis = millis();</code><br><code>get_millis();</code></td>
+<td style="text-align: left;"><strong>Hardware Timer Ticks (<code>SysTick</code>)</strong></td>
+<td style="text-align: left;">Instead of wasting millions of CPU clock cycles in empty <code>delay()</code> loops, the ARM Cortex-M <strong>SysTick 24-bit down-counter</strong> decrements in the background at 48 MHz, generating an interrupt every 1 ms to maintain an accurate system clock.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>if (currentMillis - previousMillis &gt;= interval)</code></td>
+<td style="text-align: left;"><strong>Non-Blocking Delta Timing</strong></td>
+<td style="text-align: left;">Computes elapsed time using unsigned modular arithmetic: <code>(current - previous)</code>. This formula is mathematically <strong>immune to timer overflow/rollover</strong> (which occurs after ~49.7 days on 32-bit <code>millis</code>).</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>GPIOB_BSRR_REG = (1UL &lt;&lt; pin);</code></td>
+<td style="text-align: left;"><strong>Atomic Output State Toggle</strong></td>
+<td style="text-align: left;">In bare-metal C, toggling the LED state via <code>BSRR</code> executes in a single cycle without disabling interrupts or risking data races with background ADC conversions.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+</section>
+<section id="real-world-embedded-systems-examples" class="level2">
+<h2 class="anchored" data-anchor-id="real-world-embedded-systems-examples">7. Real-World Embedded Systems Examples</h2>
+<p>Timers, ADCs, and PWM are the trifecta of modern embedded control. Study these three industry-standard applications:</p>
+<section id="example-4.1-automotive-ambient-light-automatic-headlight-dimmer" class="level3">
+<h3 class="anchored" data-anchor-id="example-4.1-automotive-ambient-light-automatic-headlight-dimmer">Example 4.1: Automotive Ambient Light Automatic Headlight Dimmer 🚗💡</h3>
+<ul>
+<li><p><strong>The Real-World Scenario:</strong> Luxury vehicles feature automatic headlamps that continuously sense external ambient light levels. When driving into an underpass, tunnel, or during twilight, the headlights automatically illuminate and smoothly scale their brightness.</p></li>
+<li><p><strong>Key Concept Connection:</strong></p>
+<ul>
+<li>An ambient light photodiode produces a voltage proportional to lux, sampled by a <strong>12-bit ADC</strong>.</li>
+<li>The microcontroller maps this reading to an inverse <strong>1 kHz PWM duty cycle</strong> driving high-power LED driver MOSFETs. Smooth duty cycle increments prevent abrupt illumination steps that could distract the driver.</li>
+</ul></li>
+<li><p><strong>Firmware Architectural Pattern:</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdint.h&gt;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> update_headlight_illumination<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 1. Sample ambient brightness (0 = Pitch Black, 4095 = Bright Sunlight)</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">uint16_t</span> ambient_lux <span class="op">=</span> read_adc_channel<span class="op">(</span>ADC_CHANNEL_LIGHT_SENSOR<span class="op">);</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2. Inverse mapping: Darker ambient requires brighter headlights</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">uint16_t</span> target_pwm_duty <span class="op">=</span> <span class="dv">4095</span> <span class="op">-</span> ambient_lux<span class="op">;</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 3. Update Hardware Timer Compare Register (CCR) controlling LED drivers</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    TIM1<span class="op">-&gt;</span>CCR1 <span class="op">=</span> target_pwm_duty<span class="op">;</span> </span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+</ul>
+<hr>
+</section>
+<section id="example-4.2-hospital-icu-vital-signs-heartbeat-metronome" class="level3">
+<h3 class="anchored" data-anchor-id="example-4.2-hospital-icu-vital-signs-heartbeat-metronome">Example 4.2: Hospital ICU Vital Signs Heartbeat Metronome ❤️🔊</h3>
+<ul>
+<li><p><strong>The Real-World Scenario:</strong> In an intensive care unit (ICU) bedside patient monitor, an audio beep and flashing heart icon synchronize with the patient’s electrocardiogram (ECG) heart rate (e.g., 60 to 180 beats per minute).</p></li>
+<li><p><strong>The Non-Blocking Requirement:</strong></p>
+<ul>
+<li>If the firmware used <code>delay()</code> to time the beeps, the processor would be completely paralyzed and unable to process urgent incoming arrhythmia alarms or nurse touch-screen inputs!</li>
+<li>Using a <strong>non-blocking SysTick timer state machine</strong>, the monitor tracks beep duration and heartbeat intervals cooperatively.</li>
+</ul></li>
+<li><p><strong>Firmware Architectural Pattern:</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">uint32_t</span> last_heartbeat_timestamp <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="dt">uint32_t</span> beat_interval_ms <span class="op">=</span> <span class="dv">857</span><span class="op">;</span> <span class="co">// 70 Beats Per Minute (60,000 / 70)</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> process_vital_signs<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">uint32_t</span> now <span class="op">=</span> get_systick_millis<span class="op">();</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Non-blocking timer check</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>now <span class="op">-</span> last_heartbeat_timestamp <span class="op">&gt;=</span> beat_interval_ms<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>        last_heartbeat_timestamp <span class="op">=</span> now<span class="op">;</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>        TRIGGER_HEARTBEAT_AUDIO_BEEP<span class="op">();</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>        FLASH_CARDIAC_LED_ON_DISPLAY<span class="op">();</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">// CPU remains 100% available to evaluate emergency alarms and touch inputs</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>    check_blood_oxygen_saturation<span class="op">();</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>    service_touchscreen_events<span class="op">();</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+</ul>
+<hr>
+</section>
+<section id="example-4.3-drone-brushless-motor-electronic-speed-controller-esc" class="level3">
+<h3 class="anchored" data-anchor-id="example-4.3-drone-brushless-motor-electronic-speed-controller-esc">Example 4.3: Drone Brushless Motor Electronic Speed Controller (ESC) 🚁</h3>
+<ul>
+<li><p><strong>The Real-World Scenario:</strong> A quadcopter flight controller must dynamically adjust the rotational speeds of 4 high-RPM brushless motors hundreds of times per second to remain stable in turbulent winds.</p></li>
+<li><p><strong>Hardware Timer PWM Generation:</strong></p>
+<ul>
+<li>The flight computer runs a hardware timer generating standard servo PWM pulses at <strong>400 Hz</strong> (period <span class="math inline">\(T = 2.5\text{ ms}\)</span>).</li>
+<li>Pulse widths between <strong>1000 <span class="math inline">\(\mu\text{s}\)</span></strong> (0% throttle) and <strong>2000 <span class="math inline">\(\mu\text{s}\)</span></strong> (100% throttle) command the Electronic Speed Controllers with sub-microsecond precision.</li>
+</ul></li>
+<li><p><strong>Firmware Architectural Pattern:</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#define THROTTLE_MIN_PULSE_US   </span><span class="op">(</span><span class="dv">1000</span><span class="bu">U</span><span class="op">)</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define THROTTLE_MAX_PULSE_US   </span><span class="op">(</span><span class="dv">2000</span><span class="bu">U</span><span class="op">)</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> set_motor_thrust<span class="op">(</span><span class="dt">uint8_t</span> motor_id<span class="op">,</span> <span class="dt">float</span> throttle_percentage<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Calculate pulse width in microseconds (1000 to 2000 us)</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">uint32_t</span> pulse_us <span class="op">=</span> THROTTLE_MIN_PULSE_US <span class="op">+</span> </span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>                        <span class="op">(</span><span class="dt">uint32_t</span><span class="op">)(</span>throttle_percentage <span class="op">*</span> <span class="fl">10.0</span><span class="bu">f</span><span class="op">);</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Update Timer Capture/Compare Register directly</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">switch</span><span class="op">(</span>motor_id<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="dv">0</span><span class="op">:</span> TIM2<span class="op">-&gt;</span>CCR1 <span class="op">=</span> pulse_us<span class="op">;</span> <span class="cf">break</span><span class="op">;</span> <span class="co">// Motor Front-Left</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="dv">1</span><span class="op">:</span> TIM2<span class="op">-&gt;</span>CCR2 <span class="op">=</span> pulse_us<span class="op">;</span> <span class="cf">break</span><span class="op">;</span> <span class="co">// Motor Front-Right</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="dv">2</span><span class="op">:</span> TIM2<span class="op">-&gt;</span>CCR3 <span class="op">=</span> pulse_us<span class="op">;</span> <span class="cf">break</span><span class="op">;</span> <span class="co">// Motor Rear-Left</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="dv">3</span><span class="op">:</span> TIM2<span class="op">-&gt;</span>CCR4 <span class="op">=</span> pulse_us<span class="op">;</span> <span class="cf">break</span><span class="op">;</span> <span class="co">// Motor Rear-Right</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="important-exam-practice-questions" class="level2">
+<h2 class="anchored" data-anchor-id="important-exam-practice-questions">8. Important Exam Practice Questions</h2>
+<section id="question-1-timer-overflow-frequency-calculation" class="level3">
+<h3 class="anchored" data-anchor-id="question-1-timer-overflow-frequency-calculation">Question 1: Timer Overflow Frequency Calculation</h3>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Click to View Question &amp; Options
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>A microcontroller timer is clocked by an internal clock source of <strong>16 MHz</strong>. The Prescaler (<code>PSC</code>) is set to <strong>15</strong>, and the Auto-Reload Register (<code>ARR</code>) is set to <strong>999</strong>. What is the resulting timer overflow frequency?</p>
+<p><strong>Options:</strong><br>
+- <strong>A)</strong> 100 Hz<br>
+- <strong>B)</strong> 500 Hz<br>
+- <strong>C)</strong> 1,000 Hz (1 kHz)<br>
+- <strong>D)</strong> 10,000 Hz</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>✅ Correct Answer: C
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Explanation:</strong><br>
+<span class="math display">\[f_{\text{timer}} = \frac{f_{\text{CLK}}}{(\text{PSC} + 1) \times (\text{ARR} + 1)} = \frac{16,000,000}{(15 + 1) \times (999 + 1)} = \frac{16,000,000}{16 \times 1000} = \mathbf{1,000\text{ Hz}}\ (1\text{ kHz})\]</span></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="question-2-adc-quantization-resolution" class="level3">
+<h3 class="anchored" data-anchor-id="question-2-adc-quantization-resolution">Question 2: ADC Quantization Resolution</h3>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Click to View Question &amp; Options
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>A 10-bit Analog-to-Digital Converter (ADC) can digitize an incoming analog signal into how many distinct discrete voltage levels?</p>
+<p><strong>Options:</strong><br>
+- <strong>A)</strong> 10 levels<br>
+- <strong>B)</strong> 256 levels<br>
+- <strong>C)</strong> 1024 levels<br>
+- <strong>D)</strong> 4096 levels</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>✅ Correct Answer: C
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Explanation:</strong><br>
+An <span class="math inline">\(N\)</span>-bit ADC resolves an input into <span class="math inline">\(2^N\)</span> discrete numerical steps. For a 10-bit converter: <span class="math inline">\(2^{10} = \mathbf{1024}\)</span> distinct levels (ranging from 0 to 1023).</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="question-3-combinational-vs.-sequential-digital-elements" class="level3">
+<h3 class="anchored" data-anchor-id="question-3-combinational-vs.-sequential-digital-elements">Question 3: Combinational vs.&nbsp;Sequential Digital Elements</h3>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Click to View Question &amp; Options
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Which of the following is the fundamental distinguishing characteristic of a sequential digital logic element compared to a combinational element?</p>
+<p><strong>Options:</strong><br>
+- <strong>A)</strong> Sequential circuits do not require electric power to operate<br>
+- <strong>B)</strong> Sequential circuits contain memory (storage) elements such as flip-flops, so the output depends on both current inputs and previous state history<br>
+- <strong>C)</strong> Combinational circuits require a continuous clock pulse signal<br>
+- <strong>D)</strong> Sequential circuits can only process analog signals</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>✅ Correct Answer: B
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Explanation:</strong><br>
+Combinational circuits (like adders and multiplexers) produce outputs based strictly on current inputs. Sequential circuits (like registers, counters, and timers) incorporate memory elements (flip-flops) and update their state based on clock transitions.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="question-4-microcontroller-low-power-modes" class="level3">
+<h3 class="anchored" data-anchor-id="question-4-microcontroller-low-power-modes">Question 4: Microcontroller Low-Power Modes</h3>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Click to View Question &amp; Options
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-8" class="callout-8-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>In battery-powered embedded systems, which microcontroller operating mode retains SRAM contents while turning off the high-speed CPU clock until an external interrupt occurs?</p>
+<p><strong>Options:</strong><br>
+- <strong>A)</strong> Shutdown Mode<br>
+- <strong>B)</strong> Sleep / Stop Mode<br>
+- <strong>C)</strong> Factory Reset Mode<br>
+- <strong>D)</strong> Thermal Protection Mode</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>✅ Correct Answer: B
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Explanation:</strong><br>
+Sleep and Stop modes gate the high-frequency clock to the CPU core while keeping SRAM powered, allowing instantaneous wakeup when an external pin change or timer interrupt triggers.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<hr>
+<div class="d-flex justify-content-between mt-4">
+<p><a href="./Week-3.html" class="seek-prev-btn">← Back to Week 3</a> <a href="./index.html" class="seek-next-btn">Return to Course Overview →</a></p>
+</div>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+<script src="site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

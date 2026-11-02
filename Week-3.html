@@ -1,0 +1,1737 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.19">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Week 3: Intermediate STM32 Programming &amp; Architecture – CS2101: Embedded C</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-9e4d0c1ab0475ae3d85677ae0d9d1730.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-3a903d85c7a032a9d62605f072b49e96.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-9e4d0c1ab0475ae3d85677ae0d9d1730.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar docked quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./Week-3.html">Week-3</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">CS2101: Embedded C</a> 
+        <div class="sidebar-tools-main">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">About the Course</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Week-1</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Week-2</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-3.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Week-3</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-4.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Week-4</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-5.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Week-5</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-6.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Week-6</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-7.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Week-7</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-8.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Week-8</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-9.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Week-9</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-10.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Week-10</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-11.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Week-11</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-12.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Week-12</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#arm-cortex-m-bus-architecture-interconnect" id="toc-arm-cortex-m-bus-architecture-interconnect" class="nav-link active" data-scroll-target="#arm-cortex-m-bus-architecture-interconnect">1. ARM Cortex-M Bus Architecture &amp; Interconnect</a>
+  <ul class="collapse">
+  <li><a href="#bus-segmentation-purpose" id="toc-bus-segmentation-purpose" class="nav-link" data-scroll-target="#bus-segmentation-purpose">Bus Segmentation Purpose</a></li>
+  </ul></li>
+  <li><a href="#memory-map-address-space-decoding" id="toc-memory-map-address-space-decoding" class="nav-link" data-scroll-target="#memory-map-address-space-decoding">2. Memory Map &amp; Address Space Decoding</a>
+  <ul class="collapse">
+  <li><a href="#memory-address-calculation-example" id="toc-memory-address-calculation-example" class="nav-link" data-scroll-target="#memory-address-calculation-example">Memory Address Calculation Example</a></li>
+  </ul></li>
+  <li><a href="#peripheral-clock-gating-rcc" id="toc-peripheral-clock-gating-rcc" class="nav-link" data-scroll-target="#peripheral-clock-gating-rcc">3. Peripheral Clock Gating (RCC)</a></li>
+  <li><a href="#the-stm32-gpio-register-suite" id="toc-the-stm32-gpio-register-suite" class="nav-link" data-scroll-target="#the-stm32-gpio-register-suite">4. The STM32 GPIO Register Suite</a>
+  <ul class="collapse">
+  <li><a href="#gpio-mode-register-moder-bit-encoding" id="toc-gpio-mode-register-moder-bit-encoding" class="nav-link" data-scroll-target="#gpio-mode-register-moder-bit-encoding">GPIO Mode Register (<code>MODER</code>) Bit Encoding</a></li>
+  <li><a href="#atomic-pin-control-with-bsrr" id="toc-atomic-pin-control-with-bsrr" class="nav-link" data-scroll-target="#atomic-pin-control-with-bsrr">Atomic Pin Control with <code>BSRR</code></a></li>
+  </ul></li>
+  <li><a href="#hardware-interfacing-mixed-voltage-considerations" id="toc-hardware-interfacing-mixed-voltage-considerations" class="nav-link" data-scroll-target="#hardware-interfacing-mixed-voltage-considerations">5. Hardware Interfacing &amp; Mixed-Voltage Considerations</a></li>
+  <li><a href="#interactive-simulation-smart-security-gate-monitor-wokwi" id="toc-interactive-simulation-smart-security-gate-monitor-wokwi" class="nav-link" data-scroll-target="#interactive-simulation-smart-security-gate-monitor-wokwi">6. Interactive Simulation: Smart Security Gate Monitor (Wokwi)</a>
+  <ul class="collapse">
+  <li><a href="#hardware-circuit-setup" id="toc-hardware-circuit-setup" class="nav-link" data-scroll-target="#hardware-circuit-setup">🛠️ Hardware Circuit Setup</a></li>
+  </ul></li>
+  <li><a href="#implementation-code-high-level-framework-vs.-bare-metal-embedded-c" id="toc-implementation-code-high-level-framework-vs.-bare-metal-embedded-c" class="nav-link" data-scroll-target="#implementation-code-high-level-framework-vs.-bare-metal-embedded-c">7. Implementation Code: High-Level Framework vs.&nbsp;Bare-Metal Embedded C</a>
+  <ul class="collapse">
+  <li><a href="#hardware-register-mapping-comparison" id="toc-hardware-register-mapping-comparison" class="nav-link" data-scroll-target="#hardware-register-mapping-comparison">Hardware Register Mapping Comparison</a></li>
+  <li><a href="#how-this-simulation-applies-week-3-concepts" id="toc-how-this-simulation-applies-week-3-concepts" class="nav-link" data-scroll-target="#how-this-simulation-applies-week-3-concepts">🔍 How This Simulation Applies Week 3 Concepts</a></li>
+  </ul></li>
+  <li><a href="#real-world-embedded-systems-examples" id="toc-real-world-embedded-systems-examples" class="nav-link" data-scroll-target="#real-world-embedded-systems-examples">8. Real-World Embedded Systems Examples</a>
+  <ul class="collapse">
+  <li><a href="#example-3.1-factory-emergency-stop-e-stop-button" id="toc-example-3.1-factory-emergency-stop-e-stop-button" class="nav-link" data-scroll-target="#example-3.1-factory-emergency-stop-e-stop-button">Example 3.1: Factory Emergency Stop (E-Stop) Button 🛑</a></li>
+  <li><a href="#example-3.2-medical-infusion-pump-optical-drop-counter" id="toc-example-3.2-medical-infusion-pump-optical-drop-counter" class="nav-link" data-scroll-target="#example-3.2-medical-infusion-pump-optical-drop-counter">Example 3.2: Medical Infusion Pump Optical Drop Counter 💧</a></li>
+  <li><a href="#example-3.3-automotive-vehicle-door-ajar-warning-system" id="toc-example-3.3-automotive-vehicle-door-ajar-warning-system" class="nav-link" data-scroll-target="#example-3.3-automotive-vehicle-door-ajar-warning-system">Example 3.3: Automotive Vehicle Door-Ajar Warning System 🚘</a></li>
+  </ul></li>
+  <li><a href="#important-exam-practice-questions" id="toc-important-exam-practice-questions" class="nav-link" data-scroll-target="#important-exam-practice-questions">9. Important Exam Practice Questions</a>
+  <ul class="collapse">
+  <li><a href="#question-1-necessity-of-rcc-peripheral-clock-gating" id="toc-question-1-necessity-of-rcc-peripheral-clock-gating" class="nav-link" data-scroll-target="#question-1-necessity-of-rcc-peripheral-clock-gating">Question 1: Necessity of RCC Peripheral Clock Gating</a></li>
+  <li><a href="#question-2-memory-mapped-address-calculation" id="toc-question-2-memory-mapped-address-calculation" class="nav-link" data-scroll-target="#question-2-memory-mapped-address-calculation">Question 2: Memory-Mapped Address Calculation</a></li>
+  <li><a href="#question-3-gpio-moder-register-configuration" id="toc-question-3-gpio-moder-register-configuration" class="nav-link" data-scroll-target="#question-3-gpio-moder-register-configuration">Question 3: GPIO MODER Register Configuration</a></li>
+  <li><a href="#question-4-common-ground-in-mixed-voltage-systems" id="toc-question-4-common-ground-in-mixed-voltage-systems" class="nav-link" data-scroll-target="#question-4-common-ground-in-mixed-voltage-systems">Question 4: Common Ground in Mixed-Voltage Systems</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Week 3: Intermediate STM32 Programming &amp; Architecture</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="arm-cortex-m-bus-architecture-interconnect" class="level2">
+<h2 class="anchored" data-anchor-id="arm-cortex-m-bus-architecture-interconnect">1. ARM Cortex-M Bus Architecture &amp; Interconnect</h2>
+<p>Modern 32-bit microcontrollers, such as the <strong>STM32</strong> family powered by ARM Cortex-M processor cores, use a multi-master interconnect matrix and layered bus hierarchy to connect the CPU core to memory and peripheral blocks.</p>
+<pre class="text"><code>+-----------------------------------------------------------------+
+|                   ARM Cortex-M Processor Core                   |
++-----------------------------------------------------------------+
+          |                                 |
+     [I-Bus: Code]                     [D-Bus: Data]
+          |                                 |
+          v                                 v
++-----------------------------------------------------------------+
+|                    Advanced High-Performance Bus                |
+|                             (AHB)                               |
++-----------------------------------------------------------------+
+          |                     |                     |
+     [Flash ROM]             [SRAM]             [Bridge to APB]
+    (0x0800 0000)        (0x2000 0000)                |
+                                                      v
+                                        +-------------------------+
+                                        |  Advanced Peripheral    |
+                                        |       Bus (APB)         |
+                                        +-------------------------+
+                                                      |
+                                          +---------------------+
+                                          | Peripherals:        |
+                                          | - GPIO Ports (A, B) |
+                                          | - Hardware Timers   |
+                                          | - UART / SPI / I2C  |
+                                          +---------------------+</code></pre>
+<section id="bus-segmentation-purpose" class="level3">
+<h3 class="anchored" data-anchor-id="bus-segmentation-purpose">Bus Segmentation Purpose</h3>
+<ul>
+<li><strong>AHB (Advanced High-Performance Bus):</strong> Runs at high clock frequency to connect the CPU to critical high-speed blocks (Flash memory, SRAM, DMA controllers).</li>
+<li><strong>APB (Advanced Peripheral Bus):</strong> Clocked at lower or divided frequencies to minimize dynamic power dissipation when accessing slower communication and control peripherals (GPIO, Timers, UART, I2C).</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="memory-map-address-space-decoding" class="level2">
+<h2 class="anchored" data-anchor-id="memory-map-address-space-decoding">2. Memory Map &amp; Address Space Decoding</h2>
+<p>The ARM architecture provides a flat, unified <strong>4-Gigabyte (32-bit)</strong> address space spanning from <code>0x0000 0000</code> to <code>0xFFFF FFFF</code>. Every component—Flash, RAM, and hardware peripherals—occupies a dedicated address segment.</p>
+<pre class="text"><code> 0x0000 0000 +-----------------------------------------------+
+             | Boot Memory / Alias Space                     |
+ 0x0800 0000 +-----------------------------------------------+
+             | Flash Program Memory (e.g., 32 KB - 512 KB)   |
+ 0x2000 0000 +-----------------------------------------------+
+             | SRAM Working Memory (e.g., 12 KB - 128 KB)    |
+ 0x4000 0000 +-----------------------------------------------+
+             | Peripheral Registers (Timers, ADC, UART, SPI) |
+ 0x5000 0000 +-----------------------------------------------+
+             | GPIO Port Registers (GPIOA, GPIOB, etc.)      |
+ 0xE000 0000 +-----------------------------------------------+
+             | System Control Space &amp; NVIC (Core Peripherals)|
+ 0xFFFF FFFF +-----------------------------------------------+</code></pre>
+<section id="memory-address-calculation-example" class="level3">
+<h3 class="anchored" data-anchor-id="memory-address-calculation-example">Memory Address Calculation Example</h3>
+<p>If an embedded processor has <strong>256 KB of SRAM</strong> starting at base address <code>0x00100000</code>: - <span class="math inline">\(256\text{ KB} = 256 \times 1024\text{ bytes} = 262,144\text{ bytes} = \text{0x00040000}\)</span> in hexadecimal. - <span class="math inline">\(\text{Ending Address} = \text{Base Address} + \text{Size} - 1\)</span> - <span class="math inline">\(\text{Ending Address} = \text{0x00100000} + \text{0x00040000} - 1 = \mathbf{\text{0x0013FFFF}}\)</span></p>
+<hr>
+</section>
+</section>
+<section id="peripheral-clock-gating-rcc" class="level2">
+<h2 class="anchored" data-anchor-id="peripheral-clock-gating-rcc">3. Peripheral Clock Gating (RCC)</h2>
+<p>In STM32 microcontrollers, <strong>all peripheral clocks are disabled by default</strong> upon system reset to minimize power consumption.</p>
+<p>Before configuring or accessing any peripheral register (such as a GPIO port or Timer), firmware <strong>must explicitly enable its clock</strong> in the <strong>RCC (Reset and Clock Control)</strong> register. Writing to a peripheral register without enabling its clock will result in a silent failure or a processor HardFault exception.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdint.h&gt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">// On STM32C0 series, GPIOA clock enable is bit 0 in RCC_IOPENR</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#define RCC_IOPENR_REG      </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="bn">0x40021034</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#define RCC_GPIOA_EN_BIT    </span><span class="op">(</span><span class="dv">0</span><span class="bu">U</span><span class="op">)</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> enable_gpioa_clock<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Assert Bit 0 to enable the clock to GPIO Port A</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    RCC_IOPENR_REG <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> RCC_GPIOA_EN_BIT<span class="op">);</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+<section id="the-stm32-gpio-register-suite" class="level2">
+<h2 class="anchored" data-anchor-id="the-stm32-gpio-register-suite">4. The STM32 GPIO Register Suite</h2>
+<p>Every General Purpose I/O port on an STM32 microcontroller is controlled by a dedicated set of 32-bit registers:</p>
+<pre class="text"><code> Register Name   Full Name                      Function
+---------------------------------------------------------------------------------------------
+ GPIOx_MODER     Port Mode Register             Selects Input, Output, Alternate Func, Analog
+ GPIOx_OTYPER    Output Type Register           Selects Push-Pull or Open-Drain output mode
+ GPIOx_OSPEEDR   Output Speed Register          Selects pin slew rate / switching frequency
+ GPIOx_PUPDR     Pull-up / Pull-down Register   Selects internal pull-up, pull-down, or floating
+ GPIOx_IDR       Input Data Register            Read-only register capturing pin logic state
+ GPIOx_ODR       Output Data Register           Read/Write register storing driven pin levels
+ GPIOx_BSRR      Bit Set / Reset Register       Atomic bit setting and resetting in one write</code></pre>
+<section id="gpio-mode-register-moder-bit-encoding" class="level3">
+<h3 class="anchored" data-anchor-id="gpio-mode-register-moder-bit-encoding">GPIO Mode Register (<code>MODER</code>) Bit Encoding</h3>
+<p>Each I/O pin consumes <strong>2 configuration bits</strong> in <code>MODER</code>: - <code>00</code> = Digital Input (Reset state) - <code>01</code> = General Purpose Digital Output - <code>10</code> = Alternate Function (e.g., UART TX/RX, SPI SCK, PWM) - <code>11</code> = Analog Input (for ADC / Low power)</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Configuring Pin PA5 (User LED on STM32 Nucleo) as Digital Output:</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Clear bits [11:10], then write '01' to bit 10</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>GPIOA<span class="op">-&gt;</span>MODER <span class="op">&amp;=</span> <span class="op">~(</span><span class="dv">3</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">2</span> <span class="op">*</span> <span class="dv">5</span><span class="op">));</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>GPIOA<span class="op">-&gt;</span>MODER <span class="op">|=</span>  <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">2</span> <span class="op">*</span> <span class="dv">5</span><span class="op">));</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="atomic-pin-control-with-bsrr" class="level3">
+<h3 class="anchored" data-anchor-id="atomic-pin-control-with-bsrr">Atomic Pin Control with <code>BSRR</code></h3>
+<p>Using <code>ODR |= (1 &lt;&lt; 5)</code> requires a three-step <strong>read-modify-write</strong> cycle (<code>LDR</code>, <code>ORR</code>, <code>STR</code>), which can cause race conditions if an interrupt occurs midway.</p>
+<p>The <strong>Bit Set/Reset Register (<code>BSRR</code>)</strong> allows <strong>atomic single-cycle pin manipulation</strong>: - Writing <code>1</code> to bits <code>[15:0]</code> sets the corresponding pin HIGH. - Writing <code>1</code> to bits <code>[31:16]</code> resets the corresponding pin LOW.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Atomic Pin Control (No read-modify-write needed)</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>GPIOA<span class="op">-&gt;</span>BSRR <span class="op">=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">5</span><span class="op">);</span>         <span class="co">// Turn Pin 5 ON</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>GPIOA<span class="op">-&gt;</span>BSRR <span class="op">=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">5</span> <span class="op">+</span> <span class="dv">16</span><span class="op">));</span>  <span class="co">// Turn Pin 5 OFF</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="hardware-interfacing-mixed-voltage-considerations" class="level2">
+<h2 class="anchored" data-anchor-id="hardware-interfacing-mixed-voltage-considerations">5. Hardware Interfacing &amp; Mixed-Voltage Considerations</h2>
+<p>When connecting microcontroller I/O pins to external components or companion chips, engineers must observe strict electrical rules:</p>
+<ol type="1">
+<li><strong>Logic Level Mismatch:</strong>
+<ul>
+<li>Modern microcontrollers commonly operate at <strong>3.3V or 1.8V</strong>, while legacy sensors or automotive modules operate at <strong>5.0V</strong>.</li>
+<li>Connecting a 5.0V signal directly to a non-5V-tolerant 3.3V MCU pin will forward-bias internal electrostatic discharge (ESD) protection diodes, causing <strong>latch-up or silicon burnout</strong>.</li>
+<li><em>Solution:</em> Use dedicated bi-directional level-shifter ICs (e.g., TXB0108) or resistor dividers for unidirectional inputs.</li>
+</ul></li>
+<li><strong>Common Ground Requirement:</strong>
+<ul>
+<li>In any electronic system with multiple power supplies, all circuits <strong>must share a common ground reference (0V)</strong>. Without a common ground, voltage potentials float unpredictably, preventing reliable logic level detection.</li>
+</ul></li>
+</ol>
+<hr>
+</section>
+<section id="interactive-simulation-smart-security-gate-monitor-wokwi" class="level2">
+<h2 class="anchored" data-anchor-id="interactive-simulation-smart-security-gate-monitor-wokwi">6. Interactive Simulation: Smart Security Gate Monitor (Wokwi)</h2>
+<p>In this project, you will build an automated monitoring system for a high-security facility. The system monitors <strong>4 physical gates (pushbuttons)</strong>. When a gate is breached: 1. <strong>Mechanical Debouncing:</strong> Firmware filters out contact bounce noise. 2. <strong>UART Security Broadcast:</strong> Microcontroller sends a timestamped alert over the serial terminal. 3. <strong>Binary LED Indicator:</strong> A 3-bit binary display immediately indicates which gate (1 to 4) was triggered.</p>
+<section id="hardware-circuit-setup" class="level3">
+<h3 class="anchored" data-anchor-id="hardware-circuit-setup">🛠️ Hardware Circuit Setup</h3>
+<ul>
+<li><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</li>
+<li><strong>4x Pushbuttons:</strong> Connected to digital pins <code>D8</code>, <code>D9</code>, <code>D10</code>, <code>D11</code> using <strong>internal pull-up resistors</strong> (<code>INPUT_PULLUP</code>).</li>
+<li><strong>3x Status LEDs:</strong> Connected to pins <code>D2</code> (Blue), <code>D3</code> (Green), <code>D4</code> (Red) via 220Ω current-limiting resistors.</li>
+<li><strong>Ground:</strong> All buttons and LED cathodes tied to common <code>GND</code>.</li>
+</ul>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 19%">
+<col style="width: 19%">
+<col style="width: 23%">
+<col style="width: 19%">
+<col style="width: 19%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Component</th>
+<th style="text-align: left;">Pin / Terminal</th>
+<th style="text-align: center;">STM32 Nucleo Pin</th>
+<th style="text-align: left;">Electrical Configuration</th>
+<th style="text-align: left;">Function</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Gate 1 Button</strong></td>
+<td style="text-align: left;">Terminal 1</td>
+<td style="text-align: center;"><code>D8</code></td>
+<td style="text-align: left;"><code>INPUT_PULLUP</code> (Idle: HIGH, Active: LOW)</td>
+<td style="text-align: left;">Security Gate 1 Sensor</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Gate 2 Button</strong></td>
+<td style="text-align: left;">Terminal 1</td>
+<td style="text-align: center;"><code>D9</code></td>
+<td style="text-align: left;"><code>INPUT_PULLUP</code> (Idle: HIGH, Active: LOW)</td>
+<td style="text-align: left;">Security Gate 2 Sensor</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Gate 3 Button</strong></td>
+<td style="text-align: left;">Terminal 1</td>
+<td style="text-align: center;"><code>D10</code></td>
+<td style="text-align: left;"><code>INPUT_PULLUP</code> (Idle: HIGH, Active: LOW)</td>
+<td style="text-align: left;">Security Gate 3 Sensor</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Gate 4 Button</strong></td>
+<td style="text-align: left;">Terminal 1</td>
+<td style="text-align: center;"><code>D11</code></td>
+<td style="text-align: left;"><code>INPUT_PULLUP</code> (Idle: HIGH, Active: LOW)</td>
+<td style="text-align: left;">Security Gate 4 Sensor</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>LED 1 (Blue)</strong></td>
+<td style="text-align: left;">Anode (via 220Ω)</td>
+<td style="text-align: center;"><code>D2</code></td>
+<td style="text-align: left;">Push-Pull Output (<code>OUTPUT</code>)</td>
+<td style="text-align: left;">Binary Bit 0 (<span class="math inline">\(2^0\)</span>)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>LED 2 (Green)</strong></td>
+<td style="text-align: left;">Anode (via 220Ω)</td>
+<td style="text-align: center;"><code>D3</code></td>
+<td style="text-align: left;">Push-Pull Output (<code>OUTPUT</code>)</td>
+<td style="text-align: left;">Binary Bit 1 (<span class="math inline">\(2^1\)</span>)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>LED 3 (Red)</strong></td>
+<td style="text-align: left;">Anode (via 220Ω)</td>
+<td style="text-align: center;"><code>D4</code></td>
+<td style="text-align: left;">Push-Pull Output (<code>OUTPUT</code>)</td>
+<td style="text-align: left;">Binary Bit 2 (<span class="math inline">\(2^2\)</span>)</td>
+</tr>
+</tbody>
+</table>
+<p>Click the green <strong>Play</strong> button inside the simulation window, open the <strong>Serial Monitor</strong> tab below, and click any of the pushbuttons:</p>
+<div class="simulation-container">
+<iframe src="https://wokwi.com/projects/478741617992340481?embed=1" title="STM32 Nucleo Smart Security Gate Monitor" loading="lazy" allowfullscreen="">
+</iframe>
+<div class="sim-info-bar">
+<p><span><strong>Target Board:</strong> STM32 Nucleo-C031C6</span> <span>Click Play, then press any Gate Button (1 to 4)</span></p>
+</div>
+</div>
+<hr>
+</section>
+</section>
+<section id="implementation-code-high-level-framework-vs.-bare-metal-embedded-c" class="level2">
+<h2 class="anchored" data-anchor-id="implementation-code-high-level-framework-vs.-bare-metal-embedded-c">7. Implementation Code: High-Level Framework vs.&nbsp;Bare-Metal Embedded C</h2>
+<p>Compare the high-level framework code running in the simulation with the equivalent <strong>Bare-Metal Embedded C</strong> implementation configuring STM32 <code>RCC</code>, <code>MODER</code>, <code>PUPDR</code>, <code>IDR</code>, and <code>BSRR</code> registers:</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="" aria-current="page">🔷 High-Level Framework (Running in Simulation)</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">🔶 Equivalent Bare-Metal Embedded C (Direct Register Manipulation)</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Smart Security Gate Monitor (High-Level Framework)</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Define Button Pins</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GATE_1 </span><span class="dv">8</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GATE_2 </span><span class="dv">9</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GATE_3 </span><span class="dv">10</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GATE_4 </span><span class="dv">11</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Define LED Pins</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#define LED_BIT_0 </span><span class="dv">2</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#define LED_BIT_1 </span><span class="dv">3</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="pp">#define LED_BIT_2 </span><span class="dv">4</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setup<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>begin<span class="op">(</span><span class="dv">115200</span><span class="op">);</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Setup LEDs as OUTPUT</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>LED_BIT_0<span class="op">,</span> OUTPUT<span class="op">);</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>LED_BIT_1<span class="op">,</span> OUTPUT<span class="op">);</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>LED_BIT_2<span class="op">,</span> OUTPUT<span class="op">);</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Setup Buttons with internal pull-up resistors to prevent floating state</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>GATE_1<span class="op">,</span> INPUT_PULLUP<span class="op">);</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>GATE_2<span class="op">,</span> INPUT_PULLUP<span class="op">);</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>GATE_3<span class="op">,</span> INPUT_PULLUP<span class="op">);</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>GATE_4<span class="op">,</span> INPUT_PULLUP<span class="op">);</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"=== Security System Active ==="</span><span class="op">);</span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"Waiting for gates to open..."</span><span class="op">);</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a><span class="co">// Display gate number in 3-bit binary using (number &gt;&gt; k) &amp; 1</span></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> showBinary<span class="op">(</span><span class="dt">int</span> number<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>  digitalWrite<span class="op">(</span>LED_BIT_0<span class="op">,</span> <span class="op">(</span>number <span class="op">&gt;&gt;</span> <span class="dv">0</span><span class="op">)</span> <span class="op">&amp;</span> <span class="dv">1</span><span class="op">);</span> </span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>  digitalWrite<span class="op">(</span>LED_BIT_1<span class="op">,</span> <span class="op">(</span>number <span class="op">&gt;&gt;</span> <span class="dv">1</span><span class="op">)</span> <span class="op">&amp;</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>  digitalWrite<span class="op">(</span>LED_BIT_2<span class="op">,</span> <span class="op">(</span>number <span class="op">&gt;&gt;</span> <span class="dv">2</span><span class="op">)</span> <span class="op">&amp;</span> <span class="dv">1</span><span class="op">);</span> </span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a><span class="co">// Check button state with non-blocking software debouncing</span></span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> checkGate<span class="op">(</span><span class="dt">int</span> pin<span class="op">,</span> <span class="dt">int</span> gateNumber<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 1. Button pressed connects pin to GND (Reads LOW)</span></span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>digitalRead<span class="op">(</span>pin<span class="op">)</span> <span class="op">==</span> LOW<span class="op">)</span> <span class="op">{</span>      </span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2. Simple Debounce: Wait 50ms for mechanical switch contacts to settle</span></span>
+<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a>    delay<span class="op">(</span><span class="dv">50</span><span class="op">);</span>                        </span>
+<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 3. Confirm valid human press</span></span>
+<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>digitalRead<span class="op">(</span>pin<span class="op">)</span> <span class="op">==</span> LOW<span class="op">)</span> <span class="op">{</span>    </span>
+<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a>      Serial<span class="op">.</span>print<span class="op">(</span><span class="st">"Alert! Gate "</span><span class="op">);</span></span>
+<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a>      Serial<span class="op">.</span>print<span class="op">(</span>gateNumber<span class="op">);</span></span>
+<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a>      Serial<span class="op">.</span>println<span class="op">(</span><span class="st">" has been breached!"</span><span class="op">);</span></span>
+<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a>      <span class="co">// Update physical binary LEDs</span></span>
+<span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a>      showBinary<span class="op">(</span>gateNumber<span class="op">);</span>         </span>
+<span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-58"><a href="#cb7-58" aria-hidden="true" tabindex="-1"></a>      <span class="co">// 4. Wait until the button is released to prevent terminal flooding</span></span>
+<span id="cb7-59"><a href="#cb7-59" aria-hidden="true" tabindex="-1"></a>      <span class="cf">while</span> <span class="op">(</span>digitalRead<span class="op">(</span>pin<span class="op">)</span> <span class="op">==</span> LOW<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-60"><a href="#cb7-60" aria-hidden="true" tabindex="-1"></a>        delay<span class="op">(</span><span class="dv">10</span><span class="op">);</span> </span>
+<span id="cb7-61"><a href="#cb7-61" aria-hidden="true" tabindex="-1"></a>      <span class="op">}</span></span>
+<span id="cb7-62"><a href="#cb7-62" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-63"><a href="#cb7-63" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb7-64"><a href="#cb7-64" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-65"><a href="#cb7-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-66"><a href="#cb7-66" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> loop<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb7-67"><a href="#cb7-67" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Continuously scan all 4 security gates</span></span>
+<span id="cb7-68"><a href="#cb7-68" aria-hidden="true" tabindex="-1"></a>  checkGate<span class="op">(</span>GATE_1<span class="op">,</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb7-69"><a href="#cb7-69" aria-hidden="true" tabindex="-1"></a>  checkGate<span class="op">(</span>GATE_2<span class="op">,</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb7-70"><a href="#cb7-70" aria-hidden="true" tabindex="-1"></a>  checkGate<span class="op">(</span>GATE_3<span class="op">,</span> <span class="dv">3</span><span class="op">);</span></span>
+<span id="cb7-71"><a href="#cb7-71" aria-hidden="true" tabindex="-1"></a>  checkGate<span class="op">(</span>GATE_4<span class="op">,</span> <span class="dv">4</span><span class="op">);</span></span>
+<span id="cb7-72"><a href="#cb7-72" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Smart Security Gate Monitor (Bare-Metal STM32 Embedded C)</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Direct hardware register configuration: RCC, MODER, PUPDR, IDR, BSRR</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdint.h&gt;</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co">// 1. Base Register Definitions</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#define RCC_BASE            </span><span class="op">(</span><span class="bn">0x40021000</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#define RCC_IOPENR_REG      </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span>RCC_BASE<span class="pp"> </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x34</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOA_BASE          </span><span class="op">(</span><span class="bn">0x50000000</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOA_MODER_REG     </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">GPIOA_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x00</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOA_PUPDR_REG     </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">GPIOA_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x0C</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOA_IDR_REG       </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">GPIOA_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x10</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOA_BSRR_REG      </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">GPIOA_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x18</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a><span class="co">// 2. Hardware Pin Mappings</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a><span class="co">// Outputs: LED0 (PA0), LED1 (PA1), LED2 (PA4)</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a><span class="pp">#define LED0_PIN            </span><span class="op">(</span><span class="dv">0</span><span class="bu">U</span><span class="op">)</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a><span class="pp">#define LED1_PIN            </span><span class="op">(</span><span class="dv">1</span><span class="bu">U</span><span class="op">)</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a><span class="pp">#define LED2_PIN            </span><span class="op">(</span><span class="dv">4</span><span class="bu">U</span><span class="op">)</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a><span class="co">// Inputs: Gate 1 (PA8), Gate 2 (PA9), Gate 3 (PA10), Gate 4 (PA11)</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GATE1_PIN           </span><span class="op">(</span><span class="dv">8</span><span class="bu">U</span><span class="op">)</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GATE2_PIN           </span><span class="op">(</span><span class="dv">9</span><span class="bu">U</span><span class="op">)</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GATE3_PIN           </span><span class="op">(</span><span class="dv">10</span><span class="bu">U</span><span class="op">)</span></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GATE4_PIN           </span><span class="op">(</span><span class="dv">11</span><span class="bu">U</span><span class="op">)</span></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">const</span> <span class="dt">uint8_t</span> led_pins<span class="op">[</span><span class="dv">3</span><span class="op">]</span>   <span class="op">=</span> <span class="op">{</span>LED0_PIN<span class="op">,</span> LED1_PIN<span class="op">,</span> LED2_PIN<span class="op">};</span></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">const</span> <span class="dt">uint8_t</span> gate_pins<span class="op">[</span><span class="dv">4</span><span class="op">]</span>  <span class="op">=</span> <span class="op">{</span>GATE1_PIN<span class="op">,</span> GATE2_PIN<span class="op">,</span> GATE3_PIN<span class="op">,</span> GATE4_PIN<span class="op">};</span></span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a><span class="co">/**</span></span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a><span class="co"> * </span><span class="an">@brief</span><span class="co"> Simple software delay loop for debouncing</span></span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a><span class="co"> */</span></span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> delay_ms<span class="op">(</span><span class="dt">volatile</span> <span class="dt">uint32_t</span> ms<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">volatile</span> <span class="dt">uint32_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> ms <span class="op">*</span> <span class="dv">4000</span><span class="op">;</span> i<span class="op">++);</span></span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a><span class="co">/**</span></span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a><span class="co"> * </span><span class="an">@brief</span><span class="co"> Initialize RCC peripheral clocks and configure GPIO modes &amp; pull-ups</span></span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a><span class="co"> */</span></span>
+<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> security_system_init<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 1. Enable GPIOA peripheral clock in RCC</span></span>
+<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a>    RCC_IOPENR_REG <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2. Configure LED Pins as Outputs ('01' in MODER)</span></span>
+<span id="cb8-48"><a href="#cb8-48" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">uint8_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">3</span><span class="op">;</span> i<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb8-49"><a href="#cb8-49" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint8_t</span> pin <span class="op">=</span> led_pins<span class="op">[</span>i<span class="op">];</span></span>
+<span id="cb8-50"><a href="#cb8-50" aria-hidden="true" tabindex="-1"></a>        GPIOA_MODER_REG <span class="op">&amp;=</span> <span class="op">~(</span><span class="dv">3</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span>pin <span class="op">*</span> <span class="dv">2</span><span class="op">));</span> <span class="co">// Clear mode bits</span></span>
+<span id="cb8-51"><a href="#cb8-51" aria-hidden="true" tabindex="-1"></a>        GPIOA_MODER_REG <span class="op">|=</span>  <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span>pin <span class="op">*</span> <span class="dv">2</span><span class="op">));</span> <span class="co">// Mode '01' (Output)</span></span>
+<span id="cb8-52"><a href="#cb8-52" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-53"><a href="#cb8-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-54"><a href="#cb8-54" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 3. Configure Gate Pins as Inputs ('00' in MODER) with Pull-Up ('01' in PUPDR)</span></span>
+<span id="cb8-55"><a href="#cb8-55" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">uint8_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">4</span><span class="op">;</span> i<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb8-56"><a href="#cb8-56" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint8_t</span> pin <span class="op">=</span> gate_pins<span class="op">[</span>i<span class="op">];</span></span>
+<span id="cb8-57"><a href="#cb8-57" aria-hidden="true" tabindex="-1"></a>        GPIOA_MODER_REG <span class="op">&amp;=</span> <span class="op">~(</span><span class="dv">3</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span>pin <span class="op">*</span> <span class="dv">2</span><span class="op">));</span> <span class="co">// Mode '00' (Input)</span></span>
+<span id="cb8-58"><a href="#cb8-58" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb8-59"><a href="#cb8-59" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Configure internal Pull-Up: Write '01' into PUPDR</span></span>
+<span id="cb8-60"><a href="#cb8-60" aria-hidden="true" tabindex="-1"></a>        GPIOA_PUPDR_REG <span class="op">&amp;=</span> <span class="op">~(</span><span class="dv">3</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span>pin <span class="op">*</span> <span class="dv">2</span><span class="op">));</span> <span class="co">// Clear pull bits</span></span>
+<span id="cb8-61"><a href="#cb8-61" aria-hidden="true" tabindex="-1"></a>        GPIOA_PUPDR_REG <span class="op">|=</span>  <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span>pin <span class="op">*</span> <span class="dv">2</span><span class="op">));</span> <span class="co">// Set '01' (Pull-Up)</span></span>
+<span id="cb8-62"><a href="#cb8-62" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-63"><a href="#cb8-63" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-64"><a href="#cb8-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-65"><a href="#cb8-65" aria-hidden="true" tabindex="-1"></a><span class="co">/**</span></span>
+<span id="cb8-66"><a href="#cb8-66" aria-hidden="true" tabindex="-1"></a><span class="co"> * </span><span class="an">@brief</span><span class="co"> Set the 3-bit binary gate indicator using atomic BSRR writes</span></span>
+<span id="cb8-67"><a href="#cb8-67" aria-hidden="true" tabindex="-1"></a><span class="co"> */</span></span>
+<span id="cb8-68"><a href="#cb8-68" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> display_gate_binary<span class="op">(</span><span class="dt">uint8_t</span> gate_num<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-69"><a href="#cb8-69" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">uint8_t</span> k <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> k <span class="op">&lt;</span> <span class="dv">3</span><span class="op">;</span> k<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb8-70"><a href="#cb8-70" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint8_t</span> pin <span class="op">=</span> led_pins<span class="op">[</span>k<span class="op">];</span></span>
+<span id="cb8-71"><a href="#cb8-71" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">((</span>gate_num <span class="op">&gt;&gt;</span> k<span class="op">)</span> <span class="op">&amp;</span> <span class="dv">1</span><span class="bu">U</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-72"><a href="#cb8-72" aria-hidden="true" tabindex="-1"></a>            GPIOA_BSRR_REG <span class="op">=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> pin<span class="op">);</span>        <span class="co">// Set HIGH</span></span>
+<span id="cb8-73"><a href="#cb8-73" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb8-74"><a href="#cb8-74" aria-hidden="true" tabindex="-1"></a>            GPIOA_BSRR_REG <span class="op">=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span>pin <span class="op">+</span> <span class="dv">16</span><span class="bu">U</span><span class="op">));</span> <span class="co">// Clear LOW</span></span>
+<span id="cb8-75"><a href="#cb8-75" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb8-76"><a href="#cb8-76" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-77"><a href="#cb8-77" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-78"><a href="#cb8-78" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-79"><a href="#cb8-79" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-80"><a href="#cb8-80" aria-hidden="true" tabindex="-1"></a>    security_system_init<span class="op">();</span></span>
+<span id="cb8-81"><a href="#cb8-81" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-82"><a href="#cb8-82" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(</span><span class="dv">1</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-83"><a href="#cb8-83" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">uint8_t</span> g <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> g <span class="op">&lt;</span> <span class="dv">4</span><span class="op">;</span> g<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb8-84"><a href="#cb8-84" aria-hidden="true" tabindex="-1"></a>            <span class="dt">uint8_t</span> pin <span class="op">=</span> gate_pins<span class="op">[</span>g<span class="op">];</span></span>
+<span id="cb8-85"><a href="#cb8-85" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb8-86"><a href="#cb8-86" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Read digital input from IDR register (Active LOW: 0 when pressed)</span></span>
+<span id="cb8-87"><a href="#cb8-87" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(!(</span>GPIOA_IDR_REG <span class="op">&amp;</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> pin<span class="op">)))</span> <span class="op">{</span></span>
+<span id="cb8-88"><a href="#cb8-88" aria-hidden="true" tabindex="-1"></a>                <span class="co">// Software debounce: wait 50ms</span></span>
+<span id="cb8-89"><a href="#cb8-89" aria-hidden="true" tabindex="-1"></a>                delay_ms<span class="op">(</span><span class="dv">50</span><span class="op">);</span></span>
+<span id="cb8-90"><a href="#cb8-90" aria-hidden="true" tabindex="-1"></a>                </span>
+<span id="cb8-91"><a href="#cb8-91" aria-hidden="true" tabindex="-1"></a>                <span class="co">// Re-verify if still pressed</span></span>
+<span id="cb8-92"><a href="#cb8-92" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(!(</span>GPIOA_IDR_REG <span class="op">&amp;</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> pin<span class="op">)))</span> <span class="op">{</span></span>
+<span id="cb8-93"><a href="#cb8-93" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">uint8_t</span> breached_gate <span class="op">=</span> g <span class="op">+</span> <span class="dv">1</span><span class="op">;</span> <span class="co">// Gate 1 to 4</span></span>
+<span id="cb8-94"><a href="#cb8-94" aria-hidden="true" tabindex="-1"></a>                    </span>
+<span id="cb8-95"><a href="#cb8-95" aria-hidden="true" tabindex="-1"></a>                    <span class="co">// Display breached gate number in binary</span></span>
+<span id="cb8-96"><a href="#cb8-96" aria-hidden="true" tabindex="-1"></a>                    display_gate_binary<span class="op">(</span>breached_gate<span class="op">);</span></span>
+<span id="cb8-97"><a href="#cb8-97" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-98"><a href="#cb8-98" aria-hidden="true" tabindex="-1"></a>                    <span class="co">// Wait until button release</span></span>
+<span id="cb8-99"><a href="#cb8-99" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">while</span> <span class="op">(!(</span>GPIOA_IDR_REG <span class="op">&amp;</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> pin<span class="op">)))</span> <span class="op">{</span></span>
+<span id="cb8-100"><a href="#cb8-100" aria-hidden="true" tabindex="-1"></a>                        delay_ms<span class="op">(</span><span class="dv">10</span><span class="op">);</span></span>
+<span id="cb8-101"><a href="#cb8-101" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}</span></span>
+<span id="cb8-102"><a href="#cb8-102" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb8-103"><a href="#cb8-103" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb8-104"><a href="#cb8-104" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb8-105"><a href="#cb8-105" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-106"><a href="#cb8-106" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-107"><a href="#cb8-107" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb8-108"><a href="#cb8-108" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<section id="hardware-register-mapping-comparison" class="level3">
+<h3 class="anchored" data-anchor-id="hardware-register-mapping-comparison">Hardware Register Mapping Comparison</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">Arduino Framework</th>
+<th style="text-align: left;">STM32 Bare-Metal Embedded C</th>
+<th style="text-align: left;">Hardware Impact</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Clock Gating</strong></td>
+<td style="text-align: left;">Implicitly handled in core startup</td>
+<td style="text-align: left;"><code>RCC-&gt;IOPENR \|= (1U &lt;&lt; 0);</code></td>
+<td style="text-align: left;">Zero power wasted on unclocked peripherals</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Pull-Up Resistor</strong></td>
+<td style="text-align: left;"><code>pinMode(pin, INPUT_PULLUP)</code></td>
+<td style="text-align: left;"><code>GPIOA-&gt;PUPDR \|= (1UL &lt;&lt; (pin * 2))</code></td>
+<td style="text-align: left;">Connects internal ~40 kΩ pull-up to <span class="math inline">\(V_{\text{DD}}\)</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Pin Read</strong></td>
+<td style="text-align: left;"><code>digitalRead(pin) == LOW</code></td>
+<td style="text-align: left;"><code>!(GPIOA-&gt;IDR &amp; (1UL &lt;&lt; pin))</code></td>
+<td style="text-align: left;">1-cycle direct read of Input Data Register</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Pin Write</strong></td>
+<td style="text-align: left;"><code>digitalWrite(pin, HIGH/LOW)</code></td>
+<td style="text-align: left;"><code>GPIOA-&gt;BSRR = (1UL &lt;&lt; pin)</code></td>
+<td style="text-align: left;">Atomic single-cycle set/reset (thread/ISR-safe)</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="how-this-simulation-applies-week-3-concepts" class="level3">
+<h3 class="anchored" data-anchor-id="how-this-simulation-applies-week-3-concepts">🔍 How This Simulation Applies Week 3 Concepts</h3>
+<p>The Smart Security Gate Monitor simulation directly demonstrates the core hardware interfacing and register-level programming techniques introduced in Week 3:</p>
+<section id="hardware-circuit-level-concept-mapping" class="level4">
+<h4 class="anchored" data-anchor-id="hardware-circuit-level-concept-mapping">1. Hardware &amp; Circuit-Level Concept Mapping</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Circuit Component</th>
+<th style="text-align: left;">Week 3 Theoretical Concept</th>
+<th style="text-align: left;">Technical Function in System</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Pushbuttons on D8–D11</strong></td>
+<td style="text-align: left;"><strong>Active-LOW Digital Inputs &amp; Floating Avoidance</strong></td>
+<td style="text-align: left;">Connected between the GPIO pin and GND. When released, an internal pull-up resistor pulls the pin to <span class="math inline">\(V_{\text{DD}}\)</span> (3.3V / logic HIGH). When pressed, the pin is pulled directly to GND (0V / logic LOW). This prevents the pin from floating in a high-impedance state.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Internal Pull-Up Resistors</strong></td>
+<td style="text-align: left;"><strong><code>PUPDR</code> Hardware Resistor Network</strong></td>
+<td style="text-align: left;">Microcontrollers include integrated ~40 kΩ pull-up transistors on chip. Activating them eliminates the cost, PCB trace routing, and assembly of 4 external pull-up resistors on the board.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Mechanical Contact Bounce</strong></td>
+<td style="text-align: left;"><strong>Physical Switch Contact Physics</strong></td>
+<td style="text-align: left;">When mechanical switch contacts slam together, microscopic metal spring leaves physically bounce for 5 to 20 ms before settling. Without debouncing, a single press would register as dozens of false security alarms!</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>3x Status LEDs (D2 to D4)</strong></td>
+<td style="text-align: left;"><strong>Push-Pull Output Stage</strong></td>
+<td style="text-align: left;">Configured as General Purpose Outputs (<code>MODER = 01</code>). High-side MOSFET drives 3.3V to illuminate the LED, and low-side MOSFET sinks to 0V when turned off.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="firmware-code-to-concept-breakdown" class="level4">
+<h4 class="anchored" data-anchor-id="firmware-code-to-concept-breakdown">2. Firmware Code-to-Concept Breakdown</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Code Statement (Framework / Bare-Metal)</th>
+<th style="text-align: left;">Week 3 Theoretical Concept</th>
+<th style="text-align: left;">Deep-Dive Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>RCC_IOPENR_REG \|= (1U &lt;&lt; 0);</code></td>
+<td style="text-align: left;"><strong>Peripheral Clock Gating (<code>RCC</code>)</strong></td>
+<td style="text-align: left;">In STM32 processors, peripherals are unclocked by default to minimize dynamic power consumption (<span class="math inline">\(P = C \cdot V^2 \cdot f\)</span>). Enabling the clock in <code>RCC</code> powers the internal flip-flops of GPIO Port A.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>GPIOA_MODER_REG \|= (1UL &lt;&lt; (pin * 2));</code></td>
+<td style="text-align: left;"><strong>2-Bit Mode Configuration (<code>MODER</code>)</strong></td>
+<td style="text-align: left;">STM32 uses two bits per pin in <code>MODER</code> (<code>00</code> = Input, <code>01</code> = Output, <code>10</code> = Alternate Function, <code>11</code> = Analog). The formula <code>(pin * 2)</code> calculates the exact bit offset for any pin.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>GPIOA_PUPDR_REG \|= (1UL &lt;&lt; (pin * 2));</code></td>
+<td style="text-align: left;"><strong>Pull-Up / Pull-Down Register (<code>PUPDR</code>)</strong></td>
+<td style="text-align: left;">Writing <code>01</code> into the 2-bit field enables the internal pull-up resistor, ensuring the input stays cleanly at +3.3V when no button is pressed.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>!(GPIOA_IDR_REG &amp; (1UL &lt;&lt; pin))</code></td>
+<td style="text-align: left;"><strong>Input Data Register (<code>IDR</code>) Reading</strong></td>
+<td style="text-align: left;">Reads the physical logic state latched by the input Schmitt trigger. Since active buttons pull the line LOW, the inverted bit test detects a pressed switch.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>delay(50);</code> / software delay loop</td>
+<td style="text-align: left;"><strong>Mechanical Debounce Filtering</strong></td>
+<td style="text-align: left;">Introduces a 50 ms stabilization window, allowing mechanical oscillations to die down before confirming the valid gate breach event.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>GPIOA_BSRR_REG = (1UL &lt;&lt; pin);</code></td>
+<td style="text-align: left;"><strong>Single-Cycle Atomic Pin Control</strong></td>
+<td style="text-align: left;">Directly alters the output state without performing a read-modify-write on <code>ODR</code>, ensuring complete immunity to interrupt race conditions.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+</section>
+<section id="real-world-embedded-systems-examples" class="level2">
+<h2 class="anchored" data-anchor-id="real-world-embedded-systems-examples">8. Real-World Embedded Systems Examples</h2>
+<p>Understanding how microcontrollers interface with external switches, sensors, and actuators is foundational to embedded product development:</p>
+<section id="example-3.1-factory-emergency-stop-e-stop-button" class="level3">
+<h3 class="anchored" data-anchor-id="example-3.1-factory-emergency-stop-e-stop-button">Example 3.1: Factory Emergency Stop (E-Stop) Button 🛑</h3>
+<ul>
+<li><p><strong>The Real-World Scenario:</strong> In heavy manufacturing plants, industrial cutting presses and conveyor belts feature large red Emergency Stop (E-Stop) mushroom buttons.</p></li>
+<li><p><strong>Fail-Safe Electrical Design:</strong></p>
+<ul>
+<li>The button uses a <strong>Normally Closed (NC)</strong> mechanical contact wired to a GPIO input configured with an internal pull-up resistor.</li>
+<li>In normal operation, current flows to ground (Active-LOW). If an operator hits the button—or if an electrical wire is accidentally cut or severed—the circuit opens, the pull-up pulls the pin HIGH, and the firmware halts all motors instantly!</li>
+</ul></li>
+<li><p><strong>Firmware Architectural Pattern:</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdint.h&gt;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#define ESTOP_PIN   </span><span class="op">(</span><span class="dv">0</span><span class="bu">U</span><span class="op">)</span><span class="pp"> </span><span class="co">// Pin PA0 connected to NC E-Stop switch</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> check_safety_interlock<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Direct 1-cycle read of Input Data Register</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">uint32_t</span> estop_tripped <span class="op">=</span> <span class="op">(</span>GPIOA<span class="op">-&gt;</span>IDR <span class="op">&amp;</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> ESTOP_PIN<span class="op">));</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>estop_tripped<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Wire cut OR button pressed: Trigger immediate hardware shutdown!</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>        HALT_ALL_MOTOR_DRIVES<span class="op">();</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>        ENGAGE_SAFETY_BRAKES<span class="op">();</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+</ul>
+<hr>
+</section>
+<section id="example-3.2-medical-infusion-pump-optical-drop-counter" class="level3">
+<h3 class="anchored" data-anchor-id="example-3.2-medical-infusion-pump-optical-drop-counter">Example 3.2: Medical Infusion Pump Optical Drop Counter 💧</h3>
+<ul>
+<li><p><strong>The Real-World Scenario:</strong> In hospital intensive care units, an intravenous (IV) infusion pump delivers medication drop by drop into a patient’s bloodstream. An infrared optical sensor monitors the clear drip chamber.</p></li>
+<li><p><strong>Key Concept Connection:</strong></p>
+<ul>
+<li>When a fluid drop falls between the infrared emitter and phototransistor, the light beam is briefly broken for approximately 8 to 15 milliseconds.</li>
+<li>The microcontroller pin uses an internal pull-up resistor and software edge-filtering to count drops reliably, ignoring electrical noise and pump vibrations.</li>
+</ul></li>
+<li><p><strong>Firmware Architectural Pattern:</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdint.h&gt;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="dt">volatile</span> <span class="dt">uint32_t</span> drop_count <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="dt">uint8_t</span> previous_sensor_state <span class="op">=</span> <span class="dv">1</span><span class="op">;</span> <span class="co">// Idle HIGH</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> poll_drop_sensor<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Read optical phototransistor pin</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">uint8_t</span> current_sensor_state <span class="op">=</span> <span class="op">(</span>GPIOB<span class="op">-&gt;</span>IDR <span class="op">&amp;</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">3</span><span class="op">))</span> <span class="op">?</span> <span class="dv">1</span> <span class="op">:</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Detect Falling Edge: Sensor transitions from HIGH (light clear) to LOW (drop blocking beam)</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>previous_sensor_state <span class="op">==</span> <span class="dv">1</span> <span class="op">&amp;&amp;</span> current_sensor_state <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>        drop_count<span class="op">++;</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>        calculate_infusion_flow_rate<span class="op">(</span>drop_count<span class="op">);</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    previous_sensor_state <span class="op">=</span> current_sensor_state<span class="op">;</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+</ul>
+<hr>
+</section>
+<section id="example-3.3-automotive-vehicle-door-ajar-warning-system" class="level3">
+<h3 class="anchored" data-anchor-id="example-3.3-automotive-vehicle-door-ajar-warning-system">Example 3.3: Automotive Vehicle Door-Ajar Warning System 🚘</h3>
+<ul>
+<li><p><strong>The Real-World Scenario:</strong> Every passenger door on an automobile contains a spring-loaded momentary switch that closes to ground when the door latches shut.</p></li>
+<li><p><strong>Power Conservation &amp; Clock Management:</strong></p>
+<ul>
+<li>When the car is parked with the engine off, the body control module (BCM) microcontroller sleeps to avoid draining the 12V car battery.</li>
+<li>When any door opens, the change on the pull-up GPIO line triggers an interrupt that wakes the MCU, re-enables the GPIO peripheral clock in <code>RCC</code>, and illuminates the cabin interior light.</li>
+</ul></li>
+<li><p><strong>Firmware Architectural Pattern:</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#define DOOR_FRONT_LEFT   </span><span class="op">(</span><span class="dv">0</span><span class="bu">U</span><span class="op">)</span><span class="pp"> </span><span class="co">// PA0</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define DOOR_FRONT_RIGHT  </span><span class="op">(</span><span class="dv">1</span><span class="bu">U</span><span class="op">)</span><span class="pp"> </span><span class="co">// PA1</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#define DOOR_REAR_LEFT    </span><span class="op">(</span><span class="dv">2</span><span class="bu">U</span><span class="op">)</span><span class="pp"> </span><span class="co">// PA2</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#define DOOR_REAR_RIGHT   </span><span class="op">(</span><span class="dv">3</span><span class="bu">U</span><span class="op">)</span><span class="pp"> </span><span class="co">// PA3</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="dt">uint8_t</span> scan_vehicle_doors<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Read 4 lower pins of Port A simultaneously</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">uint16_t</span> port_state <span class="op">=</span> <span class="op">(</span><span class="dt">uint16_t</span><span class="op">)(</span>GPIOA<span class="op">-&gt;</span>IDR <span class="op">&amp;</span> <span class="bn">0x000F</span><span class="op">);</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Any pin reading HIGH means that door switch is OPEN (unlatched)</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>port_state <span class="op">!=</span> <span class="bn">0x0000</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>        TURN_ON_CABIN_DOME_LIGHT<span class="op">();</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>        DISPLAY_DOOR_AJAR_WARNING_ON_DASHBOARD<span class="op">(</span>port_state<span class="op">);</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="dv">1</span><span class="op">;</span> <span class="co">// Door open</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span> <span class="co">// All doors securely closed</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="important-exam-practice-questions" class="level2">
+<h2 class="anchored" data-anchor-id="important-exam-practice-questions">9. Important Exam Practice Questions</h2>
+<section id="question-1-necessity-of-rcc-peripheral-clock-gating" class="level3">
+<h3 class="anchored" data-anchor-id="question-1-necessity-of-rcc-peripheral-clock-gating">Question 1: Necessity of RCC Peripheral Clock Gating</h3>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Click to View Question &amp; Options
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>In STM32 microcontrollers, what occurs if firmware attempts to configure GPIO registers without first enabling the corresponding GPIO clock in the RCC?</p>
+<p><strong>Options:</strong><br>
+- <strong>A)</strong> The microcontroller executes the instructions at half frequency<br>
+- <strong>B)</strong> The register write operations are silently ignored or trigger a bus fault exception because the peripheral hardware is unclocked<br>
+- <strong>C)</strong> The pins automatically default to open-drain mode<br>
+- <strong>D)</strong> The Flash memory contents are cleared</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>✅ Correct Answer: B
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Explanation:</strong><br>
+To minimize static and dynamic power consumption, STM32 microcontrollers disable clocks to all peripheral domains by default. If the clock is disabled, the peripheral’s internal registers are unpowered and will not latch any written values.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="question-2-memory-mapped-address-calculation" class="level3">
+<h3 class="anchored" data-anchor-id="question-2-memory-mapped-address-calculation">Question 2: Memory-Mapped Address Calculation</h3>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Click to View Question &amp; Options
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>A microcontroller has <strong>256 KB of SRAM</strong> mapped to its address space starting at base address <code>0x00100000</code>. What is the hexadecimal ending address of this memory block?</p>
+<p><strong>Options:</strong><br>
+- <strong>A)</strong> <code>0x00120000</code><br>
+- <strong>B)</strong> <code>0x0013FFFF</code><br>
+- <strong>C)</strong> <code>0x00140000</code><br>
+- <strong>D)</strong> <code>0x001FFFFF</code></p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>✅ Correct Answer: B
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Explanation:</strong><br>
+<span class="math inline">\(256\text{ KB} = 256 \times 1024 = 262,144\text{ bytes} = \text{0x40000}\)</span> in hexadecimal.<br>
+<span class="math inline">\(\text{End Address} = \text{Base} + \text{Size} - 1 = \text{0x00100000} + \text{0x00040000} - 1 = \text{0x0013FFFF}\)</span>.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="question-3-gpio-moder-register-configuration" class="level3">
+<h3 class="anchored" data-anchor-id="question-3-gpio-moder-register-configuration">Question 3: GPIO MODER Register Configuration</h3>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Click to View Question &amp; Options
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>In an STM32 microcontroller, what 2-bit value must be written to the <code>MODER</code> field of a pin to configure it as a General Purpose Digital Output?</p>
+<p><strong>Options:</strong><br>
+- <strong>A)</strong> <code>00</code><br>
+- <strong>B)</strong> <code>01</code><br>
+- <strong>C)</strong> <code>10</code><br>
+- <strong>D)</strong> <code>11</code></p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>✅ Correct Answer: B
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Explanation:</strong><br>
+In the STM32 GPIO reference manual: <code>00</code> = Input (reset state), <code>01</code> = General purpose output, <code>10</code> = Alternate function, and <code>11</code> = Analog mode.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="question-4-common-ground-in-mixed-voltage-systems" class="level3">
+<h3 class="anchored" data-anchor-id="question-4-common-ground-in-mixed-voltage-systems">Question 4: Common Ground in Mixed-Voltage Systems</h3>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Click to View Question &amp; Options
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-8" class="callout-8-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Why is a common ground connection mandatory when interfacing a microcontroller with external sensors powered by separate power supplies?</p>
+<p><strong>Options:</strong><br>
+- <strong>A)</strong> To double the operating clock frequency of the processor<br>
+- <strong>B)</strong> To establish a common zero-volt reference potential so that logic HIGH and LOW voltage thresholds are consistently detected across all circuits<br>
+- <strong>C)</strong> To prevent the microcontroller from entering low-power sleep mode<br>
+- <strong>D)</strong> To convert digital signals into analog signals</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>✅ Correct Answer: B
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Explanation:</strong><br>
+Voltage is always a relative potential difference between two points. Without a common ground reference connecting the systems, the voltage levels float unpredictably, causing erroneous digital readings and potential damage.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<hr>
+<div class="d-flex justify-content-between mt-4">
+<p><a href="./Week-2.html" class="seek-prev-btn">← Back to Week 2</a> <a href="./Week-4.html" class="seek-next-btn">NEXT: Week 4 — Advanced Peripheral Interfacing →</a></p>
+</div>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+<script src="site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

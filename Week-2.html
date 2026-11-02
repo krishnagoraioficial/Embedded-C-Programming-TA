@@ -1,0 +1,1675 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.19">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Week 2: Basics of Embedded C Programming – CS2101: Embedded C</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-9e4d0c1ab0475ae3d85677ae0d9d1730.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-3a903d85c7a032a9d62605f072b49e96.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-9e4d0c1ab0475ae3d85677ae0d9d1730.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar docked quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./Week-2.html">Week-2</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">CS2101: Embedded C</a> 
+        <div class="sidebar-tools-main">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">About the Course</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Week-1</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-2.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Week-2</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-3.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Week-3</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-4.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Week-4</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-5.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Week-5</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-6.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Week-6</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-7.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Week-7</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-8.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Week-8</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-9.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Week-9</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-10.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Week-10</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-11.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Week-11</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Week-12.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Week-12</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#why-c-for-embedded-systems" id="toc-why-c-for-embedded-systems" class="nav-link active" data-scroll-target="#why-c-for-embedded-systems">1. Why C for Embedded Systems?</a>
+  <ul class="collapse">
+  <li><a href="#core-advantages-in-firmware-engineering" id="toc-core-advantages-in-firmware-engineering" class="nav-link" data-scroll-target="#core-advantages-in-firmware-engineering">Core Advantages in Firmware Engineering</a></li>
+  </ul></li>
+  <li><a href="#fixed-width-integer-types-stdint.h" id="toc-fixed-width-integer-types-stdint.h" class="nav-link" data-scroll-target="#fixed-width-integer-types-stdint.h">2. Fixed-Width Integer Types (<code>stdint.h</code>)</a></li>
+  <li><a href="#microcontroller-memory-segments-flash-vs.-sram" id="toc-microcontroller-memory-segments-flash-vs.-sram" class="nav-link" data-scroll-target="#microcontroller-memory-segments-flash-vs.-sram">3. Microcontroller Memory Segments: Flash vs.&nbsp;SRAM</a>
+  <ul class="collapse">
+  <li><a href="#why-static-memory-allocation-is-preferred" id="toc-why-static-memory-allocation-is-preferred" class="nav-link" data-scroll-target="#why-static-memory-allocation-is-preferred">Why Static Memory Allocation is Preferred</a></li>
+  </ul></li>
+  <li><a href="#bit-manipulation-bitmasking" id="toc-bit-manipulation-bitmasking" class="nav-link" data-scroll-target="#bit-manipulation-bitmasking">4. Bit Manipulation &amp; Bitmasking</a>
+  <ul class="collapse">
+  <li><a href="#practical-c-bit-manipulation-examples" id="toc-practical-c-bit-manipulation-examples" class="nav-link" data-scroll-target="#practical-c-bit-manipulation-examples">Practical C Bit Manipulation Examples</a></li>
+  </ul></li>
+  <li><a href="#interactive-simulation-decimal-to-4-bit-binary-converter-wokwi" id="toc-interactive-simulation-decimal-to-4-bit-binary-converter-wokwi" class="nav-link" data-scroll-target="#interactive-simulation-decimal-to-4-bit-binary-converter-wokwi">5. Interactive Simulation: Decimal to 4-Bit Binary Converter (Wokwi)</a>
+  <ul class="collapse">
+  <li><a href="#hardware-circuit-setup" id="toc-hardware-circuit-setup" class="nav-link" data-scroll-target="#hardware-circuit-setup">🛠️ Hardware Circuit Setup</a></li>
+  </ul></li>
+  <li><a href="#implementation-code-arduino-framework-vs.-bare-metal-embedded-c" id="toc-implementation-code-arduino-framework-vs.-bare-metal-embedded-c" class="nav-link" data-scroll-target="#implementation-code-arduino-framework-vs.-bare-metal-embedded-c">6. Implementation Code: Arduino Framework vs.&nbsp;Bare-Metal Embedded C</a>
+  <ul class="collapse">
+  <li><a href="#architecture-comparison-high-level-vs.-bare-metal" id="toc-architecture-comparison-high-level-vs.-bare-metal" class="nav-link" data-scroll-target="#architecture-comparison-high-level-vs.-bare-metal">Architecture Comparison: High-Level vs.&nbsp;Bare-Metal</a></li>
+  <li><a href="#how-this-simulation-applies-week-2-concepts" id="toc-how-this-simulation-applies-week-2-concepts" class="nav-link" data-scroll-target="#how-this-simulation-applies-week-2-concepts">🔍 How This Simulation Applies Week 2 Concepts</a></li>
+  </ul></li>
+  <li><a href="#real-world-embedded-systems-examples" id="toc-real-world-embedded-systems-examples" class="nav-link" data-scroll-target="#real-world-embedded-systems-examples">7. Real-World Embedded Systems Examples</a>
+  <ul class="collapse">
+  <li><a href="#example-2.1-automotive-engine-status-diagnostic-trouble-code-dtc-register" id="toc-example-2.1-automotive-engine-status-diagnostic-trouble-code-dtc-register" class="nav-link" data-scroll-target="#example-2.1-automotive-engine-status-diagnostic-trouble-code-dtc-register">Example 2.1: Automotive Engine Status &amp; Diagnostic Trouble Code (DTC) Register 🚗</a></li>
+  <li><a href="#example-2.2-smart-thermostat-temperature-offset-calibration-signed-vs.-unsigned" id="toc-example-2.2-smart-thermostat-temperature-offset-calibration-signed-vs.-unsigned" class="nav-link" data-scroll-target="#example-2.2-smart-thermostat-temperature-offset-calibration-signed-vs.-unsigned">Example 2.2: Smart Thermostat Temperature Offset Calibration (Signed vs.&nbsp;Unsigned) 🌡️</a></li>
+  <li><a href="#example-2.3-industrial-4-relay-power-actuator-controller" id="toc-example-2.3-industrial-4-relay-power-actuator-controller" class="nav-link" data-scroll-target="#example-2.3-industrial-4-relay-power-actuator-controller">Example 2.3: Industrial 4-Relay Power Actuator Controller ⚡</a></li>
+  </ul></li>
+  <li><a href="#important-exam-practice-questions" id="toc-important-exam-practice-questions" class="nav-link" data-scroll-target="#important-exam-practice-questions">8. Important Exam Practice Questions</a>
+  <ul class="collapse">
+  <li><a href="#question-1-significance-of-stdint.h-in-embedded-c" id="toc-question-1-significance-of-stdint.h-in-embedded-c" class="nav-link" data-scroll-target="#question-1-significance-of-stdint.h-in-embedded-c">Question 1: Significance of <code>stdint.h</code> in Embedded C</a></li>
+  <li><a href="#question-2-clearing-a-specific-bit-in-a-register" id="toc-question-2-clearing-a-specific-bit-in-a-register" class="nav-link" data-scroll-target="#question-2-clearing-a-specific-bit-in-a-register">Question 2: Clearing a Specific Bit in a Register</a></li>
+  <li><a href="#question-3-dynamic-memory-in-safety-critical-firmware" id="toc-question-3-dynamic-memory-in-safety-critical-firmware" class="nav-link" data-scroll-target="#question-3-dynamic-memory-in-safety-critical-firmware">Question 3: Dynamic Memory in Safety-Critical Firmware</a></li>
+  <li><a href="#question-4-flash-rom-vs.-sram-characteristics" id="toc-question-4-flash-rom-vs.-sram-characteristics" class="nav-link" data-scroll-target="#question-4-flash-rom-vs.-sram-characteristics">Question 4: Flash ROM vs.&nbsp;SRAM Characteristics</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Week 2: Basics of Embedded C Programming</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="why-c-for-embedded-systems" class="level2">
+<h2 class="anchored" data-anchor-id="why-c-for-embedded-systems">1. Why C for Embedded Systems?</h2>
+<p>The C programming language remains the preeminent language for embedded firmware development due to its unique combination of <strong>low-level hardware access, predictable execution timing, and minimal runtime footprint</strong>.</p>
+<pre class="text"><code>+-------------------------------------------------------------+
+|                APPLICATION SOFTWARE (C CODE)                |
++-------------------------------------------------------------+
+                              |
+                     [Pointers &amp; Bitmasks]
+                              v
++-------------------------------------------------------------+
+|         MEMORY-MAPPED HARDWARE PERIPHERAL REGISTERS         |
+|         (GPIO Ports, Hardware Timers, Serial UART)          |
++-------------------------------------------------------------+
+                              |
+               [Direct Bus Memory Bus Access]
+                              v
++-------------------------------------------------------------+
+|               SILICON HARDWARE / MICROCONTROLLER            |
++-------------------------------------------------------------+</code></pre>
+<section id="core-advantages-in-firmware-engineering" class="level3">
+<h3 class="anchored" data-anchor-id="core-advantages-in-firmware-engineering">Core Advantages in Firmware Engineering</h3>
+<ol type="1">
+<li><strong>Direct Memory Access:</strong> Through pointers, C can read and write directly to physical memory addresses where peripheral control registers reside.</li>
+<li><strong>Deterministic Execution:</strong> Unlike interpreted or garbage-collected languages (Java, Python), C has no hidden runtime memory sweeps, ensuring deterministic real-time deadlines.</li>
+<li><strong>Zero Overhead:</strong> C functions compile directly to native machine instructions without heavy runtime environments or abstraction layers.</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="fixed-width-integer-types-stdint.h" class="level2">
+<h2 class="anchored" data-anchor-id="fixed-width-integer-types-stdint.h">2. Fixed-Width Integer Types (<code>stdint.h</code>)</h2>
+<p>In standard desktop C, data types like <code>int</code> and <code>long</code> have compiler-dependent sizes (e.g., <code>int</code> can be 16 bits on an 8-bit AVR, but 32 bits on an ARM Cortex-M or x86 PC).</p>
+<p>In embedded firmware, using ambiguous types can cause <strong>register overflow, memory waste, and portability bugs</strong>. The <code>&lt;stdint.h&gt;</code> standard header defines exact-width integer types:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 19%">
+<col style="width: 23%">
+<col style="width: 19%">
+<col style="width: 19%">
+<col style="width: 19%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Standard Type</th>
+<th style="text-align: center;">Exact Width</th>
+<th style="text-align: left;">Signed Range</th>
+<th style="text-align: left;">Unsigned Range</th>
+<th style="text-align: left;">Common Embedded Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>uint8_t</code></td>
+<td style="text-align: center;">8 bits (1 byte)</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">0 to 255</td>
+<td style="text-align: left;">8-bit sensor readings, raw byte buffers</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>int8_t</code></td>
+<td style="text-align: center;">8 bits (1 byte)</td>
+<td style="text-align: left;">-128 to 127</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">Small signed sensor offsets</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>uint16_t</code></td>
+<td style="text-align: center;">16 bits (2 bytes)</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">0 to 65,535</td>
+<td style="text-align: left;">16-bit Timer Prescaler / ARR counts</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>int16_t</code></td>
+<td style="text-align: center;">16 bits (2 bytes)</td>
+<td style="text-align: left;">-32,768 to 32,767</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">16-bit ADC values, accelerometer data</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>uint32_t</code></td>
+<td style="text-align: center;">32 bits (4 bytes)</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">0 to 4,294,967,295</td>
+<td style="text-align: left;">32-bit ARM Cortex memory addresses &amp; registers</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>int32_t</code></td>
+<td style="text-align: center;">32 bits (4 bytes)</td>
+<td style="text-align: left;">-2,147,483,648 to 2,147,483,647</td>
+<td style="text-align: left;">—</td>
+<td style="text-align: left;">Precision mathematical computations</td>
+</tr>
+</tbody>
+</table>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdint.h&gt;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Good Practice: Explicit, memory-efficient variable definitions</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="dt">uint8_t</span>  device_address <span class="op">=</span> <span class="bn">0x3C</span><span class="op">;</span>      <span class="co">// Uses exactly 1 byte of RAM</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="dt">uint16_t</span> timer_period   <span class="op">=</span> <span class="dv">10000</span><span class="op">;</span>     <span class="co">// Uses exactly 2 bytes of RAM</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="dt">uint32_t</span> peripheral_reg <span class="op">=</span> <span class="bn">0x40020000</span><span class="op">;</span><span class="co">// Uses exactly 4 bytes of RAM</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+<section id="microcontroller-memory-segments-flash-vs.-sram" class="level2">
+<h2 class="anchored" data-anchor-id="microcontroller-memory-segments-flash-vs.-sram">3. Microcontroller Memory Segments: Flash vs.&nbsp;SRAM</h2>
+<p>A microcontroller partitions its address space into distinct memory regions:</p>
+<pre class="text"><code> 0x0800 0000 +---------------------------------------+
+             | FLASH ROM (Non-Volatile)              |
+             | - Code (.text segment)                |
+             | - Constants / String Literals (.rodata)|
+             | - Reset Vector Table                  |
+ 0x2000 0000 +---------------------------------------+
+             | SRAM (Volatile Working RAM)           |
+             | - Initialized Global Data (.data)     |
+             | - Uninitialized Variables (.bss)      |
+             | - Dynamic Heap (malloc)               |
+             | - Execution Stack (Local vars, ISRs)  |
+             +---------------------------------------+</code></pre>
+<section id="why-static-memory-allocation-is-preferred" class="level3">
+<h3 class="anchored" data-anchor-id="why-static-memory-allocation-is-preferred">Why Static Memory Allocation is Preferred</h3>
+<p>In desktop programming, dynamic memory allocation (<code>malloc</code> and <code>free</code>) is standard. In <strong>safety-critical embedded systems</strong>, dynamic memory is strictly avoided for three reasons: 1. <strong>Memory Fragmentation:</strong> Repeated allocation and deallocation can leave gaps, causing allocation failures even when total free RAM seems adequate. 2. <strong>Non-Deterministic Latency:</strong> The execution time of <code>malloc()</code> varies depending on heap state, which can violate hard real-time deadlines. 3. <strong>Memory Leaks:</strong> A small memory leak in an embedded system that runs continuously for months will eventually crash the device.</p>
+<hr>
+</section>
+</section>
+<section id="bit-manipulation-bitmasking" class="level2">
+<h2 class="anchored" data-anchor-id="bit-manipulation-bitmasking">4. Bit Manipulation &amp; Bitmasking</h2>
+<p>Control and status registers in microcontrollers pack multiple binary flags into a single 8-bit, 16-bit, or 32-bit integer. Mastering bitwise operators is essential for firmware engineering:</p>
+<pre class="text"><code> Operation       Operator   Syntax                      Effect on Target Bit (n)
+----------------------------------------------------------------------------------
+ Set Bit            |       REG |= (1 &lt;&lt; n);            Forces bit n to 1
+ Clear Bit          &amp; ~     REG &amp;= ~(1 &lt;&lt; n);           Forces bit n to 0
+ Toggle Bit         ^       REG ^= (1 &lt;&lt; n);            Inverts bit n (0-&gt;1, 1-&gt;0)
+ Check Bit          &amp;       if (REG &amp; (1 &lt;&lt; n))         Evaluates TRUE if bit n is 1
+ Multi-bit Mask     &amp; ~ |   REG = (REG &amp; ~MASK) | VAL   Replaces a field of bits</code></pre>
+<section id="practical-c-bit-manipulation-examples" class="level3">
+<h3 class="anchored" data-anchor-id="practical-c-bit-manipulation-examples">Practical C Bit Manipulation Examples</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdint.h&gt;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#define STATUS_READY_BIT    </span><span class="op">(</span><span class="dv">0</span><span class="bu">U</span><span class="op">)</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#define STATUS_ERROR_BIT    </span><span class="op">(</span><span class="dv">3</span><span class="bu">U</span><span class="op">)</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#define STATUS_TX_ACTIVE    </span><span class="op">(</span><span class="dv">7</span><span class="bu">U</span><span class="op">)</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> configure_status<span class="op">(</span><span class="dt">volatile</span> <span class="dt">uint8_t</span> <span class="op">*</span>status_reg<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 1. Set Bit 0 (READY) without altering other bits</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>status_reg <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> STATUS_READY_BIT<span class="op">);</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2. Clear Bit 3 (ERROR) cleanly</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>status_reg <span class="op">&amp;=</span> <span class="op">~(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> STATUS_ERROR_BIT<span class="op">);</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 3. Toggle Bit 7 (TX_ACTIVE)</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>status_reg <span class="op">^=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> STATUS_TX_ACTIVE<span class="op">);</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 4. Test if Bit 0 is set</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(*</span>status_reg <span class="op">&amp;</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> STATUS_READY_BIT<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Peripheral is ready</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="interactive-simulation-decimal-to-4-bit-binary-converter-wokwi" class="level2">
+<h2 class="anchored" data-anchor-id="interactive-simulation-decimal-to-4-bit-binary-converter-wokwi">5. Interactive Simulation: Decimal to 4-Bit Binary Converter (Wokwi)</h2>
+<p>In this hands-on project, you will apply the core bitwise theory from Week 2 (<code>(num &gt;&gt; k) &amp; 1</code>) to read an integer from the Serial Monitor and display its <strong>4-bit binary representation</strong> on physical LEDs.</p>
+<section id="hardware-circuit-setup" class="level3">
+<h3 class="anchored" data-anchor-id="hardware-circuit-setup">🛠️ Hardware Circuit Setup</h3>
+<ul>
+<li><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</li>
+<li><strong>4x LEDs:</strong> Connected to digital pins <code>D2</code> through <code>D5</code> via 220Ω current-limiting resistors.</li>
+<li><strong>Ground:</strong> All LED cathodes connected to board <code>GND</code>.</li>
+</ul>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 18%">
+<col style="width: 18%">
+<col style="width: 18%">
+<col style="width: 22%">
+<col style="width: 22%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">LED Indicator</th>
+<th style="text-align: left;">Pin Function</th>
+<th style="text-align: left;">STM32 Pin</th>
+<th style="text-align: center;">Bit Weight</th>
+<th style="text-align: center;">Numerical Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>LED 1 (Yellow)</strong></td>
+<td style="text-align: left;">Bit 0 (LSB)</td>
+<td style="text-align: left;"><code>D2</code></td>
+<td style="text-align: center;"><span class="math inline">\(2^0\)</span></td>
+<td style="text-align: center;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>LED 2 (Blue)</strong></td>
+<td style="text-align: left;">Bit 1</td>
+<td style="text-align: left;"><code>D3</code></td>
+<td style="text-align: center;"><span class="math inline">\(2^1\)</span></td>
+<td style="text-align: center;">2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>LED 3 (Green)</strong></td>
+<td style="text-align: left;">Bit 2</td>
+<td style="text-align: left;"><code>D4</code></td>
+<td style="text-align: center;"><span class="math inline">\(2^2\)</span></td>
+<td style="text-align: center;">4</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>LED 4 (Red)</strong></td>
+<td style="text-align: left;">Bit 3 (MSB)</td>
+<td style="text-align: left;"><code>D5</code></td>
+<td style="text-align: center;"><span class="math inline">\(2^3\)</span></td>
+<td style="text-align: center;">8</td>
+</tr>
+</tbody>
+</table>
+<p>Click the green <strong>Play</strong> button inside the simulation window, open the <strong>Serial Monitor</strong> tab below the simulator, type any number between <strong>0 and 15</strong>, and press Enter:</p>
+<div class="simulation-container">
+<iframe src="https://wokwi.com/projects/478739120334264321?embed=1" title="STM32 Nucleo Decimal to 4-Bit Binary Converter" loading="lazy" allowfullscreen="">
+</iframe>
+<div class="sim-info-bar">
+<p><span><strong>Target Board:</strong> STM32 Nucleo-C031C6</span> <span>Click Play, then enter 0–15 in the Serial Monitor tab</span></p>
+</div>
+</div>
+<hr>
+</section>
+</section>
+<section id="implementation-code-arduino-framework-vs.-bare-metal-embedded-c" class="level2">
+<h2 class="anchored" data-anchor-id="implementation-code-arduino-framework-vs.-bare-metal-embedded-c">6. Implementation Code: Arduino Framework vs.&nbsp;Bare-Metal Embedded C</h2>
+<p>Compare the high-level framework code running in the simulation with the equivalent <strong>Bare-Metal Embedded C</strong> implementation directly programming the microcontroller’s hardware registers:</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="" aria-current="page">🔷 High-Level Framework (Running in Simulation)</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">🔶 Equivalent Bare-Metal Embedded C (Direct Register Manipulation)</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Decimal to 4-Bit Binary Converter (High-Level Framework)</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#define LED_BIT_0 </span><span class="dv">2</span><span class="pp">  </span><span class="co">// LSB (Least Significant Bit) - Pin D2</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#define LED_BIT_1 </span><span class="dv">3</span><span class="pp">  </span><span class="co">// Pin D3</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#define LED_BIT_2 </span><span class="dv">4</span><span class="pp">  </span><span class="co">// Pin D4</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#define LED_BIT_3 </span><span class="dv">5</span><span class="pp">  </span><span class="co">// MSB (Most Significant Bit) - Pin D5</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setup<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>begin<span class="op">(</span><span class="dv">115200</span><span class="op">);</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Configure all 4 pins as digital outputs</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>LED_BIT_0<span class="op">,</span> OUTPUT<span class="op">);</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>LED_BIT_1<span class="op">,</span> OUTPUT<span class="op">);</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>LED_BIT_2<span class="op">,</span> OUTPUT<span class="op">);</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>LED_BIT_3<span class="op">,</span> OUTPUT<span class="op">);</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"--- Decimal to Binary Converter ---"</span><span class="op">);</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"Enter a number between 0 and 15:"</span><span class="op">);</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> loop<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Check if user input is available on the UART Serial port</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>Serial<span class="op">.</span>available<span class="op">()</span> <span class="op">&gt;</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> num <span class="op">=</span> Serial<span class="op">.</span>parseInt<span class="op">();</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Clear newline and carriage-return characters from the buffer</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(</span>Serial<span class="op">.</span>available<span class="op">()</span> <span class="op">&gt;</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span> </span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>      Serial<span class="op">.</span>read<span class="op">();</span> </span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Validate numerical range (4 bits = 0 to 15)</span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>num <span class="op">&gt;=</span> <span class="dv">0</span> <span class="op">&amp;&amp;</span> num <span class="op">&lt;=</span> <span class="dv">15</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>      Serial<span class="op">.</span>print<span class="op">(</span><span class="st">"Received: "</span><span class="op">);</span></span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>      Serial<span class="op">.</span>print<span class="op">(</span>num<span class="op">);</span></span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>      Serial<span class="op">.</span>println<span class="op">(</span><span class="st">" -&gt; Updating LEDs..."</span><span class="op">);</span></span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>      <span class="co">// Extract each bit using right-shift (&gt;&gt;) and bitwise AND (&amp;)</span></span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>      <span class="co">// Formula: (num &gt;&gt; k) &amp; 1 extracts the k-th bit (0 or 1)</span></span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>      digitalWrite<span class="op">(</span>LED_BIT_0<span class="op">,</span> <span class="op">(</span>num <span class="op">&gt;&gt;</span> <span class="dv">0</span><span class="op">)</span> <span class="op">&amp;</span> <span class="dv">1</span><span class="op">);</span> </span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>      digitalWrite<span class="op">(</span>LED_BIT_1<span class="op">,</span> <span class="op">(</span>num <span class="op">&gt;&gt;</span> <span class="dv">1</span><span class="op">)</span> <span class="op">&amp;</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>      digitalWrite<span class="op">(</span>LED_BIT_2<span class="op">,</span> <span class="op">(</span>num <span class="op">&gt;&gt;</span> <span class="dv">2</span><span class="op">)</span> <span class="op">&amp;</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>      digitalWrite<span class="op">(</span>LED_BIT_3<span class="op">,</span> <span class="op">(</span>num <span class="op">&gt;&gt;</span> <span class="dv">3</span><span class="op">)</span> <span class="op">&amp;</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>      Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"Error: Number must be between 0 and 15!"</span><span class="op">);</span></span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Decimal to 4-Bit Binary Converter (Bare-Metal STM32 Embedded C)</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Direct hardware register access without framework or library overhead</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdint.h&gt;</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co">// 1. STM32 Peripheral Register Base Addresses</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#define RCC_BASE            </span><span class="op">(</span><span class="bn">0x40021000</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#define RCC_IOPENR_REG      </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span>RCC_BASE<span class="pp"> </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x34</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOA_BASE          </span><span class="op">(</span><span class="bn">0x50000000</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOA_MODER_REG     </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">GPIOA_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x00</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOA_ODR_REG       </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">GPIOA_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x14</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOA_BSRR_REG      </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">GPIOA_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x18</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="co">// 2. Pin Mapping (Pins PA0, PA1, PA4, PA5 assigned to 4 bits)</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="pp">#define LED0_PIN            </span><span class="op">(</span><span class="dv">0</span><span class="bu">U</span><span class="op">)</span><span class="pp"> </span><span class="co">// LSB</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="pp">#define LED1_PIN            </span><span class="op">(</span><span class="dv">1</span><span class="bu">U</span><span class="op">)</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="pp">#define LED2_PIN            </span><span class="op">(</span><span class="dv">4</span><span class="bu">U</span><span class="op">)</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="pp">#define LED3_PIN            </span><span class="op">(</span><span class="dv">5</span><span class="bu">U</span><span class="op">)</span><span class="pp"> </span><span class="co">// MSB</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">const</span> <span class="dt">uint8_t</span> led_pins<span class="op">[</span><span class="dv">4</span><span class="op">]</span> <span class="op">=</span> <span class="op">{</span>LED0_PIN<span class="op">,</span> LED1_PIN<span class="op">,</span> LED2_PIN<span class="op">,</span> LED3_PIN<span class="op">};</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="co">/**</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a><span class="co"> * </span><span class="an">@brief</span><span class="co"> Initialize GPIO Port A clocks and configure pins as push-pull outputs</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a><span class="co"> */</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> gpio_init<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Enable GPIO Port A peripheral clock (Bit 0 in RCC_IOPENR)</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>    RCC_IOPENR_REG <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Configure all 4 pins as General Purpose Output mode ('01' in MODER)</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">uint8_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">4</span><span class="op">;</span> i<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint8_t</span> pin <span class="op">=</span> led_pins<span class="op">[</span>i<span class="op">];</span></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>        GPIOA_MODER_REG <span class="op">&amp;=</span> <span class="op">~(</span><span class="dv">3</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span>pin <span class="op">*</span> <span class="dv">2</span><span class="op">));</span> <span class="co">// Clear 2-bit mode field</span></span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>        GPIOA_MODER_REG <span class="op">|=</span>  <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span>pin <span class="op">*</span> <span class="dv">2</span><span class="op">));</span> <span class="co">// Set '01' (Output)</span></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a><span class="co">/**</span></span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a><span class="co"> * </span><span class="an">@brief</span><span class="co"> Output a 4-bit integer to physical LEDs atomically via BSRR register</span></span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a><span class="co"> * </span><span class="an">@param</span><span class="co"> </span><span class="cv">num</span><span class="co"> Decimal integer between 0 and 15</span></span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a><span class="co"> */</span></span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> display_binary_baremetal<span class="op">(</span><span class="dt">uint8_t</span> num<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">uint8_t</span> k <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> k <span class="op">&lt;</span> <span class="dv">4</span><span class="op">;</span> k<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint8_t</span> pin <span class="op">=</span> led_pins<span class="op">[</span>k<span class="op">];</span></span>
+<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Extract k-th bit using right-shift and bitwise AND</span></span>
+<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">((</span>num <span class="op">&gt;&gt;</span> k<span class="op">)</span> <span class="op">&amp;</span> <span class="dv">1</span><span class="bu">U</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Bit is 1: Set pin HIGH (Write to lower 16 bits of BSRR)</span></span>
+<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a>            GPIOA_BSRR_REG <span class="op">=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> pin<span class="op">);</span></span>
+<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Bit is 0: Reset pin LOW (Write to upper 16 bits of BSRR)</span></span>
+<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a>            GPIOA_BSRR_REG <span class="op">=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span>pin <span class="op">+</span> <span class="dv">16</span><span class="bu">U</span><span class="op">));</span></span>
+<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-58"><a href="#cb7-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-59"><a href="#cb7-59" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-60"><a href="#cb7-60" aria-hidden="true" tabindex="-1"></a>    gpio_init<span class="op">();</span></span>
+<span id="cb7-61"><a href="#cb7-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-62"><a href="#cb7-62" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Demonstration loop: Counting 0 to 15 in binary</span></span>
+<span id="cb7-63"><a href="#cb7-63" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(</span><span class="dv">1</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-64"><a href="#cb7-64" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">uint8_t</span> count <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> count <span class="op">&lt;=</span> <span class="dv">15</span><span class="op">;</span> count<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb7-65"><a href="#cb7-65" aria-hidden="true" tabindex="-1"></a>            display_binary_baremetal<span class="op">(</span>count<span class="op">);</span></span>
+<span id="cb7-66"><a href="#cb7-66" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb7-67"><a href="#cb7-67" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Deterministic software delay loop</span></span>
+<span id="cb7-68"><a href="#cb7-68" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> <span class="op">(</span><span class="dt">volatile</span> <span class="dt">uint32_t</span> delay <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> delay <span class="op">&lt;</span> <span class="dv">250000</span><span class="op">;</span> delay<span class="op">++);</span></span>
+<span id="cb7-69"><a href="#cb7-69" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb7-70"><a href="#cb7-70" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-71"><a href="#cb7-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-72"><a href="#cb7-72" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb7-73"><a href="#cb7-73" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<section id="architecture-comparison-high-level-vs.-bare-metal" class="level3">
+<h3 class="anchored" data-anchor-id="architecture-comparison-high-level-vs.-bare-metal">Architecture Comparison: High-Level vs.&nbsp;Bare-Metal</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Metric</th>
+<th style="text-align: left;">High-Level Framework API</th>
+<th style="text-align: left;">Bare-Metal Embedded C</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Underlying Mechanism</strong></td>
+<td style="text-align: left;"><code>digitalWrite()</code> branches through pin-mapping lookup tables (~40–60 CPU cycles per call)</td>
+<td style="text-align: left;">Direct atomic write to <code>BSRR</code> register in a single machine instruction (1 CPU cycle)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Flash ROM Footprint</strong></td>
+<td style="text-align: left;">~3.8 KB (includes runtime framework, timer interrupts, serial buffering)</td>
+<td style="text-align: left;">~220 Bytes (pure machine code, zero library bloat)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>SRAM Consumption</strong></td>
+<td style="text-align: left;">~180 Bytes (allocated dynamic buffers and struct states)</td>
+<td style="text-align: left;">0 Bytes dynamic RAM (registers mapped directly in hardware memory space)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Real-Time Determinism</strong></td>
+<td style="text-align: left;">Variable latency due to framework interrupt servicing</td>
+<td style="text-align: left;">100% deterministic, cycle-accurate timing</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="how-this-simulation-applies-week-2-concepts" class="level3">
+<h3 class="anchored" data-anchor-id="how-this-simulation-applies-week-2-concepts">🔍 How This Simulation Applies Week 2 Concepts</h3>
+<p>This hands-on decimal-to-binary project directly translates the mathematical and memory management concepts taught in Week 2 into working hardware and firmware:</p>
+<section id="hardware-circuit-level-concept-mapping" class="level4">
+<h4 class="anchored" data-anchor-id="hardware-circuit-level-concept-mapping">1. Hardware &amp; Circuit-Level Concept Mapping</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Circuit Component</th>
+<th style="text-align: left;">Week 2 Theoretical Concept</th>
+<th style="text-align: left;">Technical Function in System</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>4x Physical LEDs (D2 to D5)</strong></td>
+<td style="text-align: left;"><strong>Positional Binary Number Representation</strong></td>
+<td style="text-align: left;">Each LED physically maps to a power-of-two positional weight: Bit 0 (<span class="math inline">\(2^0=1\)</span>), Bit 1 (<span class="math inline">\(2^1=2\)</span>), Bit 2 (<span class="math inline">\(2^2=4\)</span>), and Bit 3 (<span class="math inline">\(2^3=8\)</span>). Together, they visualize any nibble from <code>0b0000</code> (0) to <code>0b1111</code> (15).</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>220Ω Current-Limiting Resistors</strong></td>
+<td style="text-align: left;"><strong>Output Stage Protection &amp; Ohm’s Law</strong></td>
+<td style="text-align: left;">Protects the STM32 GPIO output push-pull stage from excessive current sinking or sourcing, maintaining the voltage level safely within the 3.3V logic threshold.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Common Ground (GND)</strong></td>
+<td style="text-align: left;"><strong>Electrical Reference Potential</strong></td>
+<td style="text-align: left;">Establishes a zero-volt potential reference, ensuring that logic HIGH (+3.3V) and logic LOW (0V) correspond directly to binary <code>1</code> and <code>0</code>.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="firmware-code-to-concept-breakdown" class="level4">
+<h4 class="anchored" data-anchor-id="firmware-code-to-concept-breakdown">2. Firmware Code-to-Concept Breakdown</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Code Statement (Framework / Bare-Metal)</th>
+<th style="text-align: left;">Week 2 Theoretical Concept</th>
+<th style="text-align: left;">Deep-Dive Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>int bitVal = (num &gt;&gt; k) &amp; 1;</code></td>
+<td style="text-align: left;"><strong>Right-Shift (<code>&gt;&gt;</code>) &amp; Bitwise AND (<code>&amp;</code>)</strong></td>
+<td style="text-align: left;">This is the core formula from Week 2 lecture. Shifting <code>num</code> right by <code>k</code> moves the target bit into the Least Significant Bit (bit 0) position. Bitwise ANDing with <code>1</code> masks out all upper bits, isolating the single binary digit <code>0</code> or <code>1</code>.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>uint8_t num;</code> vs <code>int num;</code></td>
+<td style="text-align: left;"><strong>Fixed-Width Types (<code>&lt;stdint.h&gt;</code>)</strong></td>
+<td style="text-align: left;">On a 32-bit ARM Cortex-M processor, a standard <code>int</code> occupies 4 bytes (32 bits). Since the value only ranges from 0 to 15, declaring <code>uint8_t</code> uses exactly 1 byte—reducing SRAM memory usage by <strong>75%</strong>.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>static const uint8_t led_pins[4]</code></td>
+<td style="text-align: left;"><strong>Memory Layout: Flash ROM vs.&nbsp;SRAM</strong></td>
+<td style="text-align: left;">Declaring the pin array with <code>const</code> instructs the C linker to place it in non-volatile Flash ROM (<code>.rodata</code> section) rather than consuming precious runtime SRAM (<code>.data</code>/<code>.bss</code>).</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>GPIOA_BSRR_REG = (1UL &lt;&lt; pin);</code><br><code>GPIOA_BSRR_REG = (1UL &lt;&lt; (pin + 16));</code></td>
+<td style="text-align: left;"><strong>Atomic Bit Manipulation &amp; Race Conditions</strong></td>
+<td style="text-align: left;">Unlike <code>ODR |= (1 &lt;&lt; pin)</code> which requires a 3-step read-modify-write cycle (<code>LDR</code>, <code>ORR</code>, <code>STR</code>), writing to <code>BSRR</code> sets or resets a specific pin in <strong>a single clock cycle without altering other pins</strong>, preventing interrupt corruption.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+</section>
+<section id="real-world-embedded-systems-examples" class="level2">
+<h2 class="anchored" data-anchor-id="real-world-embedded-systems-examples">7. Real-World Embedded Systems Examples</h2>
+<p>To appreciate how bitwise operations and data types function in industry, study these three real-world embedded applications:</p>
+<section id="example-2.1-automotive-engine-status-diagnostic-trouble-code-dtc-register" class="level3">
+<h3 class="anchored" data-anchor-id="example-2.1-automotive-engine-status-diagnostic-trouble-code-dtc-register">Example 2.1: Automotive Engine Status &amp; Diagnostic Trouble Code (DTC) Register 🚗</h3>
+<ul>
+<li><p><strong>The Real-World Scenario:</strong> In an automotive Engine Control Unit (ECU), firmware must track numerous boolean sensor conditions (e.g., Engine Overheating, Low Oil Pressure, Check Engine MIL, O2 Sensor Fault). Creating 8 individual boolean variables would consume 8 separate bytes in memory.</p></li>
+<li><p><strong>The Embedded Solution:</strong> Pack all 8 status flags into a single <code>uint8_t</code> status register, manipulating individual flags using bitwise operations:</p></li>
+<li><p><strong>Firmware Architectural Pattern:</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdint.h&gt;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Define bit positions for engine health flags</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#define FLAG_CHECK_ENGINE   </span><span class="op">(</span><span class="dv">0</span><span class="bu">U</span><span class="op">)</span><span class="pp"> </span><span class="co">// Bit 0: Check engine indicator</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#define FLAG_LOW_OIL_PRESS  </span><span class="op">(</span><span class="dv">1</span><span class="bu">U</span><span class="op">)</span><span class="pp"> </span><span class="co">// Bit 1: Oil pressure warning</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#define FLAG_OVERHEAT       </span><span class="op">(</span><span class="dv">2</span><span class="bu">U</span><span class="op">)</span><span class="pp"> </span><span class="co">// Bit 2: Coolant over-temperature</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#define FLAG_O2_SENSOR_FAIL </span><span class="op">(</span><span class="dv">3</span><span class="bu">U</span><span class="op">)</span><span class="pp"> </span><span class="co">// Bit 3: Oxygen sensor degraded</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="dt">uint8_t</span> engine_status <span class="op">=</span> <span class="bn">0x00</span><span class="op">;</span> <span class="co">// All flags clear at ignition</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> update_engine_diagnostics<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 1. SET: Oil pressure dropped below 20 PSI -&gt; Set Bit 1 without modifying others</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    engine_status <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> FLAG_LOW_OIL_PRESS<span class="op">);</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2. </span><span class="al">TEST</span><span class="co">: Check if Overheating (Bit 2) is active</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>engine_status <span class="op">&amp;</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> FLAG_OVERHEAT<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>        trigger_limp_home_mode<span class="op">();</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 3. CLEAR: Oil refilled, sensor normal -&gt; Clear Bit 1 cleanly</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>    engine_status <span class="op">&amp;=</span> <span class="op">~(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> FLAG_LOW_OIL_PRESS<span class="op">);</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 4. TOGGLE: Blink Check Engine light on dashboard each diagnostic cycle</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>    engine_status <span class="op">^=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> FLAG_CHECK_ENGINE<span class="op">);</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+</ul>
+<hr>
+</section>
+<section id="example-2.2-smart-thermostat-temperature-offset-calibration-signed-vs.-unsigned" class="level3">
+<h3 class="anchored" data-anchor-id="example-2.2-smart-thermostat-temperature-offset-calibration-signed-vs.-unsigned">Example 2.2: Smart Thermostat Temperature Offset Calibration (Signed vs.&nbsp;Unsigned) 🌡️</h3>
+<ul>
+<li><p><strong>The Real-World Scenario:</strong> An ambient digital temperature sensor has manufacturing variances and requires a factory calibration offset between <span class="math inline">\(-10^\circ\text{C}\)</span> and <span class="math inline">\(+10^\circ\text{C}\)</span>.</p></li>
+<li><p><strong>Key Concept Connection:</strong></p>
+<ul>
+<li>If a junior engineer mistakenly declares the offset as <code>uint8_t offset = -3;</code>, the variable underflows in unsigned arithmetic to <code>253</code>, causing the heating unit to overheat the house!</li>
+<li>Using <code>int8_t</code> from <code>&lt;stdint.h&gt;</code> correctly stores signed values from <span class="math inline">\(-128\)</span> to <span class="math inline">\(+127\)</span> using <strong>Two’s Complement representation</strong>.</li>
+</ul></li>
+<li><p><strong>Firmware Architectural Pattern:</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdint.h&gt;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Unsigned raw sensor reading (always positive: 0 to 100 degrees C)</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="dt">uint8_t</span> raw_temperature_celsius <span class="op">=</span> <span class="dv">24</span><span class="op">;</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Signed calibration offset: range -128 to +127 (using two's complement)</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="dt">int8_t</span> factory_cal_offset <span class="op">=</span> <span class="op">-</span><span class="dv">3</span><span class="op">;</span> </span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="dt">int16_t</span> calculate_true_temperature<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Promote safely to 16-bit signed integer to prevent calculation overflow</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int16_t</span> corrected_temp <span class="op">=</span> <span class="op">(</span><span class="dt">int16_t</span><span class="op">)</span>raw_temperature_celsius <span class="op">+</span> factory_cal_offset<span class="op">;</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> corrected_temp<span class="op">;</span> <span class="co">// Correct result: 21 deg C</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+</ul>
+<hr>
+</section>
+<section id="example-2.3-industrial-4-relay-power-actuator-controller" class="level3">
+<h3 class="anchored" data-anchor-id="example-2.3-industrial-4-relay-power-actuator-controller">Example 2.3: Industrial 4-Relay Power Actuator Controller ⚡</h3>
+<ul>
+<li><p><strong>The Real-World Scenario:</strong> An industrial automation controller operates 4 high-power AC mechanical relays controlling factory pump motors, exhaust fans, and heaters.</p></li>
+<li><p><strong>Key Concept Connection:</strong></p>
+<ul>
+<li>When turning ON the exhaust fan on Relay 2, firmware must <strong>never accidentally shut off</strong> the water cooling pump on Relay 0.</li>
+<li>Bitwise masks allow surgical activation of specific actuator channels.</li>
+</ul></li>
+<li><p><strong>Firmware Architectural Pattern:</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdint.h&gt;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#define RELAY_PUMP_BIT      </span><span class="op">(</span><span class="dv">0</span><span class="bu">U</span><span class="op">)</span><span class="pp"> </span><span class="co">// Relay 0: Water pump</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#define RELAY_FAN_BIT       </span><span class="op">(</span><span class="dv">1</span><span class="bu">U</span><span class="op">)</span><span class="pp"> </span><span class="co">// Relay 1: Exhaust fan</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#define RELAY_HEATER_BIT    </span><span class="op">(</span><span class="dv">2</span><span class="bu">U</span><span class="op">)</span><span class="pp"> </span><span class="co">// Relay 2: Heating element</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#define RELAY_ALARM_BIT     </span><span class="op">(</span><span class="dv">3</span><span class="bu">U</span><span class="op">)</span><span class="pp"> </span><span class="co">// Relay 3: Siren</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Simulated hardware port register (Active-HIGH relays)</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="dt">volatile</span> <span class="dt">uint8_t</span> <span class="op">*</span>p_relay_port <span class="op">=</span> <span class="op">(</span><span class="dt">volatile</span> <span class="dt">uint8_t</span> <span class="op">*)</span><span class="bn">0x40020014</span><span class="bu">UL</span><span class="op">;</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> activate_exhaust_fan_only<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Set Relay 1 HIGH without changing any other relay state</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>p_relay_port <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> RELAY_FAN_BIT<span class="op">);</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> emergency_shutdown_heaters<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Clear Relay 2 LOW while keeping pumps and alarms running</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>p_relay_port <span class="op">&amp;=</span> <span class="op">~(</span><span class="dv">1</span><span class="bu">U</span> <span class="op">&lt;&lt;</span> RELAY_HEATER_BIT<span class="op">);</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="important-exam-practice-questions" class="level2">
+<h2 class="anchored" data-anchor-id="important-exam-practice-questions">8. Important Exam Practice Questions</h2>
+<section id="question-1-significance-of-stdint.h-in-embedded-c" class="level3">
+<h3 class="anchored" data-anchor-id="question-1-significance-of-stdint.h-in-embedded-c">Question 1: Significance of <code>stdint.h</code> in Embedded C</h3>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Click to View Question &amp; Options
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Why is the <code>&lt;stdint.h&gt;</code> header considered essential in embedded firmware development?</p>
+<p><strong>Options:</strong><br>
+- <strong>A)</strong> It automatically optimizes recursive functions<br>
+- <strong>B)</strong> It provides exact, fixed-width integer types (<code>uint8_t</code>, <code>uint16_t</code>, <code>uint32_t</code>) ensuring consistent data sizes across different processor architectures<br>
+- <strong>C)</strong> It contains math libraries for calculating trigonometric functions<br>
+- <strong>D)</strong> It enables dynamic memory allocation in RAM</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>✅ Correct Answer: B
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Explanation:</strong><br>
+Embedded microcontrollers have different native word sizes (8-bit, 16-bit, 32-bit). Using <code>&lt;stdint.h&gt;</code> guarantees that a <code>uint8_t</code> is always 8 bits and a <code>uint32_t</code> is always 32 bits, preventing data corruption and memory overflow when accessing hardware registers.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="question-2-clearing-a-specific-bit-in-a-register" class="level3">
+<h3 class="anchored" data-anchor-id="question-2-clearing-a-specific-bit-in-a-register">Question 2: Clearing a Specific Bit in a Register</h3>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Click to View Question &amp; Options
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Which bitwise expression correctly clears (sets to 0) bit 4 of an 8-bit register <code>REG</code> without altering any other bits?</p>
+<p><strong>Options:</strong><br>
+- <strong>A)</strong> <code>REG |= (1 &lt;&lt; 4);</code><br>
+- <strong>B)</strong> <code>REG &amp;= ~(1 &lt;&lt; 4);</code><br>
+- <strong>C)</strong> <code>REG ^= (1 &lt;&lt; 4);</code><br>
+- <strong>D)</strong> <code>REG = (1 &lt;&lt; 4);</code></p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>✅ Correct Answer: B
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Explanation:</strong><br>
+<code>1 &lt;&lt; 4</code> creates a bitmask <code>00010000</code>. Inverting it with <code>~</code> yields <code>11101111</code>. Bitwise ANDing (<code>&amp;=</code>) with this mask forces bit 4 to 0 while leaving all other bits unchanged because <code>X &amp; 1 = X</code>.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="question-3-dynamic-memory-in-safety-critical-firmware" class="level3">
+<h3 class="anchored" data-anchor-id="question-3-dynamic-memory-in-safety-critical-firmware">Question 3: Dynamic Memory in Safety-Critical Firmware</h3>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Click to View Question &amp; Options
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Why is dynamic memory allocation (<code>malloc</code>/<code>free</code>) generally avoided in safety-critical real-time embedded systems?</p>
+<p><strong>Options:</strong><br>
+- <strong>A)</strong> Dynamic memory cannot be written to by C pointers<br>
+- <strong>B)</strong> It can lead to heap fragmentation, memory leaks, and non-deterministic execution times that jeopardize real-time deadlines<br>
+- <strong>C)</strong> Dynamic memory is stored in Flash ROM and cannot be rewritten<br>
+- <strong>D)</strong> C compilers do not support pointers in embedded mode</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>✅ Correct Answer: B
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Explanation:</strong><br>
+<code>malloc</code> relies on heap management, which has unpredictable search times (violating real-time determinism) and causes fragmentation over extended runtime, potentially leading to allocation crashes.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="question-4-flash-rom-vs.-sram-characteristics" class="level3">
+<h3 class="anchored" data-anchor-id="question-4-flash-rom-vs.-sram-characteristics">Question 4: Flash ROM vs.&nbsp;SRAM Characteristics</h3>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Click to View Question &amp; Options
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-8" class="callout-8-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>In a typical microcontroller architecture, what is stored in Flash ROM versus SRAM?</p>
+<p><strong>Options:</strong><br>
+- <strong>A)</strong> Flash ROM stores the stack; SRAM stores the compiled program code<br>
+- <strong>B)</strong> Flash ROM stores non-volatile program instructions and constant data; SRAM stores runtime variables and the stack/heap<br>
+- <strong>C)</strong> Flash ROM loses all contents when power is turned off; SRAM retains data permanently<br>
+- <strong>D)</strong> Both Flash ROM and SRAM are identical volatile memory spaces</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>✅ Correct Answer: B
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Explanation:</strong><br>
+Flash memory is non-volatile and holds the program machine code (<code>.text</code>) and constants (<code>.rodata</code>). SRAM is volatile and holds active runtime data, global variables (<code>.data</code>, <code>.bss</code>), function call frames, and the stack.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<hr>
+<div class="d-flex justify-content-between mt-4">
+<p><a href="./Week-1.html" class="seek-prev-btn">← Back to Week 1</a> <a href="./Week-3.html" class="seek-next-btn">NEXT: Week 3 — Intermediate STM32 Programming →</a></p>
+</div>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+<script src="site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>
