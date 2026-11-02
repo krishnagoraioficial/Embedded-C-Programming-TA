@@ -7,10 +7,13 @@ title: "Embedded C Programming"
 - **Course ID:** CS2101
 - **Course Credits:** 4 Credits
 - **Course Type:** Foundation Level (BS Degree in Electronic Systems)
+- **Faculty:** Prof. Nitin Chandrachoodan (IIT Madras)
+- **Course Instructor:** [subendu@study.iitm.ac.in](mailto:subendu@study.iitm.ac.in)
+- **Teaching Assistant (TA):** [25f1100001@es.study.iitm.ac.in](mailto:25f1100001@es.study.iitm.ac.in)
 - **Pre-requisites:** CS1101 — Introduction to C Programming
 - **Co-requisites:** None
 - **Official Course Outline:** [study.iitm.ac.in/es/course_pages/CS2101.html](https://study.iitm.ac.in/es/course_pages/CS2101.html)
-- **Lecture Video Playlist:** [NPTEL / IIT Madras Course Videos](https://www.youtube.com/playlist?list=PLUQpHm_JtukII_8U9pucV61MX2YE2CSUt)
+- **Lecture Video Playlist:** [IIT Madras BS in Electronic Systems - Embedded C Programming](https://www.youtube.com/playlist?list=PLUQpHm_JtukII_8U9pucV61MX2YE2CSUt)
 
 ---
 
@@ -22,7 +25,9 @@ Students learn the distinction between microprocessors and microcontrollers, mem
 
 ---
 
-### Faculty Information
+### Teaching Team & Faculty Information
+
+#### Course Faculty
 
 **Prof. Nitin Chandrachoodan**  
 *Professor, Department of Electrical Engineering*  
@@ -31,6 +36,14 @@ Students learn the distinction between microprocessors and microcontrollers, mem
 Prof. Nitin Chandrachoodan received his B.Tech in Electronics and Communication Engineering from IIT Madras in 1996, and his Ph.D. from the University of Maryland at College Park in 2002. His research expertise spans high-level synthesis techniques, digital system design automation, and embedded systems with a focus on assistive technologies.
 
 - 🌐 **Academic Profile:** [ee.iitm.ac.in/~nitin/](http://www.ee.iitm.ac.in/~nitin/)
+
+#### Course Instructor
+
+- ✉️ **Email:** [subendu@study.iitm.ac.in](mailto:subendu@study.iitm.ac.in)
+
+#### Teaching Assistant (TA)
+
+- ✉️ **Email:** [25f1100001@es.study.iitm.ac.in](mailto:25f1100001@es.study.iitm.ac.in)
 
 ---
 

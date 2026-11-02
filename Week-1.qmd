@@ -120,19 +120,19 @@ void set_led_high(void) {
 
 ## 5. Interactive Simulation: Microcontroller LED Circuit (Wokwi)
 
-Below is an interactive live simulation of an **ATmega328P / Arduino Microcontroller controlling an external LED circuit**.
+Below is an interactive live simulation of a **st-nucleo-c031c6 / STM32 Microcontroller controlling an external LED circuit**.
 
 Click the green **Play** button inside the simulation window to start the execution.
 
 ::: {.simulation-container}
 <iframe 
-  src="https://wokwi.com/projects/375659283936335873?embed=1" 
-  title="Wokwi Arduino LED Simulation"
+  src="https://wokwi.com/projects/479600411460923393?embed=1" 
+  title="Wokwi STM32 LED Simulation"
   loading="lazy"
   allowfullscreen>
 </iframe>
 <div class="sim-info-bar">
-  <span><strong>Simulation:</strong> Microcontroller GPIO Pin 13 driving an LED circuit</span>
+  <span><strong>Simulation:</strong> STM32 Microcontroller GPIO driving an LED circuit</span>
   <span>Click the Green Play button to run</span>
 </div>
 :::
@@ -145,7 +145,7 @@ In embedded systems, you can write firmware using high-level framework abstracti
 
 ::: {.panel-tabset}
 
-### 🔷 Approach 1: Arduino API (High-Level Abstraction)
+### Approach 1: Arduino API (High-Level Abstraction)
 
 ```cpp
 // Arduino Framework Style: High-level function call abstraction
@@ -171,7 +171,7 @@ void loop() {
 
 ---
 
-### 🔶 Approach 2: Bare-Metal Embedded C (Direct Register Access)
+### Approach 2: Bare-Metal Embedded C (Direct Register Access)
 
 ```c
 // Bare-Metal Embedded C Style: Direct memory-mapped register manipulation
@@ -245,7 +245,7 @@ Understanding how every circuit component and line of code connects back to our 
 
 To solidify your understanding of how embedded systems differ from general-purpose computing, let us explore three classic industrial and commercial applications:
 
-### Example 1.1: Automotive Anti-lock Braking System (ABS) ECU 🚗
+### Example 1.1: Automotive Anti-lock Braking System (ABS) ECU
 
 * **The Real-World Scenario:** In modern vehicles, an ABS Electronic Control Unit (ECU) monitors wheel rotation speeds during rapid deceleration. If a wheel locks up (stops rotating while the vehicle is in motion), the ECU rapidly pulses the hydraulic brake pressure (up to 15 times per second) to prevent skidding.
 * **Why an MCU is Used (Not a PC):** 
@@ -275,7 +275,7 @@ To solidify your understanding of how embedded systems differ from general-purpo
 
 ---
 
-### Example 1.2: Kitchen Microwave Oven Controller 🍳
+### Example 1.2: Kitchen Microwave Oven Controller  
 
 * **The Real-World Scenario:** A microwave oven is a dedicated embedded appliance designed to perform a single specialized task: heating food based on user-selected time and power profiles.
 * **Hardware & Memory-Mapped I/O:**
@@ -312,7 +312,7 @@ To solidify your understanding of how embedded systems differ from general-purpo
 
 ---
 
-### Example 1.3: Implantable Medical Cardiac Pacemaker ❤️
+### Example 1.3: Implantable Medical Cardiac Pacemaker 
 
 * **The Real-World Scenario:** An implantable pacemaker monitors natural electrical pulses from the human heart. If the heart skips a beat (bradycardia), the pacemaker generates a calibrated electrical stimulus directly to the cardiac muscle.
 * **Key Concept Connections:**
