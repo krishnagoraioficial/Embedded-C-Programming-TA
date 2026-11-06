@@ -1,14 +1,514 @@
 ---
-title: "Week 7: Practice and Problem Solving"
+title: "Week 7: Programming Assignments & Hands-on Lab"
 ---
 
-## Overview
+## 1. Overview of Week 7 Practical Modules
 
-Comprehensive problem solving, timing calculations, peripheral initialization, and debugging exercises.
+In Week 7, you translate embedded theory into **working, tested firmware**. The modules focus on hardware abstraction, timer operations, and PWM actuation:
 
-::: {.callout-tip}
-### 📌 Coming Up
-This module is part of the CS2101 syllabus outline. Detailed lecture notes, integrated interactive simulations, and question banks will be added here.
+```text
+ +-------------------------------------------------------------------------+
+ |                    WEEK 7 PRACTICAL MODULES ROADMAP                     |
+ +-------------------------------------------------------------------------+
+ | Mini-Project 1: Priority Traffic Intersection Controller (ST HAL)       |
+ |                 Target: STM32 ARM Cortex-M | Pin init, GPIO toggling    |
+ |                                                                         |
+ | Mini-Project 2: Hardware Timer & 50 Hz PWM Servo Actuator               |
+ |                 Target: STM32 / ATmega     | Precision 50 Hz PWM Pulses |
+ |                                                                         |
+ | Challenge:      Dual-Axis Solar / Sensor Tracker Actuation Turret       |
+ |                 Target: STM32 / ATmega     | Multi-Channel ADC + PWM    |
+ +-------------------------------------------------------------------------+
+```
+
+---
+
+## 2. Official Course Practice Tutorials (Wokwi Links)
+
+Before attempting the graded assignments, complete the official practice tutorials provided on Wokwi:
+
+| Tutorial | Title | Hardware & Concepts | Template / Solution Link |
+| :---: | :--- | :--- | :---: |
+| **Tutorial 7** | **LED Blink using ST HAL** | STM32, CubeMX GPIO configuration | [Open Wokwi Template ↗](https://wokwi.com/projects/413591562232935425) |
+| **Tutorial 8** | **Servo Control using Servo.h** | Arduino Library, PWM Angle Control | [Open Wokwi Solution ↗](https://wokwi.com/projects/413586442659382273) |
+| **Tutorial 9** | **LED Blink: ATmega Timers Interrupts** | 16-bit Timer 1, CTC Mode, ISR | [Open Template ↗](https://wokwi.com/projects/413874453951345665) \| [Solution ↗](https://wokwi.com/projects/413601909204105217) |
+| **Tutorial 10** | **Generating PWM using ATmega Timers** | Fast PWM, `ICR1` TOP, `OCR1A` duty | [Open Template ↗](https://wokwi.com/projects/413796509105260545) \| [Solution ↗](https://wokwi.com/projects/413747436484456449) |
+
+---
+
+## 3. Mini-Project 1: Priority Traffic Intersection Controller with Pedestrian Override 🚦
+
+### 🎯 Objective
+In urban traffic safety systems, traffic lights sequence sequentially through Green, Yellow, and Red phases. In this mini-project, you will program the **STM32 Nucleo-C031C6** to control a 3-LED traffic junction and safely handle pedestrian push-to-cross requests.
+
+### 🛠️ Hardware Setup (Wokwi)
+The circuit connects the following to an **STM32 Nucleo-C031C6** board:
+* **3x LEDs (Red, Yellow, Green):** With 220Ω current-limiting resistors.
+* **1x Pushbutton:** Pedestrian call button on `D2` (`PA10`).
+
+### Pin Wiring Table
+| Component | Pin / Terminal | STM32 / Board Pin | Electrical Function |
+| :--- | :--- | :---: | :--- |
+| **Red LED** | Anode (via 220Ω resistor) | `D13` (`PA5`) | Stop Phase Indicator |
+| **Yellow LED** | Anode (via 220Ω resistor) | `D12` (`PA6`) | Caution / Transition Phase Indicator |
+| **Green LED** | Anode (via 220Ω resistor) | `D11` (`PA7`) | Go Phase Indicator |
+| **All LEDs** | Cathodes ($-$) | Common `GND` | Ground Reference |
+| **Pedestrian Button** | Terminal 1.L / 2.L | `D2` (`PA10`) / `GND` | Pedestrian Call (`INPUT_PULLUP`) |
+
+### 📝 Problem Statement & Logic Flow
+1. **Default Traffic Cycle:**
+   * **Phase 1 (Go):** Green LED is **ON** for 4.0 seconds. Red and Yellow are OFF.
+   * **Phase 2 (Caution):** Green turns OFF; Yellow LED is **ON** for 1.5 seconds.
+   * **Phase 3 (Stop):** Yellow turns OFF; Red LED is **ON** for 4.0 seconds (allowing cross traffic).
+2. **Pedestrian Priority Override:**
+   * When a pedestrian presses the button on `D2` while the light is Green, do **not** jump instantly to Red (which causes vehicular collisions!). Instead, immediately abort the remaining Green duration and transition to the 1.5-second Yellow caution phase, followed by Red.
+3. **Serial Telemetry:**
+   * Transmit live state updates over UART at **115200 baud**.
+
+```text
+[STATE] GREEN - Traffic Moving
+[PEDESTRIAN] Button Pressed! Initiating Stop Sequence...
+[STATE] YELLOW - Prepare to Stop
+[STATE] RED - Pedestrians Crossing
+```
+
+### Interactive Simulation (Practice Workspace)
+
+::: {.simulation-container}
+<iframe 
+  src="https://wokwi.com/projects/479963095271968769?embed=1" 
+  title="STM32 Nucleo Simulation Workspace"
+  loading="lazy"
+  allowfullscreen>
+</iframe>
+<div class="sim-info-bar">
+  <span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span>
+  <span>Click Play, wire Red on D13, Yellow on D12, Green on D11, Button on D2</span>
+</div>
 :::
 
-[← Back to Main Page](index.qmd){.btn .btn-outline-secondary .mt-4}
+### Implementation Code: High-Level Framework vs. Bare-Metal Embedded C
+
+::: {.panel-tabset}
+
+### 🔷 High-Level Framework (Running in Simulation)
+
+```cpp
+// ============================================================================
+// Mini-Project 1: Multi-LED Traffic Signal Controller (Nucleo-C031C6)
+// ============================================================================
+
+#define LED_RED    13 // PA5 (User LED)
+#define LED_YELLOW 12 // PA6
+#define LED_GREEN  11 // PA7
+#define BUTTON_PIN 2  // Pedestrian Call Button
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(LED_RED, OUTPUT);
+  pinMode(LED_YELLOW, OUTPUT);
+  pinMode(LED_GREEN, OUTPUT);
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+
+  Serial.println("--- Traffic Signal Controller Initialized ---");
+}
+
+void loop() {
+  // Phase 1: Green ON (Go Phase - 4000 ms with responsive pedestrian check)
+  digitalWrite(LED_RED, LOW);
+  digitalWrite(LED_YELLOW, LOW);
+  digitalWrite(LED_GREEN, HIGH);
+  Serial.println("[STATE] GREEN - Traffic Moving");
+
+  for (int i = 0; i < 80; i++) {
+    if (digitalRead(BUTTON_PIN) == LOW) {
+      Serial.println("[PEDESTRIAN] Button Pressed! Initiating Stop Sequence...");
+      break; // Abort remaining green phase
+    }
+    delay(50);
+  }
+
+  // Phase 2: Yellow ON (Caution Phase - 1500 ms)
+  digitalWrite(LED_GREEN, LOW);
+  digitalWrite(LED_YELLOW, HIGH);
+  Serial.println("[STATE] YELLOW - Prepare to Stop");
+  delay(1500);
+
+  // Phase 3: Red ON (Stop Phase - 4000 ms)
+  digitalWrite(LED_YELLOW, LOW);
+  digitalWrite(LED_RED, HIGH);
+  Serial.println("[STATE] RED - Pedestrians Crossing");
+  delay(4000);
+}
+```
+
+---
+
+### 🔶 Equivalent STM32 HAL Embedded C
+
+```c
+// ============================================================================
+// Mini-Project 1: STM32 HAL Multi-LED Sequencer
+// ============================================================================
+#include "stm32c0xx_hal.h"
+
+#define LED_RED_PIN     GPIO_PIN_5
+#define LED_YELLOW_PIN  GPIO_PIN_6
+#define LED_GREEN_PIN   GPIO_PIN_7
+#define LED_PORT        GPIOA
+
+void traffic_cycle_step(void) {
+    // 1. Red ON
+    HAL_GPIO_WritePin(LED_PORT, LED_RED_PIN, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(LED_PORT, LED_YELLOW_PIN | LED_GREEN_PIN, GPIO_PIN_RESET);
+    HAL_Delay(4000);
+
+    // 2. Yellow ON
+    HAL_GPIO_WritePin(LED_PORT, LED_YELLOW_PIN, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(LED_PORT, LED_RED_PIN | LED_GREEN_PIN, GPIO_PIN_RESET);
+    HAL_Delay(1500);
+
+    // 3. Green ON
+    HAL_GPIO_WritePin(LED_PORT, LED_GREEN_PIN, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(LED_PORT, LED_RED_PIN | LED_YELLOW_PIN, GPIO_PIN_RESET);
+    HAL_Delay(4000);
+}
+```
+
+:::
+
+### 🔍 How Mini-Project 1 Applies Week 7 Concepts
+
+#### 1. Hardware & Circuit-Level Concept Mapping
+
+| Circuit Component | Week 7 Theoretical Concept | Technical Function in System |
+| :--- | :--- | :--- |
+| **LEDs on D11, D12, D13** | **Multi-Port GPIO Sourcing** | Pin drivers source current through 220Ω resistors into forward-biased diodes, creating visual indicators. |
+| **Button on D2** | **Asynchronous Override Input** | Samples pedestrian requests without freezing sequential execution. |
+
+#### 2. Firmware Code-to-Concept Breakdown
+
+| Code Statement (Framework / Bare-Metal) | Week 7 Theoretical Concept | Deep-Dive Explanation |
+| :--- | :--- | :--- |
+| `for (int i=0; i<80; i++) { delay(50); }` | **Granular Polling Delay** | Slices a long 4-second wait into 50 ms slices so human inputs are captured within 50 ms instead of 4 seconds. |
+| `HAL_GPIO_WritePin(...)` | **Hardware Abstraction Layer (HAL)** | Standardizes register bit operations into vendor-neutral portable firmware APIs. |
+
+---
+
+## 4. Mini-Project 2: Hardware Timer & 50 Hz PWM Servo Actuator ⚙️🤖
+
+### 🎯 Objective
+In robotic actuators and precise timing systems, software delays jitter uncontrollably when CPU load fluctuates. In this project, you will configure **Hardware Timer 1** to output a **50 Hz Fast PWM waveform** ($20\text{ ms}$ period) to position an RC servo motor smoothly across $0^\circ$, $90^\circ$, and $180^\circ$.
+
+### 🛠️ Hardware Setup (Wokwi)
+The circuit connects the following components:
+* **1x Hobby Servo Motor (`wokwi-servo`):** Signal connected to Pin 9 (Timer 1 PWM).
+* **Onboard LED:** On Pin 13 / PB5.
+
+### Pin Wiring Table
+| Component | Pin / Terminal | Board Pin | Electrical Function |
+| :--- | :--- | :---: | :--- |
+| **Servo Motor** | Signal (Orange) | `Pin 9` (`PB1` / `OC1A`) | Hardware Timer 1 Fast PWM Output |
+| **Servo Motor** | VCC (Red) | `5V` | Motor Power Supply |
+| **Servo Motor** | GND (Brown/Black) | `GND` | Ground Reference |
+
+### 📝 Problem Statement & Logic Flow
+1. **PWM Frequency & Period:** Generate an exact $50\text{ Hz}$ waveform ($20\text{ ms}$ total period).
+2. **Angle Mapping (Pulse Widths):**
+   * **$0^\circ$ Angle:** $1.0\text{ ms}$ high pulse (hold 1 sec).
+   * **$90^\circ$ Angle (Center):** $1.5\text{ ms}$ high pulse (hold 1 sec).
+   * **$180^\circ$ Angle:** $2.0\text{ ms}$ high pulse (hold 1 sec).
+3. **Register Calculations (16 MHz Clock, Prescaler = 8):**
+   * 1 timer tick $= \frac{8}{16,000,000} = 0.5\,\mu\text{s}$.
+   * TOP (20 ms period): $\text{ICR1} = 39,999$.
+   * $0^\circ$ (1.0 ms pulse): $\text{OCR1A} = 2,000$.
+   * $90^\circ$ (1.5 ms pulse): $\text{OCR1A} = 3,000$.
+   * $180^\circ$ (2.0 ms pulse): $\text{OCR1A} = 4,000$.
+
+```text
+--- Servo Hardware PWM Sweeper Started ---
+[SERVO] Angle: 0 deg (Pulse: 1.0 ms)
+[SERVO] Angle: 90 deg (Pulse: 1.5 ms)
+[SERVO] Angle: 180 deg (Pulse: 2.0 ms)
+```
+
+### Interactive Simulation (Practice Workspace)
+
+::: {.simulation-container}
+<iframe 
+  src="https://wokwi.com/projects/479963095271968769?embed=1" 
+  title="Hardware Timer Servo PWM Simulation"
+  loading="lazy"
+  allowfullscreen>
+</iframe>
+<div class="sim-info-bar">
+  <span><strong>Target Board:</strong> STM32 Nucleo-C031C6 / ATmega328P</span>
+  <span>Click Play to practice 50Hz hardware PWM angle modulation</span>
+</div>
+:::
+
+### Implementation Code: High-Level Framework vs. Bare-Metal Embedded C
+
+::: {.panel-tabset}
+
+### 🔷 High-Level Framework (Running in Simulation)
+
+```cpp
+// ============================================================================
+// Mini-Project 2: Servo Control using High-Level Framework (Servo.h)
+// ============================================================================
+#include <Servo.h>
+
+Servo myServo;
+
+void setup() {
+  Serial.begin(115200);
+  myServo.attach(9); // Digital Pin 9 (PB1 / OC1A)
+  Serial.println("--- Servo Hardware PWM Sweeper Started ---");
+}
+
+void loop() {
+  Serial.println("[SERVO] Angle: 0 deg (Pulse: 1.0 ms)");
+  myServo.write(0);   // Sweep to 0 degrees
+  delay(1000);
+
+  Serial.println("[SERVO] Angle: 90 deg (Pulse: 1.5 ms)");
+  myServo.write(90);  // Center at 90 degrees
+  delay(1000);
+
+  Serial.println("[SERVO] Angle: 180 deg (Pulse: 2.0 ms)");
+  myServo.write(180); // Sweep to 180 degrees
+  delay(1000);
+}
+```
+
+---
+
+### 🔶 Equivalent Register-Level Fast PWM (Timer 1 Direct Registers)
+
+```c
+// ============================================================================
+// Mini-Project 2: Register-Level Fast PWM (Timer 1)
+// ============================================================================
+#include <avr/io.h>
+#include <util/delay.h>
+
+void servo_timer_init(void) {
+    DDRB |= (1 << PB1); // Pin 9 as Output
+
+    // Configure Timer 1 for 50 Hz Fast PWM (ICR1 as TOP, Prescaler = 8)
+    TCCR1A = (1 << COM1A1) | (1 << WGM11);
+    TCCR1B = (1 << WGM13)  | (1 << WGM12) | (1 << CS11); // Prescaler 8
+    ICR1   = 39999;                                       // 20 ms Period (50 Hz)
+    OCR1A  = 3000;                                        // Neutral 90 deg (1.5 ms)
+}
+
+void set_servo_angle(uint8_t angle) {
+    if (angle > 180) angle = 180;
+    // Map 0-180 deg to 2000-4000 ticks (1.0 ms to 2.0 ms)
+    OCR1A = 2000 + ((uint32_t)angle * 2000) / 180;
+}
+```
+
+:::
+
+### 🔍 How Mini-Project 2 Applies Week 7 Concepts
+
+#### 1. Hardware & Circuit-Level Concept Mapping
+
+| Circuit Component | Week 7 Theoretical Concept | Technical Function in System |
+| :--- | :--- | :--- |
+| **Servo Control Signal (Pin 9)** | **Pulse Width Modulated Positioning** | The internal servo control loop compares the potentiometer position against incoming pulse width to regulate gear train torque. |
+| **Timer 1 Counter (`TCNT1`)** | **Hardware Waveform Generation** | The counter increments autonomously without CPU instruction cycles, guaranteeing zero pulse jitter. |
+
+#### 2. Firmware Code-to-Concept Breakdown
+
+| Code Statement (Framework / Bare-Metal) | Week 7 Theoretical Concept | Deep-Dive Explanation |
+| :--- | :--- | :--- |
+| `ICR1 = 39999;` | **Timer Auto-Reload TOP Register** | Establishes the exact frame period: $20\text{ ms} = 40,000 \text{ ticks} \times 0.5\,\mu\text{s}$. |
+| `OCR1A = 3000;` | **Output Compare Match Register** | Sets the pulse duration: $3,000 \text{ ticks} \times 0.5\,\mu\text{s} = 1.5\text{ ms}$ (exact neutral $90^\circ$). |
+
+---
+
+## 5. Hands-On Practice Challenge (For Students to Solve) 🎯
+
+### 🎯 Objective & Scenario
+In surveillance robotics, automated cameras use pan-and-tilt gimbals to track targets. In this challenge, you will build a dual-axis pan-and-tilt servo turret controlled by an analog 2-axis joystick using the 10-bit ADC and hardware PWM.
+
+### 🛠️ Hardware Setup & Pin Wiring Table
+Connect an analog joystick and two hobby servo motors:
+
+| Component | Pin / Terminal | Board Connection | Electrical Notes |
+| :--- | :--- | :---: | :--- |
+| **Joystick X-Axis** | VRx | `A0` | Analog ADC channel 0 ($0$ to $1023$) |
+| **Joystick Y-Axis** | VRy | `A1` | Analog ADC channel 1 ($0$ to $1023$) |
+| **Pan Servo (X-Axis)** | Signal (Orange) | `Pin 9` | 50 Hz PWM output |
+| **Tilt Servo (Y-Axis)**| Signal (Orange) | `Pin 10` | 50 Hz PWM output |
+| **Power Rails** | VCC / GND | `5V` / `GND` | Common Power Reference |
+
+### 📋 Problem Statement & Functional Requirements
+1. **Analog Acquisition & Deadband Filtering:**
+   * Sample `JOYSTICK_X` (`A0`) and `JOYSTICK_Y` (`A1`) using `analogRead()`.
+   * Apply a **deadband filter** around center ($512 \pm 30$): if within $[482, 542]$, ignore minor potentiometer jitter!
+2. **Angle Translation:**
+   * Map X-axis ($0$ to $1023$) to Pan angle ($0^\circ$ to $180^\circ$).
+   * Map Y-axis ($0$ to $1023$) to Tilt angle ($0^\circ$ to $180^\circ$).
+3. **Actuator Update:**
+   * Command servos smoothly every 20 ms.
+
+### 💻 Starter Code Template
+```cpp
+// ============================================================================
+// Student Practice Challenge: Dual-Servo Joystick Turret
+// Target: arduino-uno (ATmega328P) or board-st-nucleo-c031c6
+// ============================================================================
+#include <Servo.h>
+
+#define JOYSTICK_X A0
+#define JOYSTICK_Y A1
+#define SERVO_PAN  9
+#define SERVO_TILT 10
+
+Servo panServo;
+Servo tiltServo;
+
+void setup() {
+  // TODO 1: Initialize Serial at 115200 baud
+  // TODO 2: Attach panServo to SERVO_PAN and tiltServo to SERVO_TILT
+  // TODO 3: Center both servos at 90 degrees
+}
+
+void loop() {
+  // TODO 4: Read JOYSTICK_X and JOYSTICK_Y analog inputs
+  // TODO 5: Implement deadband filter around center (512 +/- 30)
+  // TODO 6: Map filtered values to 0-180 degrees using map()
+  // TODO 7: Command servos using .write(angle)
+  // TODO 8: Short 20 ms loop delay
+}
+```
+
+### 🧪 Verification & Expected Test Cases
+| Joystick Position | X / Y ADC Counts | Pan Servo Angle | Tilt Servo Angle |
+| :--- | :---: | :---: | :---: |
+| **Centered (At Rest)** | $512 \pm 30$ | **$90^\circ$ (Hold)** | **$90^\circ$ (Hold)** |
+| **Full Left** | $0$ / $512$ | **$0^\circ$** | $90^\circ$ |
+| **Full Right** | $1023$ / $512$ | **$180^\circ$** | $90^\circ$ |
+| **Full Up** | $512$ / $1023$ | $90^\circ$ | **$180^\circ$** |
+
+<details>
+<summary>💡 Need a Hint? Click to Reveal</summary>
+
+* **Deadband Filter:**
+  ```cpp
+  int xVal = analogRead(JOYSTICK_X);
+  if (abs(xVal - 512) > 30) {
+      int panAngle = map(xVal, 0, 1023, 0, 180);
+      panServo.write(panAngle);
+  }
+  ```
+</details>
+
+::: {.simulation-container}
+<iframe 
+  src="https://wokwi.com/projects/479963095271968769?embed=1" 
+  title="Dual Servo Turret Simulation Workspace"
+  loading="lazy"
+  allowfullscreen>
+</iframe>
+<div class="sim-info-bar">
+  <span><strong>Target Board:</strong> STM32 Nucleo-C031C6 / ATmega328P</span>
+  <span>Click Play to build and test your joystick dual-servo controller</span>
+</div>
+:::
+
+```{=html}
+<div id="comparator-w7" class="code-comparator-widget">
+  <div class="comparator-header">
+    <div class="comparator-title">
+      <span class="icon">🔄</span>
+      <span><strong>Simultaneous Code Explorer:</strong> Arduino Framework ↔ Bare-Metal C</span>
+    </div>
+    <div class="comparator-controls">
+      <label>Load Preset:</label>
+      <select class="preset-select">
+        <option value="timer_pwm">Hardware Timer PWM (50 Hz Servo)</option>
+        <option value="adc_analog">ADC Multi-Channel Joystick Reading</option>
+        <option value="gpio_blink">GPIO Multi-LED Traffic Light</option>
+        <option value="gpio_input">Pedestrian Pushbutton Input</option>
+        <option value="exti_interrupt">EXTI Hardware Interrupt</option>
+      </select>
+      <button type="button" class="btn-compare" onclick="runInteractiveTranslation('comparator-w7')">Analyze / Map Code</button>
+    </div>
+  </div>
+  <div class="comparator-panes">
+    <div class="pane">
+      <div class="pane-header">
+        <span class="badge-arduino">Arduino C++ (Framework)</span>
+        <span class="hint">Type or paste Arduino code here for live Bare-Metal translation</span>
+      </div>
+      <textarea class="code-input" spellcheck="false"></textarea>
+    </div>
+    <div class="pane">
+      <div class="pane-header">
+        <span class="badge-baremetal">Equivalent Bare-Metal C (Direct Registers)</span>
+        <span class="hint">Live Memory-Mapped Operations</span>
+      </div>
+      <pre class="code-output"><code></code></pre>
+    </div>
+  </div>
+</div>
+```
+
+---
+
+## 7. Concept Check Practice Questions
+
+### Question 1: Timer CTC Mode Compare Match Calculation
+
+::: {.callout-note collapse="true"}
+## Click to View Question & Options
+
+An ATmega328P runs at $f_{CPU} = 16\text{ MHz}$. You configure Timer 1 in CTC mode with a Prescaler of $64$. What value must be loaded into the `OCR1A` register to generate a periodic interrupt frequency of exactly $500\text{ Hz}$?
+
+**Options:**  
+- **A)** $250$  
+- **B)** $499$  
+- **C)** $500$  
+- **D)** $3124$  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: B
+**Explanation:**  
+The formula for CTC mode is:  
+$$\text{OCR1A} = \left( \frac{f_{CPU}}{\text{Prescaler} \times f_{\text{target}}} \right) - 1 = \left( \frac{16,000,000}{64 \times 500} \right) - 1 = \left( \frac{16,000,000}{32,000} \right) - 1 = 500 - 1 = \mathbf{499}$$.
+:::
+:::
+
+---
+
+### Question 2: Servo Motor PWM Signal Timing
+
+::: {.callout-note collapse="true"}
+## Click to View Question & Options
+
+What is the standard signal frequency and pulse width required to command a standard hobby servo motor to its neutral center ($90^\circ$) position?
+
+**Options:**  
+- **A)** $1000\text{ Hz}$ frequency with $50\%$ duty cycle  
+- **B)** $50\text{ Hz}$ frequency ($20\text{ ms}$ period) with a $1.5\text{ ms}$ active-high pulse  
+- **C)** $10\text{ kHz}$ frequency with a $10.0\text{ ms}$ pulse  
+- **D)** Constant DC voltage of $2.5\text{ V}$  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: B
+**Explanation:**  
+Standard hobby RC servos require a $50\text{ Hz}$ repetition rate ($20\text{ ms}$ frame). The pulse width controls position: $1.0\text{ ms}$ is $0^\circ$, **$1.5\text{ ms}$ is $90^\circ$ (center)**, and $2.0\text{ ms}$ is $180^\circ$.
+:::
+:::
+
+---
+
+<div class="d-flex justify-content-between mt-4">
+  <a href="Week-6.qmd" class="seek-prev-btn">← Back to Week 6: Compilation, Runtime & Power</a>
+  <a href="Week-8.qmd" class="seek-next-btn">NEXT: Week 8 — Software Architecture & Patterns →</a>
+</div>

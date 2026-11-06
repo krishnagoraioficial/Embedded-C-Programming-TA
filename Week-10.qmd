@@ -1,14 +1,624 @@
 ---
-title: "Week 10: Advanced Embedded C Concepts"
+title: "Week 10: Efficient Embedded Systems & Optimization"
 ---
 
-## Overview
+## 1. What Makes an Embedded System Efficient?
 
-Memory layout (Flash vs SRAM, .text, .data, .bss, stack, heap), Linker scripts, Startup assembly code, Optimization flags.
+In desktop computing, developers rarely worry if their software consumes 100 megabytes of RAM or runs the CPU at full throttle. 
 
-::: {.callout-tip}
-### 📌 Coming Up
-This module is part of the CS2101 syllabus outline. Detailed lecture notes, integrated interactive simulations, and question banks will be added here.
+In embedded systems, however, you operate under strict physical constraints:
+- **Energy Constraints:** Many devices run on coin-cell batteries or solar energy and must last for years.
+- **Memory Constraints:** Microcontrollers typically have between 2 KB and 128 KB of SRAM.
+- **Compute Constraints:** Running at 48 MHz or 72 MHz means you cannot waste clock cycles on inefficient algorithms.
+
+```text
+ THE THREE PILLARS OF EMBEDDED EFFICIENCY:
+ +-------------------------------------------------------------------------+
+ | 1. TIME EFFICIENCY:    Execute tasks in minimum clock cycles (DMA, Cache)|
+ | 2. ENERGY EFFICIENCY:  Put the CPU to sleep the microsecond work is done|
+ | 3. MEMORY EFFICIENCY:  Eliminate dynamic RAM bloat & optimize structures|
+ +-------------------------------------------------------------------------+
+```
+
+---
+
+## 2. Polling vs. Interrupts: Energy & Performance Trade-Offs
+
+When your microcontroller needs to monitor an external pin or sensor, you have two fundamental approaches:
+
+```text
+ 1. POLLING (Wastes Energy & Saturates CPU):
+ while(1) {
+     if (sensor_ready()) { read_sensor(); } // CPU runs at 100% active current (20 mA)
+ }
+
+ 2. INTERRUPT-DRIVEN SLEEP (Ultra-Low Power):
+ while(1) {
+     __asm("wfi"); // CPU sleeps at 2 µA until the hardware pin triggers an interrupt!
+ }
+```
+
+### Direct Comparison
+
+| Metric | Polling Approach | Interrupt-Driven Approach |
+| :--- | :--- | :--- |
+| **CPU Utilization** | $100\%$ (trapped in active loop) | $0\%$ between events |
+| **Power Consumption** | High ($5\text{ mA} - 25\text{ mA}$ continuously) | **Ultra-Low** (Microamps in sleep mode) |
+| **Response Latency** | Variable (depends on loop execution length) | **Immediate** (instant hardware vector jump) |
+| **Code Complexity** | Very simple | Moderate (requires ISR configuration & flags) |
+| **Best Suited For** | Microsecond-fast hardware status checks | Pushbuttons, sensor alarms, communication packets |
+
+---
+
+## 3. Direct Memory Access (DMA): High-Speed Data with 0% CPU Load
+
+Imagine you are sampling an ADC audio sensor at $100\text{ kHz}$ ($100,000$ samples per second). 
+
+If the CPU had to read each sample via interrupts, it would spend over 20 million clock cycles just saving registers and running ISRs, completely choking the processor!
+
+```text
+ TRADITIONAL DATA TRANSFER (CPU is a bottleneck):
+ Peripheral [ADC / UART] ---> [ CPU Core Reads & Writes ] ---> SRAM Memory Buffer
+ * CPU is 100% occupied acting as a glorified delivery person!
+
+ DIRECT MEMORY ACCESS (DMA) (Hardware Co-Processor):
+ Peripheral [ADC / UART] ========= [ DMA Hardware Engine ] =========> SRAM Memory Buffer
+                                             |
+ CPU Core: [ Executes Complex Control Math & Filtering in Parallel at 100% Speed! ]
+```
+
+---
+
+## 4. Cache Memory Systems & The Memory Wall
+
+Modern 32-bit ARM Cortex-M processors (like Cortex-M4 and M7) can run at clock frequencies of $100\text{ MHz}$ to $400\text{ MHz}$. However, physical non-volatile Flash memory can only be read at around $25\text{ MHz}$ to $35\text{ MHz}$!
+
+To prevent the high-speed CPU from stalling on every single instruction fetch (**Flash Wait States**), microcontrollers integrate **Cache Memory**:
+
+```text
+ [ CPU Core (200 MHz) ] <====== (1 Clock Cycle Access) ======> [ L1 Cache (SRAM) ]
+                                                                       | (Cache Miss Penalty)
+                                                                       v
+                                                           [ Flash Memory (Slow) ]
+```
+
+- **Instruction Cache (I-Cache):** Stores recently executed code loops in ultra-fast internal SRAM right next to the ALU. Loops run at full clock speed with zero wait states.
+- **Data Cache (D-Cache):** Stores frequently accessed global variables and array lookups.
+- **Cache Hit:** Requested data is found in cache $\to$ 1 clock cycle access.
+- **Cache Miss:** Data is missing $\to$ CPU must stall while fetching from slow Flash.
+
+---
+
+## 5. Power Consumption in Electronics Systems
+
+Microcontroller power dissipation is divided into two physics domains:
+
+```text
+ TOTAL POWER = DYNAMIC POWER (Switching) + STATIC POWER (Leakage)
+               P_dyn = C * V^2 * f         P_stat = V * I_leakage
+```
+
+### Engineering Techniques for Low-Power Optimization:
+1. **Dynamic Voltage & Frequency Scaling (DVFS):** If your device only needs to blink an LED, drop the CPU clock from $64\text{ MHz}$ down to $2\text{ MHz}$ to slash dynamic power by over $90\%$.
+2. **Clock Gating:** Disable peripheral clocks in the `RCC` register suite for any module you aren't actively using.
+3. **Duty Cycling:** Run at high speed for 5 milliseconds to calculate sensor math, then enter deep sleep mode for 995 milliseconds. Over a full second, the average current is under $10\,\mu\text{A}$!
+
+---
+
+## 6. Code Optimization Techniques in Embedded C
+
+```text
+ +-------------------------------------------------------------------------+
+ |                         C CODE OPTIMIZATION RULES                       |
+ +-------------------------------------------------------------------------+
+ | 1. Choose the Right Compiler Flag:                                      |
+ |    -O0: No optimization (easiest to debug with GDB)                     |
+ |    -O2: Balanced speed and performance                                  |
+ |    -Os: Optimize for Size (The industry favorite for small Flash MCUs!) |
+ |                                                                         |
+ | 2. Avoid Floating-Point on MCUs Without an FPU:                         |
+ |    Calculating float x = 3.14 * y on an ARM Cortex-M0+ requires hundreds|
+ |    of slow software library instructions! Use integer or fixed-point!   |
+ |                                                                         |
+ | 3. Use Loop Unrolling & Lookup Tables (LUTs):                           |
+ |    Pre-compute expensive trigonometric functions (sin, cos) into const  |
+ |    arrays in Flash ROM (.rodata) instead of calculating at runtime!     |
+ +-------------------------------------------------------------------------+
+```
+
+---
+
+## 7. Mini-Project 1: Autonomous ADC Data Acquisition with DMA ⚡🔄
+
+### 🎯 Objective
+In digital signal processing and motor drive control, sampling analog signals at high frequencies using standard `analogRead()` freezes the CPU inside analog-to-digital conversion wait loops. In this project, you will build an autonomous **Direct Memory Access (DMA)** pipeline on the **STM32 Nucleo-C031C6** to stream continuous ADC samples from pin `A0` directly into an SRAM array with zero CPU intervention.
+
+### 🛠️ Hardware Setup (Wokwi)
+The circuit connects an analog potentiometer sensor and an activity indicator LED:
+* **Analog Telemetry Source:** 1x Potentiometer on `A0` (`PA0`).
+* **DMA Cycle Heartbeat LED:** 1x LED with 220Ω resistor on `D13` (`PA5`).
+* **Diagnostic Serial Stream:** Virtual COM Port at **115200 baud**.
+
+### Pin Wiring Table
+| Component | Pin / Terminal | STM32 / Board Pin | Electrical Function |
+| :--- | :--- | :---: | :--- |
+| **Potentiometer** | VCC / GND | `3.3V` / `GND` | Reference supply rails |
+| **Potentiometer** | SIG (Wiper) | `A0` (`PA0`) | Analog telemetry input |
+| **User Activity LED** | Anode (`PA5`) | `D13` | Toggled upon every completed buffer cycle |
+| **User Activity LED** | Cathode | `GND` | Ground Reference |
+
+### 📝 Problem Statement & Logic Flow
+1. **Circular Buffer Allocation:** Allocate a volatile array in SRAM: `volatile uint16_t adc_buffer[8];`.
+2. **Continuous DMA Streaming:**
+   * Stream 8 consecutive conversions directly into memory.
+   * Compute the arithmetic mean across the 8-sample window to filter high-frequency noise.
+3. **Voltage Translation & Telemetry:**
+   * Translate 10-bit raw ADC reading ($0$ to $1023$) to millivolts using efficient integer arithmetic:
+     $$\text{Voltage (mV)} = \frac{\text{Average} \times 3300}{1023}$$
+   * Transmit `"[DMA STREAM]: Average Voltage = <mV> mV"` over UART at 115200 baud.
+4. **Heartbeat Toggle:** Invert `D13` on every completed moving average computation.
+
+```text
+[DMA STREAM]: Raw Samples: [512, 513, 510, 514, 512, 511, 513, 512]
+[DMA STREAM]: Average Voltage = 1650 mV | Status: CPU Free
+```
+
+### Interactive Simulation
+
+::: {.simulation-container}
+<iframe 
+  src="https://wokwi.com/projects/479963095271968769?embed=1" 
+  title="ADC DMA Simulation Workspace"
+  loading="lazy"
+  allowfullscreen>
+</iframe>
+<div class="sim-info-bar">
+  <span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span>
+  <span>Click Play, wire Potentiometer to A0 and Stream Status LED to D13</span>
+</div>
 :::
 
-[← Back to Main Page](index.qmd){.btn .btn-outline-secondary .mt-4}
+### Implementation Code: High-Level Framework vs. Bare-Metal Embedded C
+
+::: {.panel-tabset}
+
+### 🔷 High-Level Framework (Running in Simulation)
+
+```cpp
+// ============================================================================
+// Mini-Project 1: Autonomous ADC Data Acquisition with DMA (Nucleo-C031C6)
+// ============================================================================
+
+#define SENSOR_PIN  A0
+#define LED_PIN     13
+#define BUFFER_SIZE 8
+
+volatile uint16_t adc_buffer[BUFFER_SIZE];
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
+
+  Serial.println("=============================================");
+  Serial.println("  STM32 DMA Autonomous ADC Streaming Ready   ");
+  Serial.println("=============================================");
+}
+
+void loop() {
+  // Simulate autonomous DMA filling circular buffer
+  for (int i = 0; i < BUFFER_SIZE; i++) {
+    adc_buffer[i] = analogRead(SENSOR_PIN);
+    delayMicroseconds(50); // High-speed sampling
+  }
+
+  // Step 1: Calculate moving average (DSP noise filter)
+  uint32_t sum = 0;
+  for (int i = 0; i < BUFFER_SIZE; i++) {
+    sum += adc_buffer[i];
+  }
+  uint16_t average = sum / BUFFER_SIZE;
+
+  // Step 2: Convert to millivolts using integer math (avoids slow software float)
+  uint32_t milliVolts = ((uint32_t)average * 3300UL) / 1023UL;
+
+  // Step 3: Emit telemetry and toggle heartbeat LED
+  digitalWrite(LED_PIN, !digitalRead(LED_PIN));
+
+  Serial.print("[DMA STREAM]: Average = ");
+  Serial.print(average);
+  Serial.print(" counts | Voltage = ");
+  Serial.print(milliVolts);
+  Serial.println(" mV");
+
+  delay(200); // 5 Hz telemetry report rate
+}
+```
+
+---
+
+### 🔶 Equivalent Bare-Metal Embedded C (Direct DMA1 & ADC1 Register Configuration)
+
+```c
+// ============================================================================
+// Mini-Project 1: Bare-Metal DMA1 Channel 1 Configuration on STM32
+// Target: STM32 Nucleo-C031C6 (ARM Cortex-M0+)
+// ============================================================================
+#include <stdint.h>
+
+#define RCC_BASE            (0x40021000UL)
+#define RCC_AHBENR          (*(volatile uint32_t *)(RCC_BASE + 0x38UL)) // DMA Clock
+#define RCC_APBENR2         (*(volatile uint32_t *)(RCC_BASE + 0x40UL)) // ADC Clock
+
+#define DMA1_BASE           (0x40020000UL)
+#define DMA1_CCR1           (*(volatile uint32_t *)(DMA1_BASE + 0x08UL))
+#define DMA1_CNDTR1         (*(volatile uint32_t *)(DMA1_BASE + 0x0CUL))
+#define DMA1_CPAR1          (*(volatile uint32_t *)(DMA1_BASE + 0x10UL))
+#define DMA1_CMAR1          (*(volatile uint32_t *)(DMA1_BASE + 0x14UL))
+
+#define ADC1_BASE           (0x40012400UL)
+#define ADC1_DR             (*(volatile uint32_t *)(ADC1_BASE + 0x40UL))
+
+void dma1_adc_init(uint16_t *buffer, uint16_t size) {
+    // 1. Enable DMA1 and ADC1 peripheral clocks
+    RCC_AHBENR  |= (1UL << 0);  // Enable DMA1 clock
+    RCC_APBENR2 |= (1UL << 20); // Enable ADC clock
+
+    // 2. Configure Peripheral Address (ADC1 Data Register)
+    DMA1_CPAR1 = (uint32_t)(&ADC1_DR);
+
+    // 3. Configure Destination Memory Address (SRAM Buffer)
+    DMA1_CMAR1 = (uint32_t)buffer;
+
+    // 4. Configure Number of Transfers
+    DMA1_CNDTR1 = size;
+
+    // 5. Configure DMA1 Channel 1 Control Register:
+    // - CIRC (Bit 5) = 1: Circular mode (Continuous loop)
+    // - MINC (Bit 7) = 1: Memory increment mode
+    // - PSIZE (Bits 9:8) = 01: 16-bit peripheral data
+    // - MSIZE (Bits 11:10) = 01: 16-bit memory data
+    // - EN (Bit 0) = 1: Enable DMA channel
+    DMA1_CCR1 = (1UL << 5) | (1UL << 7) | (1UL << 8) | (1UL << 10) | (1UL << 0);
+}
+```
+
+:::
+
+### 🔍 How Mini-Project 1 Applies Week 10 Concepts
+
+#### 1. Hardware & Circuit-Level Concept Mapping
+
+| Circuit Component | Week 10 Theoretical Concept | Technical Function in System |
+| :--- | :--- | :--- |
+| **Potentiometer on A0** | **Continuous Analog Source** | Generates real-time analog voltage variations requiring periodic high-speed sampling. |
+| **Internal DMA1 Bus Master** | **Autonomous Hardware Bus Mastering** | Arbitrates over the ARM AHB bus matrix to stream digitized words directly from peripheral to memory without CPU interrupts. |
+
+#### 2. Firmware Code-to-Concept Breakdown
+
+| Code Statement (Framework / Bare-Metal) | Week 10 Theoretical Concept | Deep-Dive Explanation |
+| :--- | :--- | :--- |
+| `DMA1_CCR1 \|= (1UL << 5);` (CIRC) | **Circular Auto-Reload DMA Buffer** | When the transfer counter decrements to zero, hardware automatically reloads `CNDTR1` and resets memory pointers with zero CPU overhead. |
+| `uint32_t mv = ((uint32_t)avg * 3300) / 1023;` | **Fixed-Point Integer Optimization** | Replaces expensive floating-point arithmetic with integer scaling, eliminating software floating-point emulation libraries. |
+
+---
+
+## 8. Mini-Project 2: Energy Benchmarking: Polling vs. `__WFI()` Sleep ⚡💤
+
+### 🎯 Objective
+Battery-powered products die within days if firmware continuously runs active polling loops like `while(digitalRead(BTN) == HIGH);`. In this project, you will benchmark CPU active time on the **STM32 Nucleo-C031C6**, comparing high-frequency polling against the ARM Cortex-M `__WFI()` (Wait For Interrupt) low-power architecture.
+
+### 🛠️ Hardware Setup (Wokwi)
+The circuit connects a pushbutton to trigger the wakeup interrupt:
+* **Wakeup Trigger Button:** Pushbutton on `D2` (`PA10`) with internal pull-up.
+* **CPU Core Activity LED:** User LED on `D13` (`PA5`) (HIGH = Awake, LOW = Sleeping).
+* **Diagnostic Serial Console:** Virtual COM Port at **115200 baud**.
+
+### Pin Wiring Table
+| Component | Pin / Terminal | Board Connection | Electrical Notes |
+| :--- | :--- | :---: | :--- |
+| **Wakeup Pushbutton** | Terminal 1.L / 2.L | `D2` / `GND` | Interrupt line (`INPUT_PULLUP`) |
+| **Activity LED** | Anode (`PA5`) | `D13` | HIGH = CPU Awake, LOW = CPU Sleeping |
+| **Common Ground** | Cathode / GND | `GND` | Ground Reference |
+
+### 📝 Problem Statement & Logic Flow
+1. **Active Duty Phase:**
+   * Turn Activity LED on `D13` **HIGH**.
+   * Execute 50 ms of simulated active computation.
+   * Turn Activity LED **LOW**.
+2. **Deep Sleep Suspension:**
+   * Transmit `"CPU entering Sleep Mode (WFI)..."` over UART at 115200 baud.
+   * Call `Serial.flush()` to drain UART FIFO buffers.
+   * Suspend the ARM core pipeline using `__asm volatile("wfi");`.
+3. **Interrupt Wakeup:**
+   * When button on `D2` is pressed, the EXTI interrupt immediately wakes the processor.
+   * Transmit `"CPU Woken up by Hardware Interrupt!"` and repeat cycle.
+4. **Duty Cycle Analysis:**
+   $$\text{Duty Cycle} = \frac{T_{\text{active}}}{T_{\text{total}}} \times 100\%$$
+   If active for 50 ms and sleeping for 950 ms, duty cycle is $5\%$, extending battery operational life by $20\times$!
+
+```text
+Executing Active Task for 50 ms...
+CPU entering Sleep Mode (WFI)...
+--> CPU Woken up by Hardware Interrupt! <--
+Executing Active Task for 50 ms...
+```
+
+### Interactive Simulation
+
+::: {.simulation-container}
+<iframe 
+  src="https://wokwi.com/projects/479963095271968769?embed=1" 
+  title="Power Benchmark Simulation Workspace"
+  loading="lazy"
+  allowfullscreen>
+</iframe>
+<div class="sim-info-bar">
+  <span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span>
+  <span>Click Play, wire Wakeup Button on D2 and Activity LED on D13</span>
+</div>
+:::
+
+### Implementation Code: High-Level Framework vs. Bare-Metal Embedded C
+
+::: {.panel-tabset}
+
+### 🔷 High-Level Framework (Running in Simulation)
+
+```cpp
+// ============================================================================
+// Mini-Project 2: Energy Benchmarking: Polling vs. WFI Sleep (Nucleo-C031C6)
+// ============================================================================
+
+#define WAKE_BTN_PIN 2  // PA10 (External Wakeup Interrupt)
+#define ACTIVITY_PIN 13 // PA5  (Active Activity LED)
+
+void wakeUpHandler() {
+  // Interrupt wakes CPU core from WFI
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(ACTIVITY_PIN, OUTPUT);
+  pinMode(WAKE_BTN_PIN, INPUT_PULLUP);
+
+  // Attach external interrupt on falling edge
+  attachInterrupt(digitalPinToInterrupt(WAKE_BTN_PIN), wakeUpHandler, FALLING);
+
+  Serial.println("=============================================");
+  Serial.println("  Energy Benchmarking: WFI Sleep Active      ");
+  Serial.println("=============================================");
+}
+
+void loop() {
+  // Step 1: Active Burst Phase (50 ms useful work)
+  digitalWrite(ACTIVITY_PIN, HIGH);
+  Serial.println("[ACTIVE]: Executing high-speed computation (50 ms)...");
+  delay(50);
+  digitalWrite(ACTIVITY_PIN, LOW);
+
+  // Step 2: Prepare for Sleep
+  Serial.println("[SLEEP]: Draining serial FIFO and entering WFI sleep...");
+  Serial.flush(); // Drain transmit buffer before gating clock!
+
+  // Step 3: Execute Wait For Interrupt assembly instruction
+  __asm volatile("wfi");
+
+  // Step 4: Resume execution immediately after interrupt fires
+  Serial.println("--> [WAKE]: CPU Woken up by External EXTI Interrupt! <--");
+}
+```
+
+---
+
+### 🔶 Equivalent Bare-Metal Embedded C (Direct SCB Sleep Register Manipulation)
+
+```c
+// ============================================================================
+// Mini-Project 2: Bare-Metal Low-Power Sleep Control
+// ============================================================================
+#include <stdint.h>
+
+#define SCB_SCR (*(volatile uint32_t *)0xE000ED10UL) // System Control Register
+
+void enter_cortex_sleep(void) {
+    // Clear SLEEPDEEP bit (Bit 2 = 0: Regular Sleep Mode)
+    // Clear SLEEPONEXIT bit (Bit 1 = 0: Wake up immediately upon ISR completion)
+    SCB_SCR &= ~((1UL << 2) | (1UL << 1));
+
+    // Execute Wait For Interrupt (Gates core clock)
+    __asm volatile("wfi");
+}
+```
+
+:::
+
+### 🔍 How Mini-Project 2 Applies Week 10 Concepts
+
+#### 1. Hardware & Circuit-Level Concept Mapping
+
+| Circuit Component | Week 10 Theoretical Concept | Technical Function in System |
+| :--- | :--- | :--- |
+| **Activity LED (D13)** | **Dynamic Power Visualization ($P_{\text{dyn}} = C V^2 f$)** | Lights up during active CPU clock switching (~15 mA). In sleep, current drops to ~1.5 mA as core clocks gate off. |
+| **Wakeup Button (D2)** | **Asynchronous Wakeup Source** | Connects to the NVIC wakeup circuit, unblocking the CPU clock generator upon falling edge detection. |
+
+#### 2. Firmware Code-to-Concept Breakdown
+
+| Code Statement (Framework / Bare-Metal) | Week 10 Theoretical Concept | Deep-Dive Explanation |
+| :--- | :--- | :--- |
+| `Serial.flush();` | **Peripheral Buffer Drainage** | Prevents serial truncation by waiting for the shift register to finish transmitting before gating peripheral clocks. |
+| `__asm volatile("wfi");` | **Hardware Clock Gating** | Directly halts the ARM Cortex-M instruction fetch pipeline, reducing dynamic power consumption to near zero. |
+
+---
+
+## 9. Hands-On Practice Challenge (For Students to Solve) 🎯
+
+### 🎯 Objective & Scenario
+In modern electronic instrumentation and automotive head-up displays, multiplexing an 8x8 LED matrix display using standard CPU timer ISRs burns significant processor bandwidth. In this challenge, you will implement a **DMA-Accelerated 8x8 LED Matrix Framebuffer** on the **STM32 Nucleo-C031C6** that streams frame bitmap buffers directly to GPIO pins with $0\%$ CPU load!
+
+### 🛠️ Hardware Setup & Pin Wiring Table
+Connect an 8x8 LED Matrix (or 8 row lines) to STM32 digital output pins:
+
+| Component | Pin / Terminal | Board Connection | Electrical Notes |
+| :--- | :--- | :---: | :--- |
+| **Matrix Row 0..7** | Anodes | `D2` to `D9` | 8-bit parallel row data bus |
+| **Status LED** | Anode (`PA5`) | `D13` | CPU Free Indicator (toggled by superloop) |
+| **Common Ground** | Cathodes | `GND` | Ground Reference |
+
+### 📋 Problem Statement & Functional Requirements
+1. **Framebuffer Definition:** Allocate an 8-byte display buffer in SRAM:
+   `volatile uint8_t frame_buffer[8];`.
+2. **Autonomous Refresh Pipeline:**
+   * Configure a hardware timer to generate periodic events at **480 Hz** (providing a flicker-free $60\text{ Hz}$ frame rate across 8 multiplexed rows).
+   * Stream row bytes from `frame_buffer` to GPIO output registers via Circular DMA.
+3. **CPU Independence Verification:**
+   * In `loop()`, perform CPU-heavy math calculations and rapidly toggle `D13`.
+   * Verify that the display remains perfectly stable with **zero flickering or tearing**, proving that screen rendering is completely decoupled from CPU load!
+
+### 💻 Starter Code Template
+```cpp
+// ============================================================================
+// Student Practice Challenge: DMA-Accelerated LED Matrix Framebuffer
+// Target: board-st-nucleo-c031c6
+// ============================================================================
+
+volatile uint8_t frame_buffer[8] = {
+  0b00111100, // Row 0
+  0b01000010, // Row 1
+  0b10100101, // Row 2
+  0b10000001, // Row 3
+  0b10100101, // Row 4
+  0b10011001, // Row 5
+  0b01000010, // Row 6
+  0b00111100  // Row 7 (Smiley Face)
+};
+
+void setup() {
+  // TODO 1: Initialize Serial at 115200 baud
+  // TODO 2: Configure matrix pins D2-D9 as OUTPUT
+  // TODO 3: Configure Timer 3 at 480 Hz update rate
+  // TODO 4: Configure DMA channel in Circular Mode to stream frame_buffer to GPIO
+}
+
+void loop() {
+  // TODO 5: Animate pixel data in frame_buffer while DMA autonomously handles refresh!
+}
+```
+
+### 🧪 Verification & Expected Test Cases
+| Operating Condition | Frame Rate | CPU Utilization | Screen Stability |
+| :--- | :---: | :---: | :--- |
+| **Static Bitmap** | $60\text{ Hz}$ | $0\%$ | 100% Flicker-free, crystal clear |
+| **Heavy CPU Math in `loop()`** | $60\text{ Hz}$ | Heavy compute | Zero frame drops or visual tearing |
+| **Dynamic Animation** | $60\text{ Hz}$ | Instant buffer swap | Smooth animation |
+
+<details>
+<summary>💡 Need a Hint? Click to Reveal</summary>
+
+* **Row Multiplexing:** Use a circular DMA transfer of length 8. Each timer trigger advances the memory pointer by 1 byte (`MINC = 1`), outputting the next row pattern to the GPIO output data register (`ODR`).
+* **Timer Trigger:** Configure the Timer Master Mode to emit a trigger pulse on update: `TIM3->CR2 |= (0b010 << 4);` (MMS = Update).
+</details>
+
+::: {.simulation-container}
+<iframe 
+  src="https://wokwi.com/projects/479963095271968769?embed=1" 
+  title="DMA Framebuffer Simulation Workspace"
+  loading="lazy"
+  allowfullscreen>
+</iframe>
+<div class="sim-info-bar">
+  <span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span>
+  <span>Click Play to build and test your DMA-accelerated framebuffer matrix</span>
+</div>
+:::
+
+```{=html}
+<div id="comparator-w10" class="code-comparator-widget">
+  <div class="comparator-header">
+    <div class="comparator-title">
+      <span class="icon">🔄</span>
+      <span><strong>Simultaneous Code Explorer:</strong> Arduino Framework ↔ Bare-Metal C</span>
+    </div>
+    <div class="comparator-controls">
+      <label>Load Preset:</label>
+      <select class="preset-select">
+        <option value="adc_analog">ADC DMA Continuous Circular Acquisition</option>
+        <option value="gpio_blink">GPIO Power Saving Output</option>
+        <option value="exti_interrupt">Low-Power Wakeup EXTI Interrupt</option>
+        <option value="uart_comm">UART DMA Circular Buffer</option>
+        <option value="timer_pwm">Hardware Timer Trigger</option>
+      </select>
+      <button type="button" class="btn-compare" onclick="runInteractiveTranslation('comparator-w10')">Analyze / Map Code</button>
+    </div>
+  </div>
+  <div class="comparator-panes">
+    <div class="pane">
+      <div class="pane-header">
+        <span class="badge-arduino">Arduino C++ (Framework)</span>
+        <span class="hint">Type or paste Arduino code here for live Bare-Metal translation</span>
+      </div>
+      <textarea class="code-input" spellcheck="false"></textarea>
+    </div>
+    <div class="pane">
+      <div class="pane-header">
+        <span class="badge-baremetal">Equivalent Bare-Metal C (Direct Registers)</span>
+        <span class="hint">Live Memory-Mapped Operations</span>
+      </div>
+      <pre class="code-output"><code></code></pre>
+    </div>
+  </div>
+</div>
+```
+
+---
+
+## 10. Concept Check Practice Questions
+
+### Question 1: Direct Memory Access (DMA) Bus Principles
+
+::: {.callout-note collapse="true"}
+## Click to View Question & Options
+
+What is the fundamental architectural advantage of using Direct Memory Access (DMA) for streaming sensor data into microcontroller memory?
+
+**Options:**  
+- **A)** DMA doubles the clock speed of the external crystal  
+- **B)** The DMA hardware controller transfers data directly between peripherals and SRAM across the internal bus matrix without involving the CPU, leaving the processor 100% free for application computation  
+- **C)** DMA eliminates the need for SRAM  
+- **D)** DMA converts analog voltages into digital signals  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: B
+**Explanation:**  
+Standard CPU I/O requires the processor to execute load and store assembly instructions for every single byte, consuming clock cycles and stack context. A DMA controller is a dedicated silicon bus master that transfers blocks of data directly between memory and peripherals with zero CPU cycle intervention.
+:::
+:::
+
+---
+
+### Question 2: Compiler Optimization Flags in Embedded Systems
+
+::: {.callout-note collapse="true"}
+## Click to View Question & Options
+
+Why is the `-Os` GCC compiler optimization flag widely preferred when building production firmware for cost-sensitive microcontrollers?
+
+**Options:**  
+- **A)** `-Os` removes all comments from C code  
+- **B)** `-Os` optimizes specifically for **code size**, enabling feature-rich firmware to fit into smaller, less expensive on-chip Flash memory  
+- **C)** `-Os` disables hardware interrupts  
+- **D)** `-Os` converts 32-bit pointers into 8-bit integers  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: B
+**Explanation:**  
+In high-volume embedded products, choosing a microcontroller with 32 KB Flash instead of 128 KB Flash saves significant bill-of-materials cost. The `-Os` optimization flag instructs the compiler to generate the smallest possible machine code binary, avoiding aggressive loop unrolling that inflates code size.
+:::
+:::
+
+---
+
+<div class="d-flex justify-content-between mt-4">
+  <a href="Week-9.qmd" class="seek-prev-btn">← Back to Week 9: RTOS Fundamentals</a>
+  <a href="Week-11.qmd" class="seek-next-btn">NEXT: Week 11 — Testing, Debugging & Profiling →</a>
+</div>

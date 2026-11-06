@@ -1,14 +1,710 @@
 ---
-title: "Week 8: Embedded Software Design Patterns and System Architecture"
+title: "Week 8: Software Architecture & Embedded Design Patterns"
 ---
 
-## Overview
+## 1. Why Software Architecture Matters in Embedded Systems
 
-Superloop vs Event-Driven architecture, Finite State Machines (FSM), interrupt-driven scheduling.
+When beginners write embedded code, they often lump everything into one giant `main.c` file: sensor reading, pin toggling, delay loops, math calculations, and serial printing. 
 
-::: {.callout-tip}
-### 📌 Coming Up
-This module is part of the CS2101 syllabus outline. Detailed lecture notes, integrated interactive simulations, and question banks will be added here.
+While this works for simple LED blinkers, it quickly turns complex commercial projects into an unmaintainable nightmare known as **Spaghetti Code**:
+
+```text
+ MONOLITHIC SPAGHETTI FIRMWARE (Fragile & Hard to Debug):
+ +-------------------------------------------------------------------------+
+ | while(1) {                                                              |
+ |   if (digitalRead(2)) { analogWrite(9, 120); Serial.print("Running"); } |
+ |   delay(500); // Freezes everything! Misses sensor alarms!              |
+ |   // 2000 lines of mixed hardware registers, calculations, and UI code  |
+ | }                                                                       |
+ +-------------------------------------------------------------------------+
+
+ CLEAN LAYERED ARCHITECTURE (Modular, Testable & Scalable):
+ +-------------------------------------------------------------------------+
+ | Application Layer:    High-Level Business Logic (e.g., Thermostat Logic)|
+ | Service / Middleware: Event Dispatcher, State Machines, Buffer Queues   |
+ | Driver / HAL Layer:   I2C Driver, UART Driver, Timer Driver             |
+ | Silicon Hardware:     ARM Cortex-M Transistors & Memory-Mapped Registers|
+ +-------------------------------------------------------------------------+
+```
+
+### The Core Goals of Good Embedded Architecture:
+1. **Modularity:** Changing a sensor chip should only require updating that sensor's driver file, without touching the application logic.
+2. **Determinism:** Ensuring the system responds to real-time physical events within guaranteed time limits.
+3. **Reusability:** Clean hardware drivers can be reused across different projects and microcontrollers.
+4. **Testability:** Decoupled code can be unit-tested on a host PC without needing physical hardware connected.
+
+---
+
+## 2. Core Architectural Patterns
+
+Firmware systems are organized around one of three foundational execution models:
+
+```text
+ 1. SUPERLOOP (POLLING)               2. FOREGROUND / BACKGROUND           3. EVENT-DRIVEN / FSM
+ +--------------------------+        +--------------------------+        +--------------------------+
+ | while(1) {               |        | ISRs (Foreground):       |        | Event Queue:             |
+ |   read_temp();           |        |   Capture events into    |        |   [Evt 1][Evt 2][Evt 3]  |
+ |   delay(100); // STALL!  |        |   ring buffers / flags   |        |             |            |
+ |   update_display();      |        |                          |        |             v            |
+ |   check_button();        |        | Main Loop (Background):  |        | Dispatcher -> State FSM  |
+ | }                        |        |   while(1) { process(); }|        | (Zero blocking delays)   |
+ +--------------------------+        +--------------------------+        +--------------------------+
+```
+
+---
+
+## 3. The State Machine Pattern (FSM)
+
+A **Finite State Machine (FSM)** is the single most valuable design pattern in embedded systems. It models a system as a set of **States**, **Events**, and **Transitions**.
+
+```text
+                       [ Button Pressed ]
+            +----------------------------------------+
+            |                                        |
+            v                                        |
+     +--------------+     [ Timer Expired ]    +--------------+
+     |  STATE_IDLE  | -----------------------> | STATE_ACTIVE |
+     +--------------+                          +--------------+
+            ^                                        |
+            |            [ Fault Detected ]          |
+            +----------------------------------------+
+```
+
+### Why FSMs Are Essential:
+- **No Blocking Delays:** Instead of stalling the CPU with `delay(5000)`, an FSM simply checks if a timer flag has elapsed, allowing other tasks to run freely.
+- **Predictable & Deterministic:** At any moment in time, the system is in exactly one well-defined state. Illegal transitions are impossible.
+- **Easy to Debug:** Finding a bug is as simple as logging state transitions over serial: `[IDLE] -> [HEATING] -> [ALARM]`.
+
+---
+
+## 4. The Observer Pattern (Publish-Subscribe)
+
+In many embedded systems, a single sensor measurement is needed by multiple consumers. For example, a temperature reading must be:
+1. Shown on an LCD Display
+2. Logged to an SD Card
+3. Checked by a Safety Cooling Fan Controller
+
+```text
+ WITHOUT OBSERVER PATTERN (Tightly Coupled):
+ Temperature_Sensor_Read() ---> Directly calls Display_Update()
+                               ---> Directly calls SD_Card_Write()
+                               ---> Directly calls Fan_Controller_Check()
+
+ WITH OBSERVER PATTERN (Decoupled Publish-Subscribe):
+ [ Temperature Sensor ]  ======== Publishes Event: TEMP_UPDATED (32.4 C) ========>
+                                               |
+         +-------------------------------------+---------------------------------+
+         |                                     |                                 |
+         v                                     v                                 v
+ [ Observer 1: LCD Display ]          [ Observer 2: SD Logger ]        [ Observer 3: Fan Controller ]
+```
+
+---
+
+## 5. Mini-Project 1: Non-Blocking Smart Vending Machine FSM 🎰🍫
+
+### 🎯 Objective
+In modern embedded appliances, blocking calls like `delay(2000)` completely paralyze the processor, preventing it from detecting coin insertions, abort buttons, or safety faults. In this project, you will build a robust **Finite State Machine (FSM)** for the **STM32 Nucleo-C031C6** that manages coin acceptance, product selection, and motor dispensing in a strictly non-blocking architecture.
+
+### 🛠️ Hardware Setup (Wokwi)
+The circuit connects 3 pushbuttons and the onboard user LED acting as the dispense motor:
+* **Coin Inserter:** Pushbutton on `D2` (`PA10`) with internal pull-up.
+* **Product Select:** Pushbutton on `D3` (`PB3`) with internal pull-up.
+* **Coin Return / Cancel:** Pushbutton on `D4` (`PB5`) with internal pull-up.
+* **Dispense Motor Actuator:** User LED on `D13` (`PA5`).
+
+### Pin Wiring Table
+| Component | Pin / Terminal | STM32 / Board Pin | Electrical Function |
+| :--- | :--- | :---: | :--- |
+| **Coin Button** | Terminal 1.L / 2.L | `D2` (`PA10`) / `GND` | Coin Detector (`INPUT_PULLUP`) |
+| **Select Button** | Terminal 1.L / 2.L | `D3` (`PB3`) / `GND` | Selection Button (`INPUT_PULLUP`) |
+| **Return Button** | Terminal 1.L / 2.L | `D4` (`PB5`) / `GND` | Cancel & Refund Button (`INPUT_PULLUP`) |
+| **Dispense Motor LED**| Anode (`PA5`) | `D13` | Motor Actuator (HIGH = Dispensing) |
+
+### 📝 Problem Statement & Logic Flow
+1. **Initialization (`setup`):**
+   * Configure UART at **115200 baud** and set all buttons as `INPUT_PULLUP`.
+   * Ensure motor LED is **OFF** and initialize state to `STATE_IDLE`.
+2. **State Transition Rules:**
+   * **`STATE_IDLE`:** Waiting for coins. When `D2` is pressed, transition to `STATE_COIN_ACCEPTED` and print menu options.
+   * **`STATE_COIN_ACCEPTED`:**
+     * If `D3` (Select) is pressed: Start non-blocking 2-second dispensing timer, turn motor LED **HIGH**, and transition to `STATE_DISPENSING`.
+     * If `D4` (Return) is pressed: Refund coin, return to `STATE_IDLE`.
+   * **`STATE_DISPENSING`:**
+     * Run motor for **exactly 2000 ms** using non-blocking delta time: `millis() - dispenseStartTime >= 2000`.
+     * Once completed, turn motor LED **LOW** and transition back to `STATE_IDLE`.
+3. **Execution Guarantee:** The main superloop executes freely without any blocking `delay()` calls.
+
+```text
+[STATE TRANSITION] IDLE -> COIN_ACCEPTED
+[PROMPT] Coin inserted! Press SELECT to dispense or RETURN to cancel.
+[STATE TRANSITION] COIN_ACCEPTED -> DISPENSING
+[ACTION] Dispense motor running for 2000 ms...
+[ACTION] Dispense complete! Item dropped into bin.
+[STATE TRANSITION] DISPENSING -> IDLE
+```
+
+### Interactive Simulation
+
+::: {.simulation-container}
+<iframe 
+  src="https://wokwi.com/projects/479963095271968769?embed=1" 
+  title="FSM Simulation Workspace"
+  loading="lazy"
+  allowfullscreen>
+</iframe>
+<div class="sim-info-bar">
+  <span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span>
+  <span>Click Play, wire Coin on D2, Select on D3, Dispense LED on D13</span>
+</div>
 :::
 
-[← Back to Main Page](index.qmd){.btn .btn-outline-secondary .mt-4}
+### Implementation Code: High-Level Framework vs. Bare-Metal Embedded C
+
+::: {.panel-tabset}
+
+### 🔷 High-Level Framework (Running in Simulation)
+
+```cpp
+// ============================================================================
+// Mini-Project 1: Non-Blocking Smart Vending Machine FSM (Nucleo-C031C6)
+// ============================================================================
+
+#define PIN_COIN   2  // Pushbutton: Insert Coin (PA10)
+#define PIN_SELECT 3  // Pushbutton: Select Snack (PB3)
+#define PIN_RETURN 4  // Pushbutton: Coin Return (PB5)
+#define PIN_MOTOR  13 // Dispense Motor Indicator LED (PA5)
+
+typedef enum {
+  STATE_IDLE,
+  STATE_COIN_ACCEPTED,
+  STATE_DISPENSING
+} VendingState;
+
+VendingState currentState = STATE_IDLE;
+uint32_t dispenseStartTime = 0;
+uint32_t lastButtonPress = 0;
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(PIN_COIN, INPUT_PULLUP);
+  pinMode(PIN_SELECT, INPUT_PULLUP);
+  pinMode(PIN_RETURN, INPUT_PULLUP);
+  pinMode(PIN_MOTOR, OUTPUT);
+  digitalWrite(PIN_MOTOR, LOW);
+
+  Serial.println("========================================");
+  Serial.println("  Smart Vending Machine FSM Initialized ");
+  Serial.println("  State: STATE_IDLE (Insert coin to buy)");
+  Serial.println("========================================");
+}
+
+void loop() {
+  uint32_t now = millis();
+
+  switch (currentState) {
+    case STATE_IDLE:
+      digitalWrite(PIN_MOTOR, LOW);
+      if (digitalRead(PIN_COIN) == LOW && (now - lastButtonPress > 200)) {
+        lastButtonPress = now;
+        currentState = STATE_COIN_ACCEPTED;
+        Serial.println("\n[STATE TRANSITION] IDLE -> COIN_ACCEPTED");
+        Serial.println("[PROMPT] Coin inserted! Press SELECT to dispense or RETURN to cancel.");
+      }
+      break;
+
+    case STATE_COIN_ACCEPTED:
+      if (digitalRead(PIN_SELECT) == LOW && (now - lastButtonPress > 200)) {
+        lastButtonPress = now;
+        dispenseStartTime = now;
+        currentState = STATE_DISPENSING;
+        digitalWrite(PIN_MOTOR, HIGH);
+        Serial.println("\n[STATE TRANSITION] COIN_ACCEPTED -> DISPENSING");
+        Serial.println("[ACTION] Dispense motor running for 2000 ms...");
+      } else if (digitalRead(PIN_RETURN) == LOW && (now - lastButtonPress > 200)) {
+        lastButtonPress = now;
+        currentState = STATE_IDLE;
+        Serial.println("\n[STATE TRANSITION] COIN_ACCEPTED -> IDLE");
+        Serial.println("[ACTION] Coin refunded. Returning to idle.");
+      }
+      break;
+
+    case STATE_DISPENSING:
+      // Non-blocking timer: evaluate elapsed time without freezing processor
+      if (now - dispenseStartTime >= 2000) {
+        digitalWrite(PIN_MOTOR, LOW);
+        currentState = STATE_IDLE;
+        Serial.println("[ACTION] Dispense complete! Item dropped into bin.");
+        Serial.println("[STATE TRANSITION] DISPENSING -> IDLE");
+        Serial.println("----------------------------------------");
+      }
+      break;
+  }
+}
+```
+
+---
+
+### 🔶 Equivalent Bare-Metal Embedded C (Direct Register Access)
+
+```c
+// ============================================================================
+// Mini-Project 1: Bare-Metal State Machine Architecture (Direct Register)
+// Target: STM32 Nucleo-C031C6 (ARM Cortex-M0+)
+// ============================================================================
+#include <stdint.h>
+
+#define RCC_BASE        (0x40021000UL)
+#define RCC_IOPENR      (*(volatile uint32_t *)(RCC_BASE + 0x34UL))
+
+#define GPIOA_BASE      (0x50000000UL)
+#define GPIOA_MODER     (*(volatile uint32_t *)(GPIOA_BASE + 0x00UL))
+#define GPIOA_PUPDR     (*(volatile uint32_t *)(GPIOA_BASE + 0x0CUL))
+#define GPIOA_IDR       (*(volatile uint32_t *)(GPIOA_BASE + 0x10UL))
+#define GPIOA_BSRR      (*(volatile uint32_t *)(GPIOA_BASE + 0x18UL))
+
+typedef enum {
+    STATE_IDLE,
+    STATE_COIN_ACCEPTED,
+    STATE_DISPENSING
+} vending_state_t;
+
+typedef void (*state_handler_t)(void);
+
+static vending_state_t current_state = STATE_IDLE;
+static uint32_t timer_ticks = 0;
+
+void handle_idle(void) {
+    GPIOA_BSRR = (1UL << (5 + 16)); // LED OFF (Motor stopped)
+    // Check PA10 (Coin Button Active LOW)
+    if (!(GPIOA_IDR & (1UL << 10))) {
+        current_state = STATE_COIN_ACCEPTED;
+    }
+}
+
+void handle_coin(void) {
+    current_state = STATE_DISPENSING;
+    timer_ticks = 2000;
+}
+
+void handle_dispense(void) {
+    GPIOA_BSRR = (1UL << 5); // LED ON (Motor active)
+    if (timer_ticks > 0) {
+        timer_ticks--;
+    } else {
+        current_state = STATE_IDLE;
+    }
+}
+
+// Function pointer dispatch table (Statically allocated in ROM)
+const state_handler_t state_table[3] = {
+    handle_idle,
+    handle_coin,
+    handle_dispense
+};
+
+int main(void) {
+    RCC_IOPENR |= (1UL << 0); // Enable GPIOA clock
+
+    // PA5 (LED) Output: MODER = '01'
+    GPIOA_MODER &= ~(3UL << (5 * 2));
+    GPIOA_MODER |=  (1UL << (5 * 2));
+
+    // PA10 Input with Pull-Up
+    GPIOA_MODER &= ~(3UL << (10 * 2));
+    GPIOA_PUPDR |=  (1UL << (10 * 2));
+
+    while (1) {
+        state_table[current_state](); // Single instruction jump (BX Rm)
+        for (volatile int d = 0; d < 1000; d++); // Approximate tick
+    }
+}
+```
+
+:::
+
+### 🔍 How Mini-Project 1 Applies Week 8 Concepts
+
+#### 1. Hardware & Circuit-Level Concept Mapping
+
+| Circuit Component | Week 8 Theoretical Concept | Technical Function in System |
+| :--- | :--- | :--- |
+| **Pushbuttons (D2, D3, D4)** | **Asynchronous External Stimuli** | Represent physical external events that trigger state transitions in the state transition diagram. |
+| **Dispense LED (D13)** | **State-Driven Physical Actuator** | Directly controlled by state actions: driven HIGH only during `STATE_DISPENSING` and forced LOW in all other states. |
+
+#### 2. Firmware Code-to-Concept Breakdown
+
+| Code Statement (Framework / Bare-Metal) | Week 8 Theoretical Concept | Deep-Dive Explanation |
+| :--- | :--- | :--- |
+| `switch (currentState)`<br>`state_table[current_state]();` | **Deterministic State Machine Dispatch** | Replaces nested `if-else` trees with deterministic $O(1)$ dispatch. In bare metal, executes via an array of function pointers stored in Flash. |
+| `if (now - dispenseStartTime >= 2000)` | **Non-Blocking Delta Timing** | Maintains real-time responsiveness by polling elapsed time milestones instead of freezing the CPU pipeline with blocking delays. |
+
+---
+
+## 6. Mini-Project 2: Observer Pattern Multi-Sensor Alert System 📡🔔
+
+### 🎯 Objective
+In modular firmware architecture, high-level business logic must be completely decoupled from low-level hardware sensors. In this project, you will implement the **Observer Design Pattern in C/C++** using function pointers on the **STM32 Nucleo-C031C6** to decouple analog sensor reading from independent consumers (a UART logger and a safety overheat alarm).
+
+### 🛠️ Hardware Setup (Wokwi)
+The circuit connects an analog potentiometer sensor and an alarm indicator LED:
+* **Analog Temperature Simulator:** 1x Potentiometer on `A0` (`PA0`).
+* **Overheat Hazard Indicator:** 1x LED with 220Ω resistor on `D13` (`PA5`).
+* **Serial Diagnostic Terminal:** Virtual COM port over USB at **115200 baud**.
+
+### Pin Wiring Table
+| Component | Pin / Terminal | STM32 / Board Pin | Electrical Function |
+| :--- | :--- | :---: | :--- |
+| **Potentiometer** | VCC / GND | `3.3V` / `GND` | 3.3V Analog Power Reference |
+| **Potentiometer** | SIG (Wiper) | `A0` (`PA0`) | Analog Voltage Input (0–1023 ADC counts) |
+| **Alarm LED** | Anode (via 220Ω) | `D13` (`PA5`) | Overheat Warning Indicator |
+| **Alarm LED** | Cathode | `GND` | Ground Reference |
+
+### 📝 Problem Statement & Logic Flow
+1. **Define Observer Interface:** Define function pointer type: `typedef void (*SensorCallback)(int rawValue);`.
+2. **Subscription Registry:** Maintain an array of registered callback pointers with `registerObserver()`.
+3. **Sensor Sampling & Notification:**
+   * In `loop()`, sample analog pin `A0` every 500 ms.
+   * Call `notifyObservers(reading)` to iterate through subscribers and deliver the fresh data.
+4. **Independent Observers:**
+   * **Observer 1 (Serial Logger):** Logs raw sensor values to UART terminal: `"[LOGGER]: Sensor Value = <val>"`.
+   * **Observer 2 (Safety Overheat Alarm):** If value exceeds **`700`**, turn `D13` **HIGH** and alert: `"[ALERT]: OVERHEAT THRESHOLD EXCEEDED!"`; otherwise, turn `D13` **LOW**.
+
+```text
+[LOGGER]: Sensor Value = 412
+[LOGGER]: Sensor Value = 754
+[ALERT]: OVERHEAT THRESHOLD EXCEEDED! (PA5 LED turned ON)
+```
+
+### Interactive Simulation
+
+::: {.simulation-container}
+<iframe 
+  src="https://wokwi.com/projects/479963095271968769?embed=1" 
+  title="Observer Pattern Simulation Workspace"
+  loading="lazy"
+  allowfullscreen>
+</iframe>
+<div class="sim-info-bar">
+  <span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span>
+  <span>Click Play, wire Potentiometer to A0 and Alarm LED to D13</span>
+</div>
+:::
+
+### Implementation Code: High-Level Framework vs. Bare-Metal Embedded C
+
+::: {.panel-tabset}
+
+### 🔷 High-Level Framework (Running in Simulation)
+
+```cpp
+// ============================================================================
+// Mini-Project 2: Observer Pattern Callback System (Nucleo-C031C6)
+// ============================================================================
+
+#define SENSOR_PIN A0
+#define ALARM_LED  13
+
+// 1. Define the Observer function pointer signature
+typedef void (*SensorCallback)(int rawValue);
+
+#define MAX_OBSERVERS 4
+SensorCallback observers[MAX_OBSERVERS];
+int observerCount = 0;
+
+// 2. Subscription Management
+void registerObserver(SensorCallback cb) {
+  if (observerCount < MAX_OBSERVERS) {
+    observers[observerCount++] = cb;
+  }
+}
+
+void notifyObservers(int val) {
+  for (int i = 0; i < observerCount; i++) {
+    observers[i](val); // Invoke subscriber callback
+  }
+}
+
+// 3. Observer A: Serial Telemetry Logger
+void serialLogger(int val) {
+  Serial.print("[LOGGER]: Sensor Value = ");
+  Serial.println(val);
+}
+
+// 4. Observer B: Safety Overheat Alarm
+void safetyAlarm(int val) {
+  if (val > 700) {
+    digitalWrite(ALARM_LED, HIGH);
+    Serial.println("  ==> [ALERT]: OVERHEAT THRESHOLD EXCEEDED! (LED ON)");
+  } else {
+    digitalWrite(ALARM_LED, LOW);
+  }
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(ALARM_LED, OUTPUT);
+  digitalWrite(ALARM_LED, LOW);
+
+  // Register decoupled observers
+  registerObserver(serialLogger);
+  registerObserver(safetyAlarm);
+
+  Serial.println("--- Observer Pattern Multi-Sensor Alert Initialized ---");
+}
+
+void loop() {
+  static uint32_t lastSample = 0;
+  if (millis() - lastSample >= 500) {
+    lastSample = millis();
+    int sensorVal = analogRead(SENSOR_PIN);
+    notifyObservers(sensorVal); // Dispatch to all registered subscribers
+  }
+}
+```
+
+---
+
+### 🔶 Equivalent Bare-Metal Embedded C (Direct Register Access)
+
+```c
+// ============================================================================
+// Mini-Project 2: Bare-Metal Observer Pattern (Callback Jump Table)
+// ============================================================================
+#include <stdint.h>
+
+#define GPIOA_BASE   (0x50000000UL)
+#define GPIOA_BSRR   (*(volatile uint32_t *)(GPIOA_BASE + 0x18UL))
+
+typedef void (*sensor_observer_t)(uint16_t adc_val);
+
+void baremetal_alarm_observer(uint16_t adc_val) {
+    if (adc_val > 700) {
+        GPIOA_BSRR = (1UL << 5);        // Set PA5 HIGH (Overheat Alarm)
+    } else {
+        GPIOA_BSRR = (1UL << (5 + 16)); // Set PA5 LOW (Normal)
+    }
+}
+
+// Observer subscriber list
+static sensor_observer_t registry[2] = { baremetal_alarm_observer, 0 };
+
+void dispatch_telemetry(uint16_t sample) {
+    for (int i = 0; registry[i] != 0; i++) {
+        registry[i](sample); // Call observer through function pointer
+    }
+}
+```
+
+:::
+
+### 🔍 How Mini-Project 2 Applies Week 8 Concepts
+
+#### 1. Hardware & Circuit-Level Concept Mapping
+
+| Circuit Component | Week 8 Theoretical Concept | Technical Function in System |
+| :--- | :--- | :--- |
+| **Potentiometer on A0** | **Physical Event Producer** | Converts continuous mechanical angle to digital voltage samples, acting as the subject being observed. |
+| **LED on D13 (PA5)** | **Decoupled Actuator Consumer** | Consumes notifications independently without the producer knowing about its existence or pin assignment. |
+
+#### 2. Firmware Code-to-Concept Breakdown
+
+| Code Statement (Framework / Bare-Metal) | Week 8 Theoretical Concept | Deep-Dive Explanation |
+| :--- | :--- | :--- |
+| `typedef void (*SensorCallback)(int);` | **Function Pointer Contract** | Defines a type-safe interface contract that decouple event sources from event listeners. |
+| `registerObserver(safetyAlarm);` | **Dynamic Subscription Registry** | Adds new features dynamically at runtime without modifying a single line of the sensor sampling driver. |
+
+---
+
+## 7. Hands-On Practice Challenge (For Students to Solve) 🎯
+
+### 🎯 Objective & Scenario
+In modern urban traffic infrastructure, emergency emergency vehicles (ambulances, fire engines) require preemptive traffic signal control. In this challenge, you will implement a **Traffic Intersection FSM with Siren Preemption** on the **STM32 Nucleo-C031C6** that sequences standard traffic lights and immediately grants safe right-of-way when an emergency siren is triggered.
+
+### 🛠️ Hardware Setup & Pin Wiring Table
+Connect 3 traffic LEDs, a pedestrian call button, and an emergency siren input:
+
+| Component | Pin / Terminal | Board Connection | Electrical Notes |
+| :--- | :--- | :---: | :--- |
+| **Red Traffic LED** | Anode (via 220Ω) | `D11` | Stop Phase Indicator |
+| **Yellow Traffic LED** | Anode (via 220Ω) | `D12` | Caution Phase Indicator |
+| **Green Traffic LED** | Anode (via 220Ω) | `D13` | Go Phase Indicator |
+| **Pedestrian Button** | Pin 1.L / 2.L | `D2` / `GND` | Pedestrian Cross Request (`INPUT_PULLUP`) |
+| **Emergency Siren Input**| Pin 1.L / 2.L | `D3` / `GND` | Active LOW Siren Trigger (`INPUT_PULLUP`) |
+| **Common Ground** | Cathodes / GND | `GND` | Ground Reference |
+
+### 📋 Problem Statement & Functional Requirements
+1. **Standard Traffic Cycle:**
+   * **`STATE_GREEN`:** Green LED is **ON** for 4.0 seconds. Red and Yellow are OFF.
+   * **`STATE_YELLOW`:** Yellow LED is **ON** for 1.5 seconds. Green and Red are OFF.
+   * **`STATE_RED`:** Red LED is **ON** for 4.0 seconds. Green and Yellow are OFF.
+2. **Pedestrian Crossing Logic:**
+   * If `D2` is pressed during Green, abort remaining Green time and smoothly transition to Yellow $\to$ Red.
+3. **Emergency Preemption Priority:**
+   * If `D3` (Emergency Siren) goes LOW, immediately transition to **`STATE_EMERGENCY`**:
+     * Flash Red and Yellow LEDs alternately at **4 Hz** (125 ms ON / 125 ms OFF).
+     * Transmit `"[EMERGENCY] Preemption active! Civilian traffic halted."` over UART.
+     * When siren deasserts (D3 returns HIGH), safely transition back to `STATE_RED` before restoring normal cycle.
+4. **Non-Blocking Constraint:** Entire program must execute using `millis()` timing comparisons. No `delay()` permitted!
+
+### 💻 Starter Code Template
+```cpp
+// ============================================================================
+// Student Practice Challenge: Traffic FSM with Emergency Preemption
+// Target: board-st-nucleo-c031c6
+// ============================================================================
+
+#define PIN_RED       11
+#define PIN_YELLOW    12
+#define PIN_GREEN     13
+#define PIN_PED_BTN   2
+#define PIN_SIREN     3
+
+typedef enum {
+  STATE_GREEN,
+  STATE_YELLOW,
+  STATE_RED,
+  STATE_EMERGENCY
+} TrafficState;
+
+TrafficState currentState = STATE_GREEN;
+uint32_t stateStartTime = 0;
+
+void setup() {
+  // TODO 1: Initialize Serial at 115200 baud
+  // TODO 2: Configure LED pins as OUTPUT
+  // TODO 3: Configure PIN_PED_BTN and PIN_SIREN as INPUT_PULLUP
+  // TODO 4: Initialize default state
+}
+
+void loop() {
+  // TODO 5: Check emergency siren input (Highest Priority Check!)
+  // TODO 6: Implement non-blocking FSM transitions using millis() - stateStartTime
+  // TODO 7: Implement pedestrian abort during STATE_GREEN
+  // TODO 8: Implement 4 Hz alternate flashing in STATE_EMERGENCY
+}
+```
+
+### 🧪 Verification & Expected Test Cases
+| Operating Scenario | Input Stimulus | Active LEDs | Expected Serial Output |
+| :--- | :--- | :---: | :--- |
+| **Normal Cycle** | None | Green $\to$ Yellow $\to$ Red | `[STATE] Normal Cycle Sequence` |
+| **Pedestrian Request** | Press `D2` during Green | Yellow turns ON immediately | `[PED] Crossing Requested -> Fast Yellow` |
+| **Emergency Siren** | Press `D3` at any time | Red + Yellow 4 Hz Flash | `[EMERGENCY] Preemption Active!` |
+| **Emergency Cleared**| Release `D3` | Red ON for 3s safety buffer | `[STATE] Emergency Cleared -> Safe Red` |
+
+<details>
+<summary>💡 Need a Hint? Click to Reveal</summary>
+
+* **Emergency Check First:** At the top of `loop()`, evaluate:
+  ```cpp
+  if (digitalRead(PIN_SIREN) == LOW) {
+      currentState = STATE_EMERGENCY;
+  }
+  ```
+* **Alternate Flashing:** Use `(millis() / 125) % 2 == 0` to flip between Red and Yellow during emergency mode without any delay.
+</details>
+
+::: {.simulation-container}
+<iframe 
+  src="https://wokwi.com/projects/479963095271968769?embed=1" 
+  title="Traffic Intersection FSM Simulation Workspace"
+  loading="lazy"
+  allowfullscreen>
+</iframe>
+<div class="sim-info-bar">
+  <span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span>
+  <span>Click Play to build and test your Traffic Intersection FSM with Siren Preemption</span>
+</div>
+:::
+
+```{=html}
+<div id="comparator-w8" class="code-comparator-widget">
+  <div class="comparator-header">
+    <div class="comparator-title">
+      <span class="icon">🔄</span>
+      <span><strong>Simultaneous Code Explorer:</strong> Arduino Framework ↔ Bare-Metal C</span>
+    </div>
+    <div class="comparator-controls">
+      <label>Load Preset:</label>
+      <select class="preset-select">
+        <option value="adc_analog">ADC Multi-Channel Reading (Potentiometer)</option>
+        <option value="gpio_blink">GPIO Multi-LED Indicator</option>
+        <option value="gpio_input">Pushbutton Event Input</option>
+        <option value="exti_interrupt">EXTI Hardware Interrupt</option>
+        <option value="timer_pwm">Hardware Timer PWM</option>
+      </select>
+      <button type="button" class="btn-compare" onclick="runInteractiveTranslation('comparator-w8')">Analyze / Map Code</button>
+    </div>
+  </div>
+  <div class="comparator-panes">
+    <div class="pane">
+      <div class="pane-header">
+        <span class="badge-arduino">Arduino C++ (Framework)</span>
+        <span class="hint">Type or paste Arduino code here for live Bare-Metal translation</span>
+      </div>
+      <textarea class="code-input" spellcheck="false"></textarea>
+    </div>
+    <div class="pane">
+      <div class="pane-header">
+        <span class="badge-baremetal">Equivalent Bare-Metal C (Direct Registers)</span>
+        <span class="hint">Live Memory-Mapped Operations</span>
+      </div>
+      <pre class="code-output"><code></code></pre>
+    </div>
+  </div>
+</div>
+```
+
+---
+
+## 8. Concept Check Practice Questions
+
+### Question 1: Finite State Machine Advantages
+
+::: {.callout-note collapse="true"}
+## Click to View Question & Options
+
+Why is the Finite State Machine (FSM) pattern preferred over nested `if-else` chains and blocking delays for managing complex embedded system behaviors?
+
+**Options:**  
+- **A)** FSMs automatically double the CPU clock frequency  
+- **B)** FSMs eliminate blocking wait delays, make system behavior predictable and deterministic in each state, and simplify tracing state transitions  
+- **C)** FSMs do not require RAM or Flash memory  
+- **D)** FSMs convert digital pins into analog outputs  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: B
+**Explanation:**  
+FSMs enforce structured, deterministic execution. At any given moment, the system is in a known valid state. By replacing blocking delays with state transitions and non-blocking timers, the CPU remains free to monitor critical events continuously.
+:::
+:::
+
+---
+
+### Question 2: The Observer Pattern in Embedded C
+
+::: {.callout-note collapse="true"}
+## Click to View Question & Options
+
+In embedded firmware architecture, what is the primary architectural benefit of using the Observer (Publish-Subscribe) pattern?
+
+**Options:**  
+- **A)** It allows code to run without an external power supply  
+- **B)** It completely decouples the sensor or event-producer module from consumers (displays, loggers, network stacks), allowing modules to be modified or reused independently  
+- **C)** It reduces the size of the compiled binary by 90%  
+- **D)** It disables microcontroller hardware interrupts  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: B
+**Explanation:**  
+Without the Observer pattern, a sensor driver must directly call display and logging functions, creating tight coupling. The Observer pattern allows consumers to subscribe via function pointers, meaning changes to the display or logging system require zero modifications to the sensor driver.
+:::
+:::
+
+---
+
+<div class="d-flex justify-content-between mt-4">
+  <a href="Week-7.qmd" class="seek-prev-btn">← Back to Week 7: Programming Lab</a>
+  <a href="Week-9.qmd" class="seek-next-btn">NEXT: Week 9 — Real-Time Operating Systems →</a>
+</div>

@@ -1,14 +1,648 @@
 ---
-title: "Week 11: Development Tools and Debugging Techniques"
+title: "Week 11: Testing, Debugging & Performance Profiling"
 ---
 
-## Overview
+## 1. The Challenge of Embedded Debugging
 
-In-circuit debuggers, JTAG & SWD interfaces, OpenOCD, GDB debugging techniques, Logic analyzers.
+Debugging embedded firmware is fundamentally different from debugging desktop code:
+- Your target microcontroller does not have a computer monitor or keyboard attached.
+- Code interacts with real-time physical voltages, motors, and high-frequency communication signals.
+- Halting the CPU at the wrong instant can physically damage hardware (e.g., leaving a high-power motor MOSFET energized).
 
-::: {.callout-tip}
-### 📌 Coming Up
-This module is part of the CS2101 syllabus outline. Detailed lecture notes, integrated interactive simulations, and question banks will be added here.
+```text
+ 1. PRINTF-STYLE DEBUGGING (THE HEISENBUG DILEMMA):
+ Code: printf("Sensor value: %d\n", val);
+ * Consumes 10-50 ms over a 9600 baud serial UART line!
+ * Alters real-time execution timing, making timing-dependent bugs vanish during debugging
+   (known as a "Heisenbug")!
+ * Stalls Interrupt Service Routines (ISRs) and severely inflates Flash code size.
+
+ 2. MODERN HARDWARE ON-CHIP DEBUGGING (JTAG / SWD):
+ Debug Probe [ST-Link / J-Link] <== SWD (2 Wires) ==> Target Microcontroller [CoreSight]
+ * Non-intrusive, zero-overhead hardware breakpoints and watchpoints.
+ * Single-step through assembly instructions and inspect internal peripheral registers live!
+```
+
+---
+
+## 2. Hardware Debug Interfaces: JTAG vs. SWD
+
+To program Flash memory, control the processor core, and step through code line-by-line, microcontrollers feature hardware debug ports:
+
+```text
+ JTAG INTERFACE (IEEE 1149.1 - 4/5 Wires)
+ [Debug Probe] --- TDI (Test Data In) ------> [ Chip 1 ] ---> [ Chip 2 ] (Daisy Chain)
+               <-- TDO (Test Data Out) <-----+           <---+
+               --- TCK (Test Clock) -------->
+               --- TMS (Test Mode Select) -->
+               --- nTRST (Optional Reset) -->
+
+ SWD INTERFACE (ARM Serial Wire Debug - 2 Wires)
+ [Debug Probe] <== SWDIO (Bidirectional Serial Data) ==> [ Single ARM MCU ]
+               --- SWCLK (Clock Reference) ------------>
+```
+
+### Protocol Comparison
+
+| Characteristic | JTAG (IEEE 1149.1) | SWD (ARM Serial Wire Debug) |
+| :--- | :--- | :--- |
+| **Physical Pin Count** | 4 to 5 pins (TDI, TDO, TCK, TMS, [TRST]) | **2 pins** (SWCLK, SWDIO) + GND |
+| **Data Direction** | Dedicated unidirectional lines | **Bidirectional** half-duplex packets on SWDIO |
+| **Multi-Chip Daisy Chaining**| Supported (can chain MCU + FPGA on 1 header) | Primarily point-to-point |
+| **Boundary Scan** | Supported (tests PCB electrical shorts/opens) | Not supported (focused on CPU debugging) |
+| **Pin Overhead on MCU** | High (consumes 5 precious GPIO pins) | **Minimal** (frees pins for peripheral sensors) |
+| **Standard Ecosystem** | Universal (ARM, RISC-V, DSPs, FPGAs) | Specialized exclusively for **ARM Cortex** processors |
+
+---
+
+## 3. Profiling & Execution Time Measurement
+
+How do you know if your control loop executes in $150\,\mu\text{s}$ or $1500\,\mu\text{s}$? In embedded systems, there are two primary methods to measure execution time:
+
+```text
+ METHOD 1: GPIO PIN TOGGLING (Measured on an Oscilloscope or Logic Analyzer)
+ GPIOA->BSRR = (1 << 5);      // Drive Test Pin HIGH
+ execute_algorithm();         // Function under test
+ GPIOA->BSRR = (1 << (5+16)); // Drive Test Pin LOW
+ * Width of the physical square pulse equals the exact execution time!
+
+ METHOD 2: ARM CORTEX-M DWT CYCLE COUNTER (Measured in Software)
+ DWT->CYCCNT = 0;             // Reset hardware 32-bit cycle counter
+ execute_algorithm();
+ uint32_t cycles = DWT->CYCCNT; // Exact number of CPU clock cycles elapsed!
+```
+
+---
+
+## 4. Static Analysis Tools: Catching Bugs Before Flashing
+
+**Static Analysis** is the process of inspecting C source code *without running it*, detecting hidden bugs, undefined behaviors, and safety hazards during compilation.
+
+```text
+ +-------------------------------------------------------------------------+
+ |                      LEVELS OF EMBEDDED CODE QUALITY                    |
+ +-------------------------------------------------------------------------+
+ | Level 1: Basic Compiler Warnings (-Wall -Wextra -Werror)                |
+ |          Flags unused variables, implicit type conversions, and typos   |
+ |                                                                         |
+ | Level 2: Static Analysis Linters (Cppcheck, Clang-Tidy)                 |
+ |          Detects null-pointer dereferences, array buffer overflows, and |
+ |          memory leaks before code ever touches silicon!                 |
+ |                                                                         |
+ | Level 3: Coding Standards Compliance (MISRA-C:2012 / 2023)              |
+ |          Enforces strict safety rules for automotive, aerospace, and    |
+ |          medical devices (no dynamic allocation, no recursion).         |
+ +-------------------------------------------------------------------------+
+```
+
+---
+
+## 5. Unit Testing for Embedded Systems: Hardware Mocking
+
+Testing embedded C code on physical hardware is slow, expensive, and difficult to automate in Continuous Integration (CI) pipelines.
+
+The industry solution is **Unit Testing on the Host PC with Hardware Mocking**:
+
+```text
+ TRADITIONAL TESTING (Slow & Hardware Dependent):
+ Code compiled for ARM ---> Flashed to MCU via USB ---> Manually probed with a multimeter.
+
+ EMBEDDED UNIT TESTING (Fast, Automated & Scalable):
+ Sensor Algorithm compiled for PC (x86_64) ---> Run with Unity / CMock Test Framework
+ * Hardware registers (I2C, ADC, Timers) are replaced with virtual mock structures in C!
+```
+
+---
+
+## 6. Mini-Project 1: ARM DWT Cycle Counter Precision Profiler ⏱️⚡
+
+### 🎯 Objective
+When writing performance-critical signal processing or control loops, developers must know down to the exact clock cycle how long algorithms take to execute. In this project, you will activate the hardware **Data Watchpoint and Trace (DWT)** unit on the **ARM Cortex-M core** to benchmark the cycle counts of floating-point arithmetic versus integer bit-manipulation on the **STM32 Nucleo-C031C6**.
+
+### 🛠️ Hardware Setup (Wokwi)
+* **Target Board:** `board-st-nucleo-c031c6` (ARM Cortex-M0+)
+* **Diagnostic Serial Stream:** Direct USB Virtual COM Port at **115200 baud**.
+* **Benchmark Heartbeat LED:** User LED on `D13` (`PA5`).
+
+### Pin Wiring Table
+| Component | Pin / Terminal | STM32 / Board Pin | Electrical Function |
+| :--- | :--- | :---: | :--- |
+| **Serial Terminal** | USB VCP | Virtual COM Port | Telemetry Console (115200 baud, 8-N-1) |
+| **Benchmark LED** | Anode (`PA5`) | `D13` | Toggled upon every completed test cycle |
+| **Common Ground** | Cathode | `GND` | Ground Reference |
+
+### 📝 Problem Statement & Logic Flow
+1. **DWT Hardware Initialization:**
+   * Enable the CoreDebug trace control bit: `CoreDebug_DEMCR |= (1UL << 24);`.
+   * Enable the cycle counter in DWT Control register: `DWT_CTRL |= (1UL << 0);`.
+2. **Benchmark 1 (Floating-Point Division):**
+   * Reset cycle counter to zero (`DWT_CYCCNT = 0`).
+   * Perform division on two 32-bit floating-point variables (`volatile float res = 12345.67f / 3.1415f;`).
+   * Capture `float_cycles = DWT_CYCCNT;`.
+3. **Benchmark 2 (Integer Bit-Shift Division):**
+   * Reset `DWT_CYCCNT = 0`.
+   * Perform equivalent integer division by 4 using bit-shifting (`volatile uint32_t res = val >> 2;`).
+   * Capture `int_cycles = DWT_CYCCNT;`.
+4. **Speedup Analysis & Telemetry:**
+   * Transmit exact cycle counts and speedup ratio over UART:
+     $$\text{Speedup Ratio} = \frac{\text{Float Cycles}}{\text{Integer Cycles}}$$
+
+```text
+[PROFILER]: Float Division Execution: 104 cycles
+[PROFILER]: Integer Bit-Shift Execution: 1 cycle
+[PROFILER]: Performance Speedup Factor: 104x faster!
+```
+
+### Interactive Simulation
+
+::: {.simulation-container}
+<iframe 
+  src="https://wokwi.com/projects/479963095271968769?embed=1" 
+  title="DWT Profiler Simulation Workspace"
+  loading="lazy"
+  allowfullscreen>
+</iframe>
+<div class="sim-info-bar">
+  <span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span>
+  <span>Click Play, open Serial Monitor at 115200 baud to view hardware clock cycle benchmarks</span>
+</div>
 :::
 
-[← Back to Main Page](index.qmd){.btn .btn-outline-secondary .mt-4}
+### Implementation Code: High-Level Framework vs. Bare-Metal Embedded C
+
+::: {.panel-tabset}
+
+### 🔷 High-Level Framework (Running in Simulation)
+
+```cpp
+// ============================================================================
+// Mini-Project 1: ARM Cycle Counter Precision Profiler (Nucleo-C031C6)
+// ============================================================================
+
+#define CoreDebug_DEMCR (*(volatile uint32_t *)0xE000EDFCUL)
+#define DWT_CTRL        (*(volatile uint32_t *)0xE0001000UL)
+#define DWT_CYCCNT      (*(volatile uint32_t *)0xE0001004UL)
+
+void initCycleCounter() {
+  CoreDebug_DEMCR |= (1UL << 24); // Enable TRCENA bit
+  DWT_CTRL        |= (1UL << 0);  // Enable CYCCNTENA bit
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(LED_BUILTIN, OUTPUT);
+  initCycleCounter();
+
+  Serial.println("==================================================");
+  Serial.println("   ARM Cortex-M Hardware Cycle Profiler Ready     ");
+  Serial.println("==================================================");
+}
+
+void loop() {
+  // Test 1: Software Floating-Point Division
+  volatile float f_num = 12345.67f;
+  volatile float f_den = 3.1415f;
+  
+  DWT_CYCCNT = 0; // Reset counter
+  volatile float f_res = f_num / f_den;
+  uint32_t float_cycles = DWT_CYCCNT;
+
+  // Test 2: Hardware Single-Cycle Integer Bit-Shift Division
+  volatile uint32_t i_num = 12345;
+  
+  DWT_CYCCNT = 0; // Reset counter
+  volatile uint32_t i_res = i_num >> 2;
+  uint32_t int_cycles = DWT_CYCCNT;
+
+  // Telemetry Output
+  digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+
+  Serial.print("[PROFILER]: Float Division Execution:    ");
+  Serial.print(float_cycles);
+  Serial.println(" cycles");
+
+  Serial.print("[PROFILER]: Integer Bit-Shift Execution: ");
+  Serial.print(int_cycles);
+  Serial.println(" cycles");
+
+  Serial.print("[PROFILER]: Speedup Factor:               ");
+  Serial.print(float_cycles / (int_cycles > 0 ? int_cycles : 1));
+  Serial.println("x faster!\n");
+
+  delay(2000);
+}
+```
+
+---
+
+### 🔶 Equivalent Bare-Metal Embedded C (Direct DWT & CoreDebug Register Access)
+
+```c
+// ============================================================================
+// Mini-Project 1: Bare-Metal ARM DWT Profiler Driver
+// Target: STM32 Nucleo-C031C6 (ARM Cortex-M0+)
+// ============================================================================
+#include <stdint.h>
+
+#define COREDEBUG_DEMCR (*(volatile uint32_t *)0xE000EDFCUL)
+#define DWT_CTRL        (*(volatile uint32_t *)0xE0001000UL)
+#define DWT_CYCCNT      (*(volatile uint32_t *)0xE0001004UL)
+
+void dwt_profiler_init(void) {
+    COREDEBUG_DEMCR |= (1UL << 24); // Enable Global Trace (TRCENA)
+    DWT_CYCCNT       = 0;           // Reset counter
+    DWT_CTRL        |= (1UL << 0);  // Enable Cycle Counter (CYCCNTENA)
+}
+
+uint32_t profile_algorithm(void (*func)(void)) {
+    DWT_CYCCNT = 0;
+    func();
+    return DWT_CYCCNT; // Single-cycle precision elapsed instruction cycles
+}
+```
+
+:::
+
+### 🔍 How Mini-Project 1 Applies Week 11 Concepts
+
+#### 1. Hardware & Circuit-Level Concept Mapping
+
+| Circuit Component | Week 11 Theoretical Concept | Technical Function in System |
+| :--- | :--- | :--- |
+| **ARM CoreDebug & DWT** | **Hardware On-Chip Debug Unit** | Dedicated silicon register unit clocked at $f_{\text{CPU}}$ that increments every single CPU clock tick without memory or pipeline stalls. |
+| **User LED (PA5 / D13)** | **Visual Profiling Heartbeat** | Emits a hardware pulse indicating completion of a profiling run. |
+
+#### 2. Firmware Code-to-Concept Breakdown
+
+| Code Statement (Framework / Bare-Metal) | Week 11 Theoretical Concept | Deep-Dive Explanation |
+| :--- | :--- | :--- |
+| `volatile float f_num;` | **Compiler Optimization Invalidation** | Without `volatile`, the GCC `-O2` compiler would compute the float division at compile time, reducing runtime clock cycles to zero. |
+| `DWT_CYCCNT = 0;` | **Zero-Overhead Hardware Timestamping** | Eliminates the Heisenbug problem by replacing millisecond-slow `printf()` logging with 1-cycle register reads. |
+
+---
+
+## 7. Mini-Project 2: Embedded Unit Testing Harness with Pass/Fail LEDs 🧪✅
+
+### 🎯 Objective
+In automotive (ISO 26262) and medical device development, untested code is forbidden from deployment. In this project, you will build an automated self-testing firmware harness for the **STM32 Nucleo-C031C6** that executes automated unit tests on boot, verifying an ADC-to-Voltage translation function using hardware Pass (Green) and Fail (Red) LED indicators.
+
+### 🛠️ Hardware Setup (Wokwi)
+The circuit connects two diagnostic status LEDs with 220Ω current-limiting resistors:
+* **Pass LED (Green):** Connected to pin `D12` (`PA6`).
+* **Fail LED (Red):** Connected to pin `D11` (`PA7`).
+* **Common Ground:** LED cathodes tied to `GND`.
+
+### Pin Wiring Table
+| Component | Pin / Terminal | STM32 / Board Pin | Electrical Function |
+| :--- | :--- | :---: | :--- |
+| **Pass LED (Green)** | Anode (via 220Ω) | `D12` (`PA6`) | Test Suite All-Pass Indicator |
+| **Fail LED (Red)** | Anode (via 220Ω) | `D11` (`PA7`) | Assertion Failure Indicator |
+| **Both LEDs** | Cathodes ($-$) | Common `GND` | Ground Reference |
+
+### 📝 Problem Statement & Logic Flow
+1. **Unit Under Test (UUT):** Implement a robust integer math scaling function:
+   `uint32_t adcToMillivolts(uint16_t raw_adc);` which scales 12-bit ADC raw values ($0$ to $4095$) to millivolts ($0$ to $3300\text{ mV}$). It must clamp out-of-bounds readings ($> 4095$) defensively.
+2. **Automated Unit Test Suite:**
+   * **Test 1 (Zero Scale):** Verify that input `0` yields exactly `0 mV`.
+   * **Test 2 (Full Scale):** Verify that input `4095` yields exactly `3300 mV`.
+   * **Test 3 (Mid Scale):** Verify that input `2047` yields `1648 mV` to `1652 mV` ($\pm 2\text{ mV}$ precision band).
+3. **Hardware Test Reporting:**
+   * If all tests pass: turn Green LED on `D12` **HIGH**, Red LED **LOW**, and print `"[ALL TESTS PASSED]: Green LED illuminated."`.
+   * If any test fails: turn Red LED on `D11` **HIGH**, Green LED **LOW**, and print assertion error details.
+
+```text
+==================================================
+   Running Embedded Self-Test Unit Harness...
+==================================================
+[PASS] Test 1: Zero Scale (0 counts -> 0 mV)
+[PASS] Test 2: Full Scale (4095 counts -> 3300 mV)
+[PASS] Test 3: Mid Scale  (2047 counts -> 1649 mV)
+--------------------------------------------------
+[ALL TESTS PASSED]: Hardware Green LED illuminated!
+```
+
+### Interactive Simulation
+
+::: {.simulation-container}
+<iframe 
+  src="https://wokwi.com/projects/479963095271968769?embed=1" 
+  title="Unit Test Simulation Workspace"
+  loading="lazy"
+  allowfullscreen>
+</iframe>
+<div class="sim-info-bar">
+  <span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span>
+  <span>Click Play, wire Pass LED to D12 and Fail LED to D11 to test assertions</span>
+</div>
+:::
+
+### Implementation Code: High-Level Framework vs. Bare-Metal Embedded C
+
+::: {.panel-tabset}
+
+### 🔷 High-Level Framework (Running in Simulation)
+
+```cpp
+// ============================================================================
+// Mini-Project 2: Embedded Unit Testing Harness (Nucleo-C031C6)
+// ============================================================================
+
+#define LED_GREEN 12 // Pass Indicator (PA6)
+#define LED_RED   11 // Fail Indicator (PA7)
+
+// Unit Under Test (UUT): Scales 12-bit ADC (0-4095) to Millivolts (0-3300 mV)
+uint32_t adcToMillivolts(uint16_t raw_adc) {
+  // Defensive clamp against out-of-bounds inputs
+  if (raw_adc > 4095) {
+    raw_adc = 4095;
+  }
+  // Fixed-point 32-bit integer arithmetic
+  return ((uint32_t)raw_adc * 3300UL) / 4095UL;
+}
+
+// Unit Test Cases
+bool test_zero_scale() {
+  return adcToMillivolts(0) == 0;
+}
+
+bool test_full_scale() {
+  return adcToMillivolts(4095) == 3300;
+}
+
+bool test_mid_scale() {
+  uint32_t mv = adcToMillivolts(2047);
+  return (mv >= 1648 && mv <= 1652); // Precision tolerance band
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(LED_GREEN, OUTPUT);
+  pinMode(LED_RED, OUTPUT);
+  digitalWrite(LED_GREEN, LOW);
+  digitalWrite(LED_RED, LOW);
+
+  Serial.println("==================================================");
+  Serial.println("   Running Embedded Self-Test Unit Harness...     ");
+  Serial.println("==================================================");
+
+  bool all_passed = true;
+
+  if (test_zero_scale()) {
+    Serial.println("[PASS] Test 1: Zero Scale (0 counts -> 0 mV)");
+  } else {
+    Serial.println("[FAIL] Test 1: Zero Scale Failed!");
+    all_passed = false;
+  }
+
+  if (test_full_scale()) {
+    Serial.println("[PASS] Test 2: Full Scale (4095 counts -> 3300 mV)");
+  } else {
+    Serial.println("[FAIL] Test 2: Full Scale Failed!");
+    all_passed = false;
+  }
+
+  if (test_mid_scale()) {
+    Serial.println("[PASS] Test 3: Mid Scale  (2047 counts -> 1649 mV)");
+  } else {
+    Serial.println("[FAIL] Test 3: Mid Scale Failed!");
+    all_passed = false;
+  }
+
+  Serial.println("--------------------------------------------------");
+  if (all_passed) {
+    digitalWrite(LED_GREEN, HIGH);
+    Serial.println("[ALL TESTS PASSED]: Hardware Green LED illuminated!");
+  } else {
+    digitalWrite(LED_RED, HIGH);
+    Serial.println("[TEST FAILED]: Hardware Red LED illuminated!");
+  }
+}
+
+void loop() {}
+```
+
+---
+
+### 🔶 Equivalent Bare-Metal Embedded C (MISRA-C Test Harness with Register Output)
+
+```c
+// ============================================================================
+// Mini-Project 2: Bare-Metal MISRA Assertion Framework
+// ============================================================================
+#include <stdint.h>
+#include <stdbool.h>
+
+#define GPIOA_BASE  (0x50000000UL)
+#define GPIOA_BSRR  (*(volatile uint32_t *)(GPIOA_BASE + 0x18UL))
+
+#define ASSERT_EQUAL(actual, expected) do { \
+    if ((actual) != (expected)) return false; \
+} while(0)
+
+bool run_boot_verification(void) {
+    // Assert calibration calculations
+    ASSERT_EQUAL(((uint32_t)0 * 3300UL) / 4095UL, 0);
+    ASSERT_EQUAL(((uint32_t)4095 * 3300UL) / 4095UL, 3300);
+    return true; // All assertions passed
+}
+
+void indicate_test_result(bool passed) {
+    if (passed) {
+        GPIOA_BSRR = (1UL << 6); // Green LED (PA6) ON
+    } else {
+        GPIOA_BSRR = (1UL << 7); // Red LED (PA7) ON
+    }
+}
+```
+
+:::
+
+### 🔍 How Mini-Project 2 Applies Week 11 Concepts
+
+#### 1. Hardware & Circuit-Level Concept Mapping
+
+| Circuit Component | Week 11 Theoretical Concept | Technical Function in System |
+| :--- | :--- | :--- |
+| **Pass LED (D12)** | **Hardware Verification Indicator** | Illuminates green only when all unit assertions pass, validating system safety before machine startup. |
+| **Fail LED (D11)** | **Hardware Fault Interlock** | Illuminates red upon any regression or math assertion failure, halting system operation. |
+
+#### 2. Firmware Code-to-Concept Breakdown
+
+| Code Statement (Framework / Bare-Metal) | Week 11 Theoretical Concept | Deep-Dive Explanation |
+| :--- | :--- | :--- |
+| `adcToMillivolts(2047) >= 1648` | **Boundary Value Analysis & Tolerancing** | Validates algorithm correctness across boundaries (Zero, Mid, Full-Scale) under fixed-point rounding. |
+| `ASSERT_EQUAL(actual, expected)` | **MISRA-C Defensive Assertion Macro** | Guarantees test halts and isolates faults without corrupting hardware stack or execution pointers. |
+
+---
+
+## 8. Hands-On Practice Challenge (For Students to Solve) 🎯
+
+### 🎯 Objective & Scenario
+In hard real-time motor control and functional safety systems, software engineers must verify the physical latency between an external electrical trigger and the execution of its Interrupt Service Routine (ISR). In this challenge, you will implement a **Pin-Toggled Interrupt Latency Benchmarking Harness** on the **STM32 Nucleo-C031C6** to measure hardware EXTI dispatch latency on an oscilloscope.
+
+### 🛠️ Hardware Setup & Pin Wiring Table
+Connect a trigger pulse button and an oscilloscope latency probe:
+
+| Component | Pin / Terminal | Board Connection | Electrical Notes |
+| :--- | :--- | :---: | :--- |
+| **External Trigger Button** | Terminal 1.L / 2.L | `D2` (`PA10`) / `GND` | Edge trigger stimulus (`INPUT_PULLUP`) |
+| **Oscilloscope Latency Probe** | Anode (`PA5`) | `D13` | Direct high-speed latency output probe |
+| **Common Ground** | Cathode / GND | `GND` | Oscilloscope ground reference clip |
+
+### 📋 Problem Statement & Functional Requirements
+1. **Interrupt Configuration:**
+   * Configure `D2` (`PA10`) as an external falling-edge interrupt source (EXTI).
+   * Configure `D13` (`PA5`) as a high-speed digital output pin.
+2. **Deterministic Latency Measurement:**
+   * As the **very first assembly instruction** inside the ISR, drive `D13` **HIGH** using single-cycle register manipulation (`GPIOA->BSRR = (1UL << 5)`).
+   * As the last instruction before returning, drive `D13` **LOW** (`GPIOA->BSRR = (1UL << (5 + 16))`).
+3. **Oscilloscope Latency Observation:**
+   * Channel 1 measures falling edge on `D2` ($3.3\text{V} \to 0\text{V}$).
+   * Channel 2 measures rising edge on `D13` ($0\text{V} \to 3.3\text{V}$).
+   * Latency is the exact time delta $\Delta t$ between Channel 1 falling edge and Channel 2 rising edge (typically 12 to 16 CPU cycles on ARM Cortex-M).
+
+### 💻 Starter Code Template
+```cpp
+// ============================================================================
+// Student Practice Challenge: Interrupt Latency Benchmarking
+// Target: board-st-nucleo-c031c6
+// ============================================================================
+
+#define TRIGGER_PIN 2  // D2 (PA10 EXTI Line)
+#define PROBE_PIN   13 // D13 (PA5 High-Speed Probe)
+
+void latencyISR() {
+  // TODO 1: Drive PROBE_PIN HIGH in single clock cycle using direct register write
+  // TODO 2: Drive PROBE_PIN LOW before returning
+}
+
+void setup() {
+  // TODO 3: Initialize Serial at 115200 baud
+  // TODO 4: Configure PROBE_PIN as OUTPUT
+  // TODO 5: Configure TRIGGER_PIN as INPUT_PULLUP
+  // TODO 6: Attach interrupt on FALLING edge
+}
+
+void loop() {}
+```
+
+### 🧪 Verification & Expected Test Cases
+| Event Trigger | Scope Channel 1 (D2) | Scope Channel 2 (D13) | Measured Hardware Latency |
+| :--- | :---: | :---: | :--- |
+| **Button Idle** | $3.3\text{V}$ (HIGH) | $0\text{V}$ (LOW) | System waiting in low-power idle |
+| **Button Pressed** | Falling Edge ($3.3\text{V} \to 0\text{V}$) | Rising Edge ($0\text{V} \to 3.3\text{V}$) | $\approx 250\text{ ns}$ ($12\text{ cycles} \times \frac{1}{48\text{ MHz}}$) |
+| **ISR Completion** | Ground ($0\text{V}$) | Falling Edge back to $0\text{V}$ | Latency pulse duration measured |
+
+<details>
+<summary>💡 Need a Hint? Click to Reveal</summary>
+
+* **Eliminating Function Call Overhead:** Standard `digitalWrite()` requires ~40 to 60 clock cycles of parameter lookup. Replace with direct STM32 BSRR register writes:
+  ```cpp
+  GPIOA->BSRR = (1UL << 5);        // 1 cycle HIGH
+  GPIOA->BSRR = (1UL << (5 + 16)); // 1 cycle LOW
+  ```
+</details>
+
+::: {.simulation-container}
+<iframe 
+  src="https://wokwi.com/projects/479963095271968769?embed=1" 
+  title="Interrupt Latency Simulation Workspace"
+  loading="lazy"
+  allowfullscreen>
+</iframe>
+<div class="sim-info-bar">
+  <span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span>
+  <span>Click Play to build and test your GPIO latency benchmarking harness</span>
+</div>
+:::
+
+```{=html}
+<div id="comparator-w11" class="code-comparator-widget">
+  <div class="comparator-header">
+    <div class="comparator-title">
+      <span class="icon">🔄</span>
+      <span><strong>Simultaneous Code Explorer:</strong> Arduino Framework ↔ Bare-Metal C</span>
+    </div>
+    <div class="comparator-controls">
+      <label>Load Preset:</label>
+      <select class="preset-select">
+        <option value="gpio_blink">GPIO Test Assertion Pass/Fail Indicators</option>
+        <option value="timer_pwm">Cycle Timing & Benchmark Profiling</option>
+        <option value="exti_interrupt">EXTI Latency Measurement Trigger</option>
+        <option value="uart_comm">UART Telemetry Logging</option>
+        <option value="adc_analog">ADC Boundary Assertion Testing</option>
+      </select>
+      <button type="button" class="btn-compare" onclick="runInteractiveTranslation('comparator-w11')">Analyze / Map Code</button>
+    </div>
+  </div>
+  <div class="comparator-panes">
+    <div class="pane">
+      <div class="pane-header">
+        <span class="badge-arduino">Arduino C++ (Framework)</span>
+        <span class="hint">Type or paste Arduino code here for live Bare-Metal translation</span>
+      </div>
+      <textarea class="code-input" spellcheck="false"></textarea>
+    </div>
+    <div class="pane">
+      <div class="pane-header">
+        <span class="badge-baremetal">Equivalent Bare-Metal C (Direct Registers)</span>
+        <span class="hint">Live Memory-Mapped Operations</span>
+      </div>
+      <pre class="code-output"><code></code></pre>
+    </div>
+  </div>
+</div>
+```
+
+---
+
+## 9. Concept Check Practice Questions
+
+### Question 1: In-Circuit Debugging: SWD vs. JTAG
+
+::: {.callout-note collapse="true"}
+## Click to View Question & Options
+
+Why is ARM Serial Wire Debug (SWD) the standard debug interface on modern 32-bit Cortex-M microcontrollers rather than traditional 5-wire JTAG?
+
+**Options:**  
+- **A)** JTAG does not work with C programming  
+- **B)** SWD achieves full hardware debugging, flash programming, and CPU control using only 2 physical pins (SWCLK and SWDIO), saving valuable pins on compact chip packages  
+- **C)** SWD eliminates the need for a power supply  
+- **D)** JTAG can only be used on 8-bit processors  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: B
+**Explanation:**  
+Standard JTAG requires 4 or 5 dedicated pins (TDI, TDO, TCK, TMS, TRST). On small 20-pin or 32-pin microcontrollers, dedicating 5 pins to debugging severely limits the number of pins available for sensors and actuators. SWD provides the same debugging capabilities over just 2 pins.
+:::
+:::
+
+---
+
+### Question 2: Profiling with ARM DWT Cycle Counter
+
+::: {.callout-note collapse="true"}
+## Click to View Question & Options
+
+What is the primary advantage of using the ARM Cortex-M Data Watchpoint and Trace (DWT) cycle counter (`DWT->CYCCNT`) for execution profiling compared to inserting `printf()` statements?
+
+**Options:**  
+- **A)** `printf()` increases the CPU clock speed  
+- **B)** `DWT->CYCCNT` measures execution time at single-clock-cycle precision with zero software overhead, avoiding the massive timing delays introduced by serial `printf()` calls  
+- **C)** DWT registers are stored in Flash memory  
+- **D)** `printf()` can only display negative numbers  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: B
+**Explanation:**  
+`printf()` involves formatting strings and waiting for bytes to shift out over a serial bus, adding milliseconds of delay and completely altering real-time software timing (**the Heisenbug problem**). The DWT cycle counter is a dedicated silicon hardware counter that reads in a single clock cycle with zero overhead.
+:::
+:::
+
+---
+
+<div class="d-flex justify-content-between mt-4">
+  <a href="Week-10.qmd" class="seek-prev-btn">← Back to Week 10: Efficiency & Optimization</a>
+  <a href="Week-12.qmd" class="seek-next-btn">NEXT: Week 12 — Safety, Security & Ethics →</a>
+</div>

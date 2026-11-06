@@ -824,6 +824,6 @@ Sleep and Stop modes gate the high-frequency clock to the CPU core while keeping
 ---
 
 <div class="d-flex justify-content-between mt-4">
-  <a href="Week-3.qmd" class="seek-prev-btn">← Back to Week 3</a>
-  <a href="index.qmd" class="seek-next-btn">Return to Course Overview →</a>
+  <a href="Week-3.qmd" class="seek-prev-btn">← Back to Week 3: Architecture & GPIO</a>
+  <a href="Week-5.qmd" class="seek-next-btn">NEXT: Week 5 — Digital Communication Protocols →</a>
 </div>

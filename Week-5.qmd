@@ -1,14 +1,711 @@
 ---
-title: "Week 5: Digital Communication Protocols"
+title: "Week 5: Communication Protocols in Embedded Systems"
 ---
 
-## Overview
+## 1. Why Do Embedded Systems Need Communication Protocols?
 
-UART asynchronous protocol, SPI synchronous bus, I2C two-wire interface, master-slave communication.
+Imagine a modern car or a smart home: you have dozens of sensors measuring temperature, wheel speed, and battery voltage, along with multiple microcontrollers controlling motors, displays, and actuators.
 
-::: {.callout-tip}
-### 📌 Coming Up
-This module is part of the CS2101 syllabus outline. Detailed lecture notes, integrated interactive simulations, and question banks will be added here.
+If every sensor required its own dedicated bundle of analog wires directly connected to the central CPU, the wiring harness would weigh hundreds of kilograms and cost thousands of dollars.
+
+```text
+ WITHOUT A COMMUNICATION PROTOCOL (Chaotic & Expensive):
+ [Sensor 1] ======= 8 Dedicated Wires =======> [ Microcontroller ]
+ [Sensor 2] ======= 8 Dedicated Wires =======> [ Microcontroller ]
+ [Display ] ======= 16 Dedicated Wires ======> [ Microcontroller ]
+ * Bulky wiring, pin exhaustion, high cost, and zero interoperability!
+
+ WITH A STANDARDIZED PROTOCOL (Organized & Efficient):
+ [Sensor 1] --+
+ [Sensor 2] --+=== Shared 2-Wire Serial Bus (e.g., I2C / CAN) ===> [ Microcontroller ]
+ [Display ] --+
+ * Only 2 to 4 shared wires, low cost, scalable, and standardized!
+```
+
+A **Communication Protocol** is simply an agreed-upon set of rules that defines:
+1. **Physical Signaling:** Voltage levels, timing intervals, and clock frequencies.
+2. **Data Framing:** How bits are grouped into packets, bytes, start bits, and stop bits.
+3. **Addressing:** How a master processor identifies which specific sensor it wants to talk to on a shared bus.
+4. **Error Handling:** How the receiver detects if electrical noise corrupted a transmitted bit (e.g., Parity, Checksum, CRC).
+
+---
+
+## 2. Serial vs. Parallel Communication
+
+In the early days of computing, **parallel communication** (sending 8, 16, or 32 bits simultaneously over 8, 16, or 32 physical wires) was faster because clock speeds were low. However, in modern embedded systems, **serial communication** (sending data bit-by-bit over a single wire) has almost completely replaced parallel buses.
+
+```text
+ PARALLEL BUS (8 Bits Sent Simultaneously)
+ Sender [D0] -----------------------------> Receiver [D0]
+        [D1] ----------------------------->          [D1]
+        [D2] ----------------------------->          [D2]
+        ...
+        [CLK] ---------------------------->          [CLK]
+ * Problem: Clock Skew! Bits arrive at slightly different nanoseconds over different trace lengths.
+
+ SERIAL BUS (1 Bit Sent at a Time in Rapid Succession)
+ Sender [TX] ---- Bit 7, 6, 5, 4, 3, 2, 1, 0 ----> Receiver [RX]
+ * Solved: Zero trace-to-trace skew, simple 1-wire trace, works reliably over long distances!
+```
+
+### Why Serial Communication Won:
+- **No Clock Skew:** In parallel buses, slight differences in PCB copper trace lengths cause bits to arrive at slightly different times (**clock skew**). At high speeds, this scrambles data. Serial sends one bit at a time, eliminating skew.
+- **Fewer Microcontroller Pins:** Serial protocols only require 1 to 4 pins, allowing microcontrollers to come in tiny, inexpensive chip packages (QFN, TSSOP).
+- **Reduced Cross-Talk & Noise:** Routing 16 parallel high-speed traces close together causes electromagnetic interference (cross-talk). Serial routing is clean and compact.
+- **Longer Distance:** Serial signals can travel meters or even kilometers (e.g., RS-485, CAN bus), whereas parallel buses are restricted to a few centimeters.
+
+---
+
+## 3. The Big Three Microcontroller Serial Protocols
+
+Microcontrollers typically feature hardware peripheral engines for three fundamental serial standards: **UART**, **SPI**, and **$I^2C$**.
+
+```text
+ +-----------------------------------------------------------------------------------------+
+ |                               THE CORE PROTOCOL COMPARISON                              |
+ +-----------------------------------------------------------------------------------------+
+ | Feature             | UART                       | SPI                  | I2C           |
+ +---------------------+----------------------------+----------------------+---------------+
+ | Type                | Asynchronous (No clock)    | Synchronous (SCK)    | Synchronous   |
+ | Wires (Excl. GND)   | 2 (TX, RX)                 | 4 (MOSI, MISO,SCK,CS)| 2 (SDA, SCL)  |
+ | Speed Range         | 9.6 kbps to 1 Mbps         | 10 Mbps to 80+ Mbps  | 100k - 3.4M   |
+ | Duplex              | Full Duplex                | Full Duplex          | Half Duplex   |
+ | Bus Architecture    | Point-to-Point (1 to 1)    | Master-Slave (Multi) | Multi-Master  |
+ | Best Suited For     | Debug serial, GPS, Modems  | Flash memory, Displays| Low-speed sen|
+ +-----------------------------------------------------------------------------------------+
+```
+
+---
+
+### 3.1 UART (Universal Asynchronous Receiver-Transmitter)
+
+**UART** is an **asynchronous** protocol. "Asynchronous" means there is **no shared clock wire** between the sender and the receiver. 
+
+Instead, both devices are pre-configured to run at the exact same transmission speed, known as the **Baud Rate** (e.g., 9600, 115200 bits per second).
+
+```text
+ UART WIRING (Cross-over connection):
+ MCU 1 [TX Pin] ------------------------------> MCU 2 [RX Pin]
+ MCU 1 [RX Pin] <------------------------------ MCU 2 [TX Pin]
+ MCU 1 [GND   ] ------------------------------- MCU 2 [GND   ]
+```
+
+#### The UART Data Frame
+When no data is being sent, the line idles at a steady logic **HIGH** ($V_{CC}$). To transmit a byte, the UART hardware wraps the 8 data bits in a standardized frame:
+
+```text
+ Idle (1) | Start (0) | D0 | D1 | D2 | D3 | D4 | D5 | D6 | D7 | Parity | Stop (1) | Idle (1)
+ ---------+           +----+----+----+----+----+----+----+----+--------+----------+---------
+          |___________|                                                |
+            1 Bit-Time             8 Data Bits (LSB First)                1-2 Bits
+```
+
+1. **Start Bit (Always 0):** The sender pulls the line LOW for 1 bit-time. This falling edge wakes up the receiver and starts its internal sampling timer.
+2. **Data Payload (5 to 9 bits, typically 8 bits):** The byte is sent **Least Significant Bit (LSB) first**.
+3. **Optional Parity Bit:** Adds basic error detection (Even or Odd parity).
+4. **Stop Bit(s) (Always 1):** The line returns HIGH for 1 or 2 bit-times, allowing the receiver to shift the byte into its buffer and prepare for the next frame.
+
+---
+
+### 3.2 SPI (Serial Peripheral Interface)
+
+**SPI** is a **synchronous, full-duplex** bus designed by Motorola. Because it includes an explicit clock line (**SCK**) driven by the Master, it can achieve speeds exceeding $50\text{ MHz}$.
+
+- **MOSI (Master Out Slave In):** Data sent from the Master to the Slave.
+- **MISO (Master In Slave Out):** Data sent from the Slave back to the Master.
+- **SCK (Serial Clock):** Clock pulses generated exclusively by the Master to time bit transfers.
+- **CS / SS (Chip Select / Slave Select):** Active-low pin used to wake up and select a specific slave.
+
+---
+
+### 3.3 $I^2C$ (Inter-Integrated Circuit)
+
+**$I^2C$** is a **synchronous, half-duplex, multi-device** bus that requires only **two wires**, regardless of how many devices are attached:
+- **SDA (Serial Data):** Bi-directional data line.
+- **SCL (Serial Clock):** Synchronizing clock line driven by the Master.
+
+#### Open-Drain Architecture & Pull-Up Resistors
+$I^2C$ pins use **open-drain** output stages. They can pull the line LOW to $0\text{V}$, but cannot actively drive it HIGH. External **pull-up resistors ($R_p$, typically $4.7\text{ k}\Omega$)** pull the bus voltage back up to $3.3\text{V}$ when all devices release the line.
+
+---
+
+## 4. Networking Concepts & Industrial Fieldbus Protocols
+
+In harsh factory environments or automobiles, consumer protocols like $I^2C$ fail due to electrical motor noise. **Fieldbus protocols** provide robust, noise-immune communication:
+- **CAN Bus (Controller Area Network):** Used across automotive ECUs with balanced differential signaling (`CAN_H` and `CAN_L`).
+- **RS-485 / Modbus:** Industrial balanced serial standard for distances up to 1200 meters.
+- **LIN Bus:** Single-wire cost-effective automotive bus for sub-systems like power mirrors and window switches.
+- **Wireless Protocols (BLE, Zigbee, LoRa):** For cable-free remote IoT and sensor node networking.
+
+---
+
+## 5. Mini-Project 1: Two-Way UART Command & Echo Parser 📡💬
+
+### 🎯 Objective
+In field automation and diagnostic consoles, microcontrollers frequently communicate with a host computer or test harness via a serial terminal. In this project, you will build an interactive ASCII Command-Line Interface (CLI) over UART at **115200 baud** running on the **STM32 Nucleo-C031C6** that parses incoming text commands, toggles the onboard LED, and replies with structured acknowledgement frames.
+
+### 🛠️ Hardware Setup (Wokwi)
+The circuit connects the following to an **STM32 Nucleo-C031C6** board:
+* **Onboard User LED:** Connected to pin `PA5` (`D13`) to visualize command states.
+* **UART USB VCP:** Direct hardware serial link over ST-LINK Virtual COM Port.
+* *(Optional breadboard LED: Anode to `D13` via 220Ω resistor, Cathode to `GND`).*
+
+### Pin Wiring Table
+| Component | Pin / Terminal | STM32 / Board Pin | Electrical Function |
+| :--- | :--- | :---: | :--- |
+| **Onboard User LED** | Anode (`PA5`) | `D13` | Green LED driven directly by MCU pin `PA5` |
+| **UART TX** | Transmit (`PA2`) | Virtual COM Port | Transmits ASCII data to Host PC |
+| **UART RX** | Receive (`PA3`) | Virtual COM Port | Receives ASCII commands from Host PC |
+| **GND** | Ground | `GND` | Common Logic Ground Reference |
+
+### 📝 Problem Statement & Logic Flow
+1. **Initialization (`setup`):**
+   * Start UART Serial communication at **115200 baud rate**.
+   * Configure onboard LED pin (`D13` / `PA5`) as `OUTPUT` and set initial state to `LOW`.
+   * Print a startup welcome banner listing all supported CLI commands.
+2. **Continuous Loop (`loop`):**
+   * **Poll Receive Buffer:** Check if characters are available with `Serial.available()`.
+   * **Extract Command Line:** Read incoming characters until newline (`\n`) and trim whitespace.
+   * **Parse Commands (Case-Insensitive):**
+     * `"LED ON"` $\rightarrow$ Drive `D13` HIGH and reply `"[ACK] LED is now ON"`.
+     * `"LED OFF"` $\rightarrow$ Drive `D13` LOW and reply `"[ACK] LED is now OFF"`.
+     * `"LED TOGGLE"` $\rightarrow$ Invert current LED state and report new state.
+     * `"PING"` $\rightarrow$ Reply `"[ACK] PONG!"`.
+     * `"STATUS"` $\rightarrow$ Report current LED status and uptime in seconds (`millis() / 1000`).
+   * **Defensive Fallback:** If command is unrecognized, report `"[ERR] Unknown command: <cmd>"`.
+
+```text
+======================================
+  STM32 UART Command Parser Ready     
+  Commands: 'LED ON', 'LED OFF', 'PING'
+======================================
+> LED ON
+[ACK] LED is now ON
+> STATUS
+[STATUS] LED: ON | Uptime: 12s
+```
+
+### Interactive Simulation
+
+::: {.simulation-container}
+<iframe 
+  src="https://wokwi.com/projects/479951814265564161?embed=1" 
+  title="UART Serial Simulation"
+  loading="lazy"
+  allowfullscreen>
+</iframe>
+<div class="sim-info-bar">
+  <span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span>
+  <span>Click Play, open Serial Monitor at 115200 baud, and type commands</span>
+</div>
 :::
 
-[← Back to Main Page](index.qmd){.btn .btn-outline-secondary .mt-4}
+### Implementation Code: High-Level Framework vs. Bare-Metal Embedded C
+
+::: {.panel-tabset}
+
+### 🔷 High-Level Framework (Running in Simulation)
+
+```cpp
+// ============================================================================
+// Mini-Project 1: Two-Way UART Command & Echo Parser (Nucleo-C031C6)
+// ============================================================================
+
+#define LED_PIN LED_BUILTIN // PA5 / D13
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
+
+  Serial.println("======================================");
+  Serial.println("  STM32 UART Command Parser Ready     ");
+  Serial.println("  Commands: 'LED ON', 'LED OFF', 'PING'");
+  Serial.println("======================================");
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    String cmd = Serial.readStringUntil('\n');
+    cmd.trim(); // Strip newline and carriage returns
+
+    if (cmd.equalsIgnoreCase("LED ON")) {
+      digitalWrite(LED_PIN, HIGH);
+      Serial.println("[ACK] LED is now ON");
+    } else if (cmd.equalsIgnoreCase("LED OFF")) {
+      digitalWrite(LED_PIN, LOW);
+      Serial.println("[ACK] LED is now OFF");
+    } else if (cmd.equalsIgnoreCase("LED TOGGLE")) {
+      digitalWrite(LED_PIN, !digitalRead(LED_PIN));
+      Serial.print("[ACK] LED toggled to: ");
+      Serial.println(digitalRead(LED_PIN) ? "ON" : "OFF");
+    } else if (cmd.equalsIgnoreCase("PING")) {
+      Serial.println("[ACK] PONG!");
+    } else if (cmd.equalsIgnoreCase("STATUS")) {
+      Serial.print("[STATUS] LED: ");
+      Serial.print(digitalRead(LED_PIN) ? "ON" : "OFF");
+      Serial.print(" | Uptime: ");
+      Serial.print(millis() / 1000);
+      Serial.println("s");
+    } else if (cmd.length() > 0) {
+      Serial.print("[ERR] Unknown command: ");
+      Serial.println(cmd);
+    }
+  }
+}
+```
+
+---
+
+### 🔶 Equivalent Bare-Metal Embedded C (Direct Register Access)
+
+```c
+// ============================================================================
+// Mini-Project 1: Bare-Metal STM32 UART Driver (Direct Register Access)
+// Hardware: STM32 Nucleo-C031C6 (USART2 on PA2/PA3, LED on PA5)
+// ============================================================================
+#include <stdint.h>
+
+#define RCC_BASE        (0x40021000UL)
+#define RCC_IOPENR      (*(volatile uint32_t *)(RCC_BASE + 0x34UL))
+#define RCC_APBENR1     (*(volatile uint32_t *)(RCC_BASE + 0x3CUL))
+
+#define GPIOA_BASE      (0x50000000UL)
+#define GPIOA_MODER     (*(volatile uint32_t *)(GPIOA_BASE + 0x00UL))
+#define GPIOA_AFRL      (*(volatile uint32_t *)(GPIOA_BASE + 0x20UL))
+#define GPIOA_BSRR      (*(volatile uint32_t *)(GPIOA_BASE + 0x18UL))
+
+#define USART2_BASE     (0x40004400UL)
+#define USART2_CR1      (*(volatile uint32_t *)(USART2_BASE + 0x00UL))
+#define USART2_BRR      (*(volatile uint32_t *)(USART2_BASE + 0x0CUL))
+#define USART2_ISR      (*(volatile uint32_t *)(USART2_BASE + 0x1CUL))
+#define USART2_TDR      (*(volatile uint32_t *)(USART2_BASE + 0x28UL))
+#define USART2_RDR      (*(volatile uint32_t *)(USART2_BASE + 0x24UL))
+
+void uart_init(uint32_t pclk, uint32_t baud) {
+    RCC_IOPENR  |= (1UL << 0);        // Enable GPIOA clock
+    RCC_APBENR1 |= (1UL << 17);       // Enable USART2 clock
+
+    // Configure PA2 as Alternate Function (AF1 for USART2_TX)
+    GPIOA_MODER &= ~(3UL << (2 * 2));
+    GPIOA_MODER |=  (2UL << (2 * 2));
+    GPIOA_AFRL  |=  (1UL << (2 * 4));
+
+    // Configure PA5 as Output (User LED)
+    GPIOA_MODER &= ~(3UL << (5 * 2));
+    GPIOA_MODER |=  (1UL << (5 * 2));
+
+    // Set Baud Rate (pclk / baud)
+    USART2_BRR = pclk / baud;
+    USART2_CR1 = (1UL << 3) | (1UL << 2) | (1UL << 0); // TE, RE, UE
+}
+
+void uart_send_char(char c) {
+    while (!(USART2_ISR & (1UL << 7))); // Wait for TXE (Transmit Empty)
+    USART2_TDR = (uint8_t)c;
+}
+
+void uart_send_str(const char *s) {
+    while (*s) uart_send_char(*s++);
+}
+```
+
+:::
+
+### 🔍 How Mini-Project 1 Applies Week 5 Concepts
+
+#### 1. Hardware & Circuit-Level Concept Mapping
+
+| Circuit Component | Week 5 Theoretical Concept | Technical Function in System |
+| :--- | :--- | :--- |
+| **Virtual COM Port over USB** | **Asynchronous Serial Framing (UART)** | Data packets are framed with 1 Start bit, 8 Data bits, 0 Parity, and 1 Stop bit (8-N-1). Both MCU and host clock independently at 115200 baud. |
+| **PA5 User LED** | **Actuator Status Indicator** | Direct memory-mapped logic drive: setting PA5 to 3.3V illuminates the onboard green LED to confirm received packets. |
+
+#### 2. Firmware Code-to-Concept Breakdown
+
+| Code Statement (Framework / Bare-Metal) | Week 5 Theoretical Concept | Deep-Dive Explanation |
+| :--- | :--- | :--- |
+| `Serial.begin(115200);`<br>`USART2_BRR = pclk / baud;` | **Baud Rate Clock Division** | Generates the sampling clock. The internal peripheral clock is divided down so the receiver samples the RX line exactly at the center of each bit period ($8.68\,\mu\text{s}$). |
+| `while (!(USART2_ISR & (1UL << 7)));` | **Hardware Handshaking via Status Flags** | Checks the `TXE` (Transmit Data Register Empty) bit before writing to `TDR` to avoid overwriting characters mid-transmission. |
+
+---
+
+## 6. Mini-Project 2: EV Battery Thermal & Voltage Supervisor 🔋⚡
+
+### 🎯 Objective
+In Electric Vehicle (EV) battery management systems, thermal runaway can cause catastrophic fires. In this mini-project, you will build an autonomous **EV Battery Thermal Transducer & Alarm Supervisor** on the **STM32 Nucleo-C031C6** that samples an analog temperature transducer and triggers safety indicators and alarms.
+
+### 🛠️ Hardware Setup (Wokwi)
+The circuit connects the following components to an **STM32 Nucleo-C031C6** board:
+* **1x Potentiometer (`wokwi-potentiometer`):** Connected to `A0` (`PA0`) to simulate the analog temperature transducer ($0.0^\circ\text{C}$ to $100.0^\circ\text{C}$).
+* **1x Green Status LED:** Connected to `D2` (`PA10`) via $220\,\Omega$ resistor (Safe State Indicator).
+* **1x Red Hazard LED:** Connected to `D3` (`PB3`) via $220\,\Omega$ resistor (Overheat Hazard Indicator).
+* **1x Warning Buzzer (`wokwi-buzzer`):** Connected to `D5` (`PB4`) for audible emergency alerting.
+
+### Pin Wiring Table
+| Component | Pin / Terminal on Component | STM32 Nucleo-C031C6 Pin | Electrical Notes |
+| :--- | :--- | :---: | :--- |
+| **Potentiometer** | `GND` / `VCC` | `GND` / `3.3V` | Analog Reference Power Rails |
+| **Potentiometer** | `SIG` (Wiper) | `A0` (`PA0`) | Analog Thermal Transducer ($0.0^\circ\text{C}-100.0^\circ\text{C}$) |
+| **Safe LED (Green)** | Anode (via 220Ω) | `D2` (`PA10`) | Normal thermal state indicator |
+| **Hazard LED (Red)** | Anode (via 220Ω) | `D3` (`PB3`) | Thermal runaway hazard indicator |
+| **Warning Buzzer** | Positive ($+$) | `D5` (`PB4`) | Audible alarm actuator |
+| **Common Ground** | Cathodes / GND | `GND` | Ground Reference |
+
+### 📝 Problem Statement & Functional Requirements
+1. **Transducer Acquisition:**
+   * Sample the analog temperature transducer on pin `A0` continuously.
+   * Map the 10-bit ADC reading ($0 - 1023$) to temperature: $\text{Temp}(^\circ\text{C}) = \frac{\text{raw} \times 100.0}{1023.0}$.
+2. **Thermal State Decision Logic:**
+   * **Safe State (< 45.0°C):** Green LED on `D2` is **ON**, Red LED on `D3` is **OFF**, and Buzzer on `D5` is **OFF**.
+   * **Hazard State (>= 45.0°C):** Green LED is **OFF**, Red LED is **ON**, Buzzer pulses at **2 Hz** (250 ms ON, 250 ms OFF), and send `"[ALERT] OVERHEAT HAZARD: <temp> C"` over UART at 115200 baud.
+3. **Non-Blocking Constraint:** The buzzer pulse is driven using `millis()` timing comparisons.
+
+### Interactive Simulation
+
+::: {.simulation-container}
+<iframe 
+  src="https://wokwi.com/projects/479961310618297345?embed=1" 
+  title="EV Battery Thermal Supervisor Simulation"
+  loading="lazy"
+  allowfullscreen>
+</iframe>
+<div class="sim-info-bar">
+  <span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span>
+  <span>Click Play, rotate the potentiometer to test safe (&lt; 45°C) vs overheat (≥ 45°C) modes</span>
+</div>
+:::
+
+### Implementation Code: High-Level Framework vs. Bare-Metal Embedded C
+
+::: {.panel-tabset}
+
+### 🔷 High-Level Framework (Running in Simulation)
+
+```cpp
+// ============================================================================
+// Mini-Project 2: EV Battery Thermal & Voltage Supervisor
+// Target Board: STM32 Nucleo-C031C6
+// ============================================================================
+
+#define SENSOR_PIN    A0 // Temperature Transducer (0 - 100 C)
+#define LED_GREEN_PIN 2  // D2 Safe State
+#define LED_RED_PIN   3  // D3 Hazard State
+#define BUZZER_PIN    5  // D5 Alarm Buzzer
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(LED_GREEN_PIN, OUTPUT);
+  pinMode(LED_RED_PIN, OUTPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
+  
+  digitalWrite(LED_GREEN_PIN, HIGH);
+  digitalWrite(LED_RED_PIN, LOW);
+  digitalWrite(BUZZER_PIN, LOW);
+}
+
+void loop() {
+  int raw = analogRead(SENSOR_PIN);
+  float temp = (raw * 100.0f) / 1023.0f; // 0.0 to 100.0 °C
+
+  static unsigned long lastToggle = 0;
+  static bool buzzerState = false;
+
+  if (temp >= 45.0f) { // Overheat hazard
+    digitalWrite(LED_GREEN_PIN, LOW);
+    digitalWrite(LED_RED_PIN, HIGH);
+    
+    // 2 Hz non-blocking toggle (250 ms ON, 250 ms OFF)
+    if (millis() - lastToggle >= 250) {
+      lastToggle = millis();
+      buzzerState = !buzzerState;
+      digitalWrite(BUZZER_PIN, buzzerState ? HIGH : LOW);
+    }
+    Serial.print("[ALERT] OVERHEAT HAZARD: ");
+  } else { // Safe state
+    digitalWrite(LED_GREEN_PIN, HIGH);
+    digitalWrite(LED_RED_PIN, LOW);
+    digitalWrite(BUZZER_PIN, LOW);
+    Serial.print("[STATUS] Battery Temp Safe: ");
+  }
+
+  Serial.print(temp, 1);
+  Serial.println(" C");
+  delay(250);
+}
+```
+
+---
+
+### 🔶 Equivalent Bare-Metal Embedded C (Direct Register Access)
+
+```c
+// ============================================================================
+// Mini-Project 2: Bare-Metal EV Battery Thermal & Voltage Supervisor
+// Target: STM32 Nucleo-C031C6 (ARM Cortex-M0+)
+// ============================================================================
+#include <stdint.h>
+#include <stdbool.h>
+
+// 1. Bus Clock Registers
+#define RCC_BASE        (0x40021000UL)
+#define RCC_IOPENR      (*(volatile uint32_t *)(RCC_BASE + 0x34UL))
+#define RCC_APBENR2     (*(volatile uint32_t *)(RCC_BASE + 0x40UL))
+
+// 2. GPIO Registers (GPIOA & GPIOB)
+#define GPIOA_BASE      (0x50000000UL)
+#define GPIOA_MODER     (*(volatile uint32_t *)(GPIOA_BASE + 0x00UL))
+#define GPIOA_BSRR      (*(volatile uint32_t *)(GPIOA_BASE + 0x18UL))
+
+#define GPIOB_BASE      (0x50000400UL)
+#define GPIOB_MODER     (*(volatile uint32_t *)(GPIOB_BASE + 0x00UL))
+#define GPIOB_BSRR      (*(volatile uint32_t *)(GPIOB_BASE + 0x18UL))
+
+// 3. ADC1 Registers
+#define ADC1_BASE       (0x40012400UL)
+#define ADC1_ISR        (*(volatile uint32_t *)(ADC1_BASE + 0x00UL))
+#define ADC1_CR         (*(volatile uint32_t *)(ADC1_BASE + 0x08UL))
+#define ADC1_CHSELR     (*(volatile uint32_t *)(ADC1_BASE + 0x28UL))
+#define ADC1_DR         (*(volatile uint32_t *)(ADC1_BASE + 0x40UL))
+
+void hardware_init(void) {
+    // Enable GPIOA, GPIOB, and ADC1 peripheral bus clocks
+    RCC_IOPENR |= (1UL << 0) | (1UL << 1);
+    RCC_APBENR2 |= (1UL << 20); // ADC1EN
+
+    // PA0 (A0) as Analog Mode ('11')
+    GPIOA_MODER |= (3UL << (0 * 2));
+
+    // PA10 (D2 Green LED) as General Purpose Output ('01')
+    GPIOA_MODER &= ~(3UL << (10 * 2));
+    GPIOA_MODER |=  (1UL << (10 * 2));
+
+    // PB3 (D3 Red LED) as General Purpose Output ('01')
+    GPIOB_MODER &= ~(3UL << (3 * 2));
+    GPIOB_MODER |=  (1UL << (3 * 2));
+
+    // PB4 (D5 Buzzer) as General Purpose Output ('01')
+    GPIOB_MODER &= ~(3UL << (4 * 2));
+    GPIOB_MODER |=  (1UL << (4 * 2));
+
+    // Configure ADC1: Channel 0 (PA0)
+    ADC1_CHSELR = (1UL << 0);
+    ADC1_CR |= (1UL << 0); // Enable ADC
+    while (!(ADC1_ISR & (1UL << 0))); // Wait for ADRDY
+}
+
+uint16_t adc_read(void) {
+    ADC1_CR |= (1UL << 2); // Start conversion (ADSTART)
+    while (!(ADC1_ISR & (1UL << 2))); // Wait for End-Of-Conversion (EOC)
+    return (uint16_t)ADC1_DR;
+}
+
+int main(void) {
+    hardware_init();
+    while (1) {
+        uint16_t raw = adc_read();
+        // 45°C corresponds to raw threshold: (45.0 * 1023 / 100.0) ≈ 460
+        if (raw >= 460) {
+            // Hazard State: Green OFF, Red ON, Buzzer ON
+            GPIOA_BSRR = (1UL << (10 + 16)); // PA10 LOW
+            GPIOB_BSRR = (1UL << 3);         // PB3 HIGH
+            GPIOB_BSRR = (1UL << 4);         // PB4 HIGH (Buzzer)
+        } else {
+            // Safe State: Green ON, Red OFF, Buzzer OFF
+            GPIOA_BSRR = (1UL << 10);        // PA10 HIGH
+            GPIOB_BSRR = (1UL << (3 + 16));  // PB3 LOW
+            GPIOB_BSRR = (1UL << (4 + 16));  // PB4 LOW
+        }
+        for (volatile uint32_t i = 0; i < 600000; i++); // Short loop delay
+    }
+}
+```
+
+:::
+
+### 🔍 How Mini-Project 2 Applies Week 5 Concepts
+
+#### 1. Hardware & Circuit-Level Concept Mapping
+
+| Circuit Component | Week 5 Theoretical Concept | Technical Function in System |
+| :--- | :--- | :--- |
+| **Potentiometer on A0** | **Analog-to-Digital Transduction** | Converts continuous physical temperature variation into 10-bit quantized discrete integer values. |
+| **Status LEDs on D2/D3** | **Digital Actuator Drive** | Direct memory-mapped logic drive: provides immediate visual feedback of thermal supervisor safety states. |
+| **Audible Buzzer on D5** | **Acoustic Emergency Alerting** | Switched via open-drain/push-pull driver to generate high-priority safety alarms during thermal runaway. |
+
+---
+
+## 7. Hands-On Practice Challenge (For Students to Solve) 🎯
+
+### 🎯 Objective & Scenario
+In modern automotive systems, an Electronic Control Unit (ECU) streams periodic sensor telemetry packets over serial to a central dashboard. In this practice challenge, you will implement an **Automotive Serial Diagnostic Console & Parameter Logger** on the **STM32 Nucleo-C031C6** that samples temperature on `A0` and streams formatted ASCII telemetry frames over UART at **115200 baud**, responding dynamically to interactive console commands.
+
+### 🛠️ Hardware Setup (Wokwi)
+The circuit connects to the **STM32 Nucleo-C031C6** board:
+* **1x Potentiometer:** Wiper to `A0` (`PA0`), ends to `GND` and `3.3V`.
+* **Onboard LED:** On `D13` (`PA5`).
+* **Virtual COM Port:** USB Serial at 115200 baud.
+
+### 📋 Problem Statement & Functional Requirements
+1. **Periodic Telemetry Streaming:**
+   * Every 1000 ms, read the analog transducer on `A0` and transmit a structured telemetry frame:  
+     `"[TELEMETRY] Temp: <val> C | Status: OK"`
+2. **Interactive Command Handling:**
+   * When the user types `"HELP"`, reply with a menu of available commands.
+   * When the user types `"ALERT"`, blink the onboard LED on `D13` 3 times rapidly (100 ms ON, 100 ms OFF).
+3. **Defensive Formatting:**
+   * Filter empty strings and handle unknown commands defensively without locking up the serial buffer.
+
+### 💻 Starter Code Template
+```cpp
+// ============================================================================
+// Student Practice Challenge: Automotive Serial Diagnostic Console
+// Target: board-st-nucleo-c031c6
+// Simulation Workspace: https://wokwi.com/projects/479963095271968769
+// ============================================================================
+
+#define SENSOR_PIN A0          // PA0
+#define LED_PIN    LED_BUILTIN // D13 (PA5)
+
+unsigned long lastTelemetry = 0;
+
+void setup() {
+  // TODO 1: Initialize Serial at 115200 baud
+  // TODO 2: Configure LED_PIN as OUTPUT
+  // TODO 3: Print diagnostic greeting banner
+}
+
+void loop() {
+  // TODO 4: Check if 1000 ms has elapsed using millis()
+  // TODO 5: Read A0 analog transducer and transmit formatted telemetry frame
+  // TODO 6: If Serial.available() > 0, read incoming command
+  // TODO 7: Parse 'HELP' and 'ALERT' commands
+}
+```
+
+### 🧪 Verification & Expected Test Cases
+| Event / Command | Serial Monitor Input | Expected Output Response | LED Action |
+| :--- | :--- | :--- | :--- |
+| **Periodic Tick** | *(None)* | `[TELEMETRY] Temp: 32.4 C \| Status: OK` | None |
+| **Help Query** | `HELP` | `[CMD] Available: 'HELP', 'ALERT'` | None |
+| **Alert Command** | `ALERT` | `[ALERT] Triggering visual alarm sequence` | 3 rapid blinks on `D13` |
+
+<details>
+<summary>💡 Need a Hint? Click to Reveal</summary>
+
+* **Non-Blocking Telemetry Timer:**
+  ```cpp
+  if (millis() - lastTelemetry >= 1000) {
+      lastTelemetry = millis();
+      int raw = analogRead(SENSOR_PIN);
+      Serial.print("[TELEMETRY] Temp: ");
+      Serial.print((raw * 100.0f) / 1023.0f, 1);
+      Serial.println(" C | Status: OK");
+  }
+  ```
+</details>
+
+::: {.simulation-container}
+<iframe 
+  src="https://wokwi.com/projects/479963095271968769?embed=1" 
+  title="Practice Simulation Workspace"
+  loading="lazy"
+  allowfullscreen>
+</iframe>
+<div class="sim-info-bar">
+  <span><strong>Practice Challenge Workspace:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span>
+  <span>Click Play to write and test your telemetry console firmware</span>
+</div>
+:::
+
+```{=html}
+<div id="comparator-w5" class="code-comparator-widget">
+  <div class="comparator-header">
+    <div class="comparator-title">
+      <span class="icon">🔄</span>
+      <span><strong>Simultaneous Code Explorer:</strong> Arduino Framework ↔ Bare-Metal STM32 C</span>
+    </div>
+    <div class="comparator-controls">
+      <label>Load Preset:</label>
+      <select class="preset-select">
+        <option value="uart_comm">UART Serial Command Parser</option>
+        <option value="adc_analog">ADC Thermal Transducer Reading</option>
+        <option value="gpio_blink">GPIO Output (Status LED)</option>
+        <option value="gpio_input">GPIO Input (Pushbuttons)</option>
+        <option value="exti_interrupt">EXTI Hardware Interrupt</option>
+        <option value="timer_pwm">Hardware Timer PWM</option>
+      </select>
+      <button type="button" class="btn-compare" onclick="runInteractiveTranslation('comparator-w5')">Analyze / Map Code</button>
+    </div>
+  </div>
+  <div class="comparator-panes">
+    <div class="pane">
+      <div class="pane-header">
+        <span class="badge-arduino">Arduino C++ (Framework)</span>
+        <span class="hint">Type or paste Arduino code here for live Bare-Metal translation</span>
+      </div>
+      <textarea class="code-input" spellcheck="false"></textarea>
+    </div>
+    <div class="pane">
+      <div class="pane-header">
+        <span class="badge-baremetal">Equivalent Bare-Metal C (STM32 Registers)</span>
+        <span class="hint">Live Memory-Mapped Operations</span>
+      </div>
+      <pre class="code-output"><code></code></pre>
+    </div>
+  </div>
+</div>
+```
+
+---
+
+## 8. Concept Check Practice Questions
+
+### Question 1: Serial vs. Parallel Bus Trade-Offs
+
+::: {.callout-note collapse="true"}
+## Click to View Question & Options
+
+Why have modern high-speed embedded systems almost entirely shifted from parallel data buses to serial communication protocols?
+
+**Options:**  
+- **A)** Parallel communication consumes more software memory in SRAM  
+- **B)** Clock skew and cross-talk between closely spaced parallel traces limit speed and distance, whereas serial lines eliminate inter-trace skew and require far fewer microcontroller pins  
+- **C)** Serial buses do not require a ground reference  
+- **D)** Parallel communication is only supported by 8-bit processors  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: B
+**Explanation:**  
+In parallel buses, signals on different wires travel at slightly different speeds due to physical trace length variations (**clock skew**). At high frequencies, this causes bits to arrive misaligned. Serial sends one bit at a time, eliminating skew while drastically cutting pin count and PCB complexity.
+:::
+:::
+
+---
+
+### Question 2: $I^2C$ Pull-Up Resistor Function
+
+::: {.callout-note collapse="true"}
+## Click to View Question & Options
+
+In an $I^2C$ communication circuit, what is the role of the external pull-up resistors on the SDA and SCL lines?
+
+**Options:**  
+- **A)** To prevent the microcontroller from resetting during sleep mode  
+- **B)** Because $I^2C$ devices have open-drain outputs that can only pull the lines LOW to $0\text{V}$; pull-up resistors passively pull the lines back HIGH when released  
+- **C)** To step down $5\text{V}$ signals to $3.3\text{V}$  
+- **D)** To generate the baud rate clock  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: B
+**Explanation:**  
+$I^2C$ outputs are open-drain. A device can pull a line to ground, but cannot drive it high. When no device is asserting a 0, the external pull-up resistor pulls the voltage up to $V_{DD}$, creating a wired-AND configuration that enables multi-master arbitration and clock stretching.
+:::
+:::
+
+---
+
+<div class="d-flex justify-content-between mt-4">
+  <a href="Week-4.qmd" class="seek-prev-btn">← Back to Week 4: Timers, PWM & ADC</a>
+  <a href="Week-6.qmd" class="seek-next-btn">NEXT: Week 6 — Compilation, Runtime & Power →</a>
+</div>

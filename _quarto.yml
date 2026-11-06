@@ -61,6 +61,7 @@ format:
       dark: superhero
 
     css: styles.css
+    include-after-body: code-comparator.html
     page-layout: article
     code-copy: true
     code-overflow: wrap

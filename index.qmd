@@ -64,14 +64,14 @@ Prof. Nitin Chandrachoodan received his B.Tech in Electronics and Communication 
 | **[Week 2](Week-2.qmd)** | **Basics of Embedded C Programming** | Bitwise operators, Bitmasking, `volatile` keyword, Memory-mapped I/O | [Open Module →](Week-2.qmd) |
 | **[Week 3](Week-3.qmd)** | **Intermediate STM32 Programming & Architecture** | ARM Cortex-M core, AHB/APB buses, RCC clock gating, GPIO configuration | [Open Module →](Week-3.qmd) |
 | **[Week 4](Week-4.qmd)** | **Advanced Peripheral Interfacing** | Hardware Timers, Prescaler, Auto-Reload, PWM generation, NVIC Interrupts, ADC | [Open Module →](Week-4.qmd) |
-| **[Week 5](Week-5.qmd)** | **Digital Communication Protocols** | Asynchronous UART, Synchronous SPI, I2C Two-Wire Protocol | [Open Module →](Week-5.qmd) |
-| **[Week 6](Week-6.qmd)** | **Advanced Peripheral Interfacing II** | Direct Memory Access (DMA), Digital-to-Analog Converters (DAC), Watchdogs | [Open Module →](Week-6.qmd) |
-| **[Week 7](Week-7.qmd)** | **Practice and Problem Solving** | Comprehensive problem solving, timing calculations, firmware debugging | [Open Module →](Week-7.qmd) |
-| **[Week 8](Week-8.qmd)** | **Embedded Software Design Patterns** | Superloop vs Event-Driven architectures, Finite State Machines (FSM) | [Open Module →](Week-8.qmd) |
-| **[Week 9](Week-9.qmd)** | **Introduction to Real-Time Operating Systems** | FreeRTOS fundamentals, Tasks, Queues, Semaphores, Priority Inversion | [Open Module →](Week-9.qmd) |
-| **[Week 10](Week-10.qmd)** | **Advanced Embedded C Concepts** | Memory layout (Flash/SRAM, `.data`, `.bss`), Linker scripts, Optimization | [Open Module →](Week-10.qmd) |
-| **[Week 11](Week-11.qmd)** | **Development Tools & Debugging Techniques** | In-circuit debugging, JTAG/SWD, OpenOCD, GDB, Logic analyzers | [Open Module →](Week-11.qmd) |
-| **[Week 12](Week-12.qmd)** | **Safety, Ethics & Professional Practices** | MISRA-C guidelines, Defensive programming, Fail-safe design | [Open Module →](Week-12.qmd) |
+| **[Week 5](Week-5.qmd)** | **Communication Protocols in Embedded Systems** | Parallel vs Serial, UART, SPI, I2C, Networking Concepts & Fieldbus Protocols | [Open Module →](Week-5.qmd) |
+| **[Week 6](Week-6.qmd)** | **Compilation, Runtime, Memory & Power Management** | Compilation stages, Linking, Memory Layout (.text, .data, .bss), Boot sequence, Power modes | [Open Module →](Week-6.qmd) |
+| **[Week 7](Week-7.qmd)** | **Programming Assignments & Hands-on Lab** | Priority Traffic Signal, Hardware Timers, 50 Hz PWM Servo Control | [Open Module →](Week-7.qmd) |
+| **[Week 8](Week-8.qmd)** | **Software Architecture & Embedded Design Patterns** | Finite State Machines (FSM), Observer Pattern, Layered Architecture, Error Handling | [Open Module →](Week-8.qmd) |
+| **[Week 9](Week-9.qmd)** | **Real-Time Operating Systems (RTOS)** | FreeRTOS Core, Tasks & TCB, Preemptive Scheduling, Queues, Semaphores, Mutexes | [Open Module →](Week-9.qmd) |
+| **[Week 10](Week-10.qmd)** | **Efficient Embedded Systems & Optimization** | Interrupts vs Polling, DMA Transfers, Cache Memory Systems, Power & Code Optimization | [Open Module →](Week-10.qmd) |
+| **[Week 11](Week-11.qmd)** | **Testing, Debugging & Performance Profiling** | In-Circuit Debugging, JTAG/SWD, DWT Cycle Profiling, Static Analysis, Unit Testing | [Open Module →](Week-11.qmd) |
+| **[Week 12](Week-12.qmd)** | **Safety, Security & Professional Ethics** | Functional Safety, Fail-Safe Design, Embedded Cybersecurity, Engineering Ethics, MISRA-C | [Open Module →](Week-12.qmd) |
 
 ---
 

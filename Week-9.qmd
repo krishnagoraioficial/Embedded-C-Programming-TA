@@ -1,14 +1,655 @@
 ---
-title: "Week 9: Introduction to Real-Time Operating Systems (RTOS)"
+title: "Week 9: Real-Time Operating Systems (RTOS)"
 ---
 
-## Overview
+## 1. What is an RTOS and Why Do We Need It?
 
-FreeRTOS core concepts, Task scheduling, Context switching, Queues, Semaphores, Mutexes, Priority Inversion.
+When you build complex embedded projects—like a drone that must calculate flight stabilization math at 500 Hz while receiving GPS coordinates and recording video—a traditional bare-metal superloop quickly breaks down:
 
-::: {.callout-tip}
-### 📌 Coming Up
-This module is part of the CS2101 syllabus outline. Detailed lecture notes, integrated interactive simulations, and question banks will be added here.
+```text
+ THE BARE-METAL SUPERLOOP BREAKDOWN:
+ while(1) {
+     read_flight_imu();      // MUST RUN EVERY 2 MILLISECONDS (Hard Deadline!)
+     read_gps_sentence();    // Takes 15 ms (BLOCKS CPU -> DRONE CRASHES!)
+     write_sd_card_log();    // Takes 40 ms (BLOCKS CPU -> DRONE CRASHES!)
+ }
+ * In a bare-metal loop, one slow function causes all other time-critical tasks to fail!
+
+ THE PREEMPTIVE RTOS SOLUTION:
+ High-Priority Task:   [ Flight IMU (2ms) ] ----> [ Flight IMU (2ms) ] ----> [ Flight IMU (2ms) ]
+                                                        ^
+ Medium-Priority Task: --------------------> [ GPS Parser (Preempted by IMU) ] -------->
+                                                        ^
+ Low-Priority Task:    ------------------------------------------------> [ SD Card Logger ]
+ * A Real-Time Operating System automatically pauses lower-priority tasks the instant
+   a time-critical task needs to run!
+```
+
+### General-Purpose OS (Desktop) vs. RTOS (Embedded)
+
+| Characteristic | General-Purpose OS (Windows, Linux, macOS) | Real-Time Operating System (FreeRTOS, Zephyr) |
+| :--- | :--- | :--- |
+| **Main Design Goal** | High average throughput and fairness to all apps | **Strict determinism & guaranteed worst-case deadlines** |
+| **Response Latency** | Unpredictable (milliseconds to seconds) | **Predictable down to microseconds/nanoseconds** |
+| **Memory Footprint** | Gigabytes of RAM and storage | **6 KB to 15 KB Flash, < 2 KB SRAM** |
+| **Missing a Deadline** | Annoyance (video drops a frame, mouse stutters) | **Catastrophic** (airbag fails to deploy, drone falls) |
+
+---
+
+## 2. Tasks and Task States in FreeRTOS
+
+In FreeRTOS, your program is split into independent threads of execution called **Tasks**. Each task thinks it has the entire CPU to itself and runs inside an infinite loop:
+
+```c
+void vBlinkTask(void *pvParameters) {
+    for (;;) {
+        toggle_led();
+        // Yields CPU to other tasks for 500 ms (Consumes 0% CPU while delayed!)
+        vTaskDelay(pdMS_TO_TICKS(500));
+    }
+}
+```
+
+### The 4 Task States
+
+```text
+                        vTaskSuspend()
+           +--------------------------------------+
+           |                                      |
+           v                                      |
+    +--------------+    vTaskResume()      +--------------+
+    |  SUSPENDED   | --------------------> |    READY     | <------+
+    +--------------+                       +--------------+        |
+                                                  |                |
+                                     Scheduler    |   Preempted    |
+                                     Dispatches   |   by Higher    |
+                                                  v   Priority     |
+    +--------------+    Event Occurs /     +--------------+        |
+    |   BLOCKED    | <-------------------- |   RUNNING    | -------+
+    +--------------+    Delay Timeout      +--------------+
+           ^                                      |
+           +--------------------------------------+
+                     vTaskDelay() / Waiting for Queue
+```
+
+1. **Running:** Currently executing on the CPU core. (On a single-core microcontroller, only one task can run at a time).
+2. **Ready:** Ready to execute, but waiting because an equal or higher priority task is currently using the CPU.
+3. **Blocked:** Waiting for a time delay (`vTaskDelay`) or waiting for data from a Queue or Semaphore. **A blocked task consumes zero CPU clock cycles!**
+4. **Suspended:** Manually paused; will not run until explicitly resumed.
+
+---
+
+## 3. Communication & Synchronization: Queues, Semaphores & Mutexes
+
+Tasks must coordinate and share data safely without corrupting memory:
+
+```text
+ 1. QUEUE (Data Passing)               2. SEMAPHORE (Signaling)             3. MUTEX (Resource Lock)
+ +-----------------------------+      +-----------------------------+      +-----------------------------+
+ | Task A -> [ITEM 1][ITEM 2]  |      | ISR -> [Give Semaphore]     |      | Task A [Take Mutex] -> WORK |
+ |                |            |      |            |                |      | Task B [BLOCKED WAITING]    |
+ |                v            |      |            v                |      | Task A [Give Mutex]         |
+ |           -> Task B (Read)  |      | Task B [Wakes Up Instantly] |      | Task B [Unblocks & Runs]    |
+ +-----------------------------+      +-----------------------------+      +-----------------------------+
+```
+
+### 3.1 Queues (Thread-Safe FIFO Buffer)
+- Passes data safely between tasks by value (**pass-by-copy**).
+- If a task tries to read from an empty queue, it enters the **Blocked state** and sleeps until data arrives!
+
+### 3.2 Semaphores (Event Signaling)
+- A flag used to signal that an event occurred (e.g. an ISR signals a worker task).
+
+### 3.3 Mutexes & Priority Inheritance
+- A specialized token used strictly to protect shared resources (like serial ports or I2C buses).
+- Supports **Priority Inheritance**: if a high-priority task needs a mutex held by a low-priority task, the low-priority task's priority is temporarily elevated to prevent intermediate tasks from starving it!
+
+---
+
+## 4. Mini-Project 1: Dual-Task FreeRTOS Sensor Pipeline 🔄📦
+
+### 🎯 Objective
+In bare-metal superloops, reading an ADC sensor and formatting strings for serial printing wastes precious CPU time in blocking loops. In this project, you will build a **FreeRTOS Producer-Consumer Pipeline** on the **STM32 Nucleo-C031C6**, where a high-priority periodic task samples an analog channel and passes values safely through an `xQueue` to an asynchronous logging task.
+
+### 🛠️ Hardware Setup (Wokwi)
+The circuit connects an analog potentiometer sensor and an alarm indicator LED:
+* **Analog Telemetry Sensor:** 1x Potentiometer on `A0` (`PA0`).
+* **Threshold Alert LED:** 1x LED with 220Ω resistor on `D13` (`PA5`).
+* **Serial Diagnostic Terminal:** USB Virtual COM Port at **115200 baud**.
+
+### Pin Wiring Table
+| Component | Pin / Terminal | STM32 / Board Pin | Electrical Function |
+| :--- | :--- | :---: | :--- |
+| **Potentiometer** | VCC / GND | `3.3V` / `GND` | Power Reference Rails |
+| **Potentiometer** | SIG (Wiper) | `A0` (`PA0`) | Analog telemetry input |
+| **Alert LED** | Anode (`PA5`) | `D13` | Alert indicator (Lit when sensor exceeds 600) |
+| **Alert LED** | Cathode | `GND` | Ground Reference |
+
+### 📝 Problem Statement & Logic Flow
+1. **Queue Allocation:** Create a FreeRTOS Queue capable of holding 5 integer samples: `xSensorQueue = xQueueCreate(5, sizeof(int));`.
+2. **Task 1: Producer Task (Priority 2 - High):**
+   * Runs strictly every **50 ms** using non-blocking RTOS delay: `vTaskDelay(pdMS_TO_TICKS(50))`.
+   * Samples analog pin `A0` and pushes the sample into `xSensorQueue`.
+3. **Task 2: Consumer Task (Priority 1 - Low):**
+   * Blocks waiting for incoming queue data using `xQueueReceive(xSensorQueue, &val, portMAX_DELAY)`. Consumes **0% CPU** while the queue is empty!
+   * When data arrives, evaluate threshold:
+     * If reading $> 600$: Turn LED on `D13` **HIGH** and log alert.
+     * Else: Turn LED **LOW** and log normal telemetry.
+4. **RTOS Kernel:** Hand over execution to FreeRTOS with `vTaskStartScheduler()`.
+
+```text
+[STATUS]: Normal Telemetry: 320
+[STATUS]: Normal Telemetry: 450
+[ALARM]: HIGH TEMP DETECTED: 720 (Alert LED ON)
+```
+
+### Interactive Simulation
+
+::: {.simulation-container}
+<iframe 
+  src="https://wokwi.com/projects/479963095271968769?embed=1" 
+  title="FreeRTOS Pipeline Simulation Workspace"
+  loading="lazy"
+  allowfullscreen>
+</iframe>
+<div class="sim-info-bar">
+  <span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span>
+  <span>Click Play, wire Potentiometer to A0 and Alert LED to D13</span>
+</div>
 :::
 
-[← Back to Main Page](index.qmd){.btn .btn-outline-secondary .mt-4}
+### Implementation Code: High-Level Framework vs. Bare-Metal Embedded C
+
+::: {.panel-tabset}
+
+### 🔷 High-Level Framework (Running in Simulation)
+
+```cpp
+// ============================================================================
+// Mini-Project 1: FreeRTOS Producer-Consumer Pipeline (Nucleo-C031C6)
+// ============================================================================
+#include <STM32FreeRTOS.h>
+
+#define SENSOR_PIN A0
+#define ALERT_LED  13
+
+QueueHandle_t xSensorQueue;
+
+// Task 1: High-Priority Producer (Periodic 50 ms)
+void vProducerTask(void *pvParameters) {
+  (void)pvParameters;
+  for (;;) {
+    int sensorReading = analogRead(SENSOR_PIN);
+    // Send to queue with timeout of 0 ticks (non-blocking)
+    xQueueSend(xSensorQueue, &sensorReading, 0);
+    vTaskDelay(pdMS_TO_TICKS(50)); // Yield CPU to lower-priority tasks
+  }
+}
+
+// Task 2: Low-Priority Consumer (Blocks until queue has data)
+void vConsumerTask(void *pvParameters) {
+  (void)pvParameters;
+  int receivedReading = 0;
+  for (;;) {
+    // Blocks indefinitely (0% CPU consumption while waiting)
+    if (xQueueReceive(xSensorQueue, &receivedReading, portMAX_DELAY) == pdTRUE) {
+      if (receivedReading > 600) {
+        digitalWrite(ALERT_LED, HIGH);
+        Serial.print("[ALARM]: HIGH TEMP DETECTED: ");
+      } else {
+        digitalWrite(ALERT_LED, LOW);
+        Serial.print("[STATUS]: Normal Telemetry: ");
+      }
+      Serial.println(receivedReading);
+    }
+  }
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(ALERT_LED, OUTPUT);
+  digitalWrite(ALERT_LED, LOW);
+
+  // 1. Create a queue holding up to 5 integers
+  xSensorQueue = xQueueCreate(5, sizeof(int));
+
+  if (xSensorQueue != NULL) {
+    // 2. Spawn tasks: Producer (Priority 2), Consumer (Priority 1)
+    xTaskCreate(vProducerTask, "Producer", 128, NULL, 2, NULL);
+    xTaskCreate(vConsumerTask, "Consumer", 128, NULL, 1, NULL);
+
+    Serial.println("--- FreeRTOS Producer-Consumer Scheduler Started ---");
+    // 3. Start FreeRTOS Kernel
+    vTaskStartScheduler();
+  }
+}
+
+void loop() {
+  // Handed over to FreeRTOS; loop() is never executed
+}
+```
+
+---
+
+### 🔶 Equivalent Native FreeRTOS Embedded C (Direct RTOS API & Register Access)
+
+```c
+// ============================================================================
+// Mini-Project 1: Native FreeRTOS Producer-Consumer in C
+// Target: STM32 Nucleo-C031C6 (ARM Cortex-M0+)
+// ============================================================================
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+#include <stdint.h>
+
+#define GPIOA_BASE  (0x50000000UL)
+#define GPIOA_BSRR  (*(volatile uint32_t *)(GPIOA_BASE + 0x18UL))
+
+static QueueHandle_t xQueueHandle = NULL;
+
+void ProducerTask(void *argument) {
+    uint16_t sample = 0;
+    TickType_t xLastWakeTime = xTaskGetTickCount();
+    for (;;) {
+        sample = (uint16_t)(rand() % 1024); // Simulated ADC sample
+        xQueueSend(xQueueHandle, &sample, 0);
+        vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(50));
+    }
+}
+
+void ConsumerTask(void *argument) {
+    uint16_t received = 0;
+    for (;;) {
+        if (xQueueReceive(xQueueHandle, &received, portMAX_DELAY) == pdTRUE) {
+            if (received > 600) {
+                GPIOA_BSRR = (1UL << 5);        // Set PA5 HIGH (Overheat)
+            } else {
+                GPIOA_BSRR = (1UL << (5 + 16)); // Set PA5 LOW (Normal)
+            }
+        }
+    }
+}
+
+int main(void) {
+    xQueueHandle = xQueueCreate(5, sizeof(uint16_t));
+    if (xQueueHandle != NULL) {
+        xTaskCreate(ProducerTask, "Prod", 128, NULL, 2, NULL);
+        xTaskCreate(ConsumerTask, "Cons", 128, NULL, 1, NULL);
+        vTaskStartScheduler();
+    }
+    while (1);
+}
+```
+
+:::
+
+### 🔍 How Mini-Project 1 Applies Week 9 Concepts
+
+#### 1. Hardware & Circuit-Level Concept Mapping
+
+| Circuit Component | Week 9 Theoretical Concept | Technical Function in System |
+| :--- | :--- | :--- |
+| **Potentiometer on A0** | **Real-Time Data Acquisition Channel** | Generates raw analog telemetry digitized by the SAR ADC without CPU polling overhead. |
+| **Alert LED on D13** | **Event-Driven Visual Actuator** | Driven directly by the Consumer task upon receiving a threshold-violating queue message. |
+
+#### 2. Firmware Code-to-Concept Breakdown
+
+| Code Statement (Framework / Bare-Metal) | Week 9 Theoretical Concept | Deep-Dive Explanation |
+| :--- | :--- | :--- |
+| `xQueueSend(xSensorQueue, ...)` | **Thread-Safe Inter-Task IPC** | Copies data into a kernel-managed FIFO ring buffer with atomic interrupt masking, preventing memory corruption. |
+| `xQueueReceive(..., portMAX_DELAY)` | **Blocked State Zero-Power Yield** | Places Consumer task into the Blocked state. The scheduler removes it from the Ready list, saving 100% of CPU cycles until data arrives. |
+
+---
+
+## 5. Mini-Project 2: Mutex-Protected Shared Serial Output 🔒🛡️
+
+### 🎯 Objective
+When multiple asynchronous tasks simultaneously write multi-byte strings to a single shared peripheral (such as a UART port or SPI bus), their data streams collide and produce garbled, unreadable console output. In this project, you will use a **FreeRTOS Mutex** on the **STM32 Nucleo-C031C6** to guarantee mutual exclusion and thread-safe serial logging.
+
+### 🛠️ Hardware Setup (Wokwi)
+* **Target Board:** `board-st-nucleo-c031c6`
+* **Diagnostic Console:** Built-in ST-LINK Virtual COM Port over USB at **115200 baud**.
+
+### Pin Wiring Table
+| Component | Pin / Terminal | Board Connection | Electrical Function |
+| :--- | :--- | :---: | :--- |
+| **Serial Terminal** | USB VCP | Virtual COM Port | Diagnostic stream (115200 baud, 8-N-1) |
+| **Onboard User LED** | Anode (`PA5`) | `D13` | Mutex activity indicator |
+
+### 📝 Problem Statement & Logic Flow
+1. **Mutex Instantiation:** Create a FreeRTOS Mutex handle: `xSerialMutex = xSemaphoreCreateMutex();`.
+2. **Task 1: High-Priority Emergency Reporter (Priority 3):**
+   * Runs periodically every **150 ms**.
+   * Acquires the mutex token: `xSemaphoreTake(xSerialMutex, portMAX_DELAY)`.
+   * Transmits: `"[HIGH PRIORITY]: Critical Emergency Telemetry Packet Sent."`.
+   * Releases mutex: `xSemaphoreGive(xSerialMutex)`.
+3. **Task 2: Low-Priority Routine Logger (Priority 1):**
+   * Runs periodically every **1000 ms**.
+   * Acquires mutex, transmits heartbeat message, and releases mutex.
+4. **Collision Verification:** Verify that log lines from Task 1 and Task 2 are printed cleanly without mid-sentence race conditions or character interleaving.
+
+```text
+[LOW PRIORITY]: Routine System Heartbeat Log.
+[HIGH PRIORITY]: Critical Emergency Telemetry Packet Sent.
+[HIGH PRIORITY]: Critical Emergency Telemetry Packet Sent.
+```
+
+### Interactive Simulation
+
+::: {.simulation-container}
+<iframe 
+  src="https://wokwi.com/projects/479963095271968769?embed=1" 
+  title="RTOS Mutex Simulation Workspace"
+  loading="lazy"
+  allowfullscreen>
+</iframe>
+<div class="sim-info-bar">
+  <span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span>
+  <span>Click Play to practice concurrent thread logging with FreeRTOS Mutex</span>
+</div>
+:::
+
+### Implementation Code: High-Level Framework vs. Bare-Metal Embedded C
+
+::: {.panel-tabset}
+
+### 🔷 High-Level Framework (Running in Simulation)
+
+```cpp
+// ============================================================================
+// Mini-Project 2: FreeRTOS Mutex Protection (Nucleo-C031C6)
+// ============================================================================
+#include <STM32FreeRTOS.h>
+
+SemaphoreHandle_t xSerialMutex;
+
+// High-Priority Emergency Task (Priority 3)
+void vHighPriorityTask(void *pvParameters) {
+  (void)pvParameters;
+  for (;;) {
+    if (xSemaphoreTake(xSerialMutex, portMAX_DELAY) == pdTRUE) {
+      Serial.println("[HIGH PRIORITY]: Critical Emergency Telemetry Packet Sent.");
+      xSemaphoreGive(xSerialMutex); // Release lock
+    }
+    vTaskDelay(pdMS_TO_TICKS(150));
+  }
+}
+
+// Low-Priority Routine Logger (Priority 1)
+void vLowPriorityTask(void *pvParameters) {
+  (void)pvParameters;
+  for (;;) {
+    if (xSemaphoreTake(xSerialMutex, portMAX_DELAY) == pdTRUE) {
+      Serial.println("[LOW PRIORITY]: Routine System Heartbeat Log.");
+      xSemaphoreGive(xSerialMutex); // Release lock
+    }
+    vTaskDelay(pdMS_TO_TICKS(1000));
+  }
+}
+
+void setup() {
+  Serial.begin(115200);
+
+  // 1. Create Mutex
+  xSerialMutex = xSemaphoreCreateMutex();
+
+  if (xSerialMutex != NULL) {
+    // 2. Create tasks with differing priorities
+    xTaskCreate(vHighPriorityTask, "HighTask", 128, NULL, 3, NULL);
+    xTaskCreate(vLowPriorityTask,  "LowTask",  128, NULL, 1, NULL);
+
+    Serial.println("--- FreeRTOS Mutex Shared Resource System Ready ---");
+    vTaskStartScheduler();
+  }
+}
+
+void loop() {}
+```
+
+---
+
+### 🔶 Equivalent Native FreeRTOS Embedded C (Direct RTOS API & Register Access)
+
+```c
+// ============================================================================
+// Mini-Project 2: Native FreeRTOS Mutex Architecture in C
+// ============================================================================
+#include "FreeRTOS.h"
+#include "semphr.h"
+
+SemaphoreHandle_t xBusMutex;
+
+void safe_uart_transmit(const char *msg) {
+    if (xSemaphoreTake(xBusMutex, portMAX_DELAY) == pdTRUE) {
+        // Critical Section: Hardware bus is locked exclusively for this task
+        while (*msg) {
+            // Direct register transmit or HAL call
+            msg++;
+        }
+        xSemaphoreGive(xBusMutex); // Unlock bus
+    }
+}
+```
+
+:::
+
+### 🔍 How Mini-Project 2 Applies Week 9 Concepts
+
+#### 1. Hardware & Circuit-Level Concept Mapping
+
+| Circuit Component | Week 9 Theoretical Concept | Technical Function in System |
+| :--- | :--- | :--- |
+| **USART2 TX FIFO** | **Shared Critical Hardware Resource** | Hardware register accessed concurrently by multiple asynchronous threads, necessitating mutual exclusion. |
+
+#### 2. Firmware Code-to-Concept Breakdown
+
+| Code Statement (Framework / Bare-Metal) | Week 9 Theoretical Concept | Deep-Dive Explanation |
+| :--- | :--- | :--- |
+| `xSemaphoreCreateMutex()` | **Mutex Token with Priority Inheritance** | Instantiates a binary token that records the owner task. If a high-priority task blocks on it, the owner's priority is boosted to prevent priority inversion. |
+| `xSemaphoreTake(..., portMAX_DELAY)` | **Blocking Resource Acquisition** | Guarantees atomic ownership of the resource before proceeding into the critical print section. |
+
+---
+
+### ⚙️ Under-the-Hood: Bare-Metal Architecture Reference
+
+FreeRTOS tasks operate via private stacks allocated in SRAM. The kernel switches tasks by triggering the **PendSV (Pended Servicing)** exception on the ARM Cortex-M core, saving CPU registers `R4-R11` to the current Task Control Block (TCB) and loading the next task's stack pointer:
+
+```c
+// Native FreeRTOS API in C Firmware
+#include "FreeRTOS.h"
+#include "semphr.h"
+
+SemaphoreHandle_t xHardwareMutex;
+
+void safe_peripheral_access(uint8_t *buffer, uint16_t len) {
+    if (xSemaphoreTake(xHardwareMutex, pdMS_TO_TICKS(10)) == pdTRUE) {
+        // Critical section: Hardware bus is locked exclusively for this task
+        hal_spi_transmit(buffer, len);
+        xSemaphoreGive(xHardwareMutex);
+    } else {
+        // Timed out waiting for bus access
+        handle_bus_busy_error();
+    }
+}
+```
+
+
+---
+
+## 6. Hands-On Practice Challenge (For Students to Solve) 🎯
+
+### 🎯 Objective & Scenario
+In modern intensive care units (ICU), patient bedside monitors must process critical ECG heart signals with millisecond determinism while simultaneously updating status displays and serial medical logs. In this challenge, you will implement a **Multi-Rate ICU Patient Vital Signs Monitor** using **FreeRTOS** on the **STM32 Nucleo-C031C6**.
+
+### 🛠️ Hardware Setup & Pin Wiring Table
+Connect an analog ECG sensor potentiometer and a warning alarm LED:
+
+| Component | Pin / Terminal | Board Connection | Electrical Notes |
+| :--- | :--- | :---: | :--- |
+| **ECG Pulse Simulator** | Wiper / SIG | `A0` (`PA0`) | Analog ECG waveform simulator |
+| **Arrhythmia Alarm LED** | Anode (via 220Ω) | `D13` (`PA5`) | Visual cardiac alarm indicator |
+| **Common Ground** | Cathode / GND | `GND` | Ground Reference |
+
+### 📋 Problem Statement & Functional Requirements
+1. **ECG Sampling Task (Priority 3 - Highest):**
+   * Runs strictly every **10 ms** using `vTaskDelayUntil()`.
+   * Samples analog pin `A0`. If an arrhythmia waveform ($> 800$) is detected, signal a Binary Semaphore: `xSemaphoreGive(xArrhythmiaSemaphore);`.
+2. **Arrhythmia Alarm Task (Priority 2 - Medium):**
+   * Blocks waiting on the Binary Semaphore using `xSemaphoreTake(xArrhythmiaSemaphore, portMAX_DELAY)`.
+   * When unblocked: illuminate `D13`, sound alarm for 500 ms, and print `"[ALERT]: ARRHYTHMIA EVENT DETECTED!"`.
+3. **Telemetry Task (Priority 1 - Lowest):**
+   * Runs periodically every **1000 ms**.
+   * Logs routine patient vitals: `"[ICU VITALS]: Heart Rate: 72 bpm | SpO2: 98%"` over UART at 115200 baud.
+4. **Strict Determinism:** The high-priority ECG task must never miss its 10 ms deadline, even when the telemetry task is transmitting long strings!
+
+### 💻 Starter Code Template
+```cpp
+// ============================================================================
+// Student Practice Challenge: RTOS Patient Vital Signs Monitor
+// Target: board-st-nucleo-c031c6
+// ============================================================================
+#include <STM32FreeRTOS.h>
+
+#define ECG_PIN    A0
+#define ALARM_PIN  13
+
+SemaphoreHandle_t xArrhythmiaSemaphore;
+
+void vEcgSamplingTask(void *pvParameters);
+void vAlarmTask(void *pvParameters);
+void vTelemetryTask(void *pvParameters);
+
+void setup() {
+  // TODO 1: Initialize Serial at 115200 baud
+  // TODO 2: Configure ALARM_PIN as OUTPUT
+  // TODO 3: Create binary semaphore xArrhythmiaSemaphore = xSemaphoreCreateBinary()
+  // TODO 4: Launch EcgSamplingTask (Priority 3), AlarmTask (Priority 2), TelemetryTask (Priority 1)
+  // TODO 5: Start scheduler with vTaskStartScheduler()
+}
+
+void loop() {}
+```
+
+### 🧪 Verification & Expected Test Cases
+| Operating Condition | ECG Reading (A0) | Alarm LED (D13) | Expected Serial Telemetry |
+| :--- | :---: | :---: | :--- |
+| **Normal Heartbeat** | $< 800$ | **OFF** | `[ICU VITALS]: Heart Rate: 72 bpm \| SpO2: 98%` (every 1s) |
+| **Arrhythmia Spike** | $> 800$ | **ON** | `[ALERT]: ARRHYTHMIA EVENT DETECTED!` (Instant unblock) |
+| **Continuous Baseline**| Stable | OFF | Zero jitter on 10 ms ECG sampling loop |
+
+<details>
+<summary>💡 Need a Hint? Click to Reveal</summary>
+
+* **Binary Semaphore Signaling:** In the ECG task:
+  ```cpp
+  if (analogRead(ECG_PIN) > 800) {
+      xSemaphoreGive(xArrhythmiaSemaphore);
+  }
+  ```
+* **Strict Periodic Timing:** Use `vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(10));` rather than `vTaskDelay()` to avoid drift over time!
+</details>
+
+::: {.simulation-container}
+<iframe 
+  src="https://wokwi.com/projects/479963095271968769?embed=1" 
+  title="RTOS Patient Monitor Simulation Workspace"
+  loading="lazy"
+  allowfullscreen>
+</iframe>
+<div class="sim-info-bar">
+  <span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span>
+  <span>Click Play to build and test your real-time ICU patient vital signs monitor</span>
+</div>
+:::
+
+```{=html}
+<div id="comparator-w9" class="code-comparator-widget">
+  <div class="comparator-header">
+    <div class="comparator-title">
+      <span class="icon">🔄</span>
+      <span><strong>Simultaneous Code Explorer:</strong> Arduino Framework ↔ Bare-Metal C</span>
+    </div>
+    <div class="comparator-controls">
+      <label>Load Preset:</label>
+      <select class="preset-select">
+        <option value="exti_interrupt">EXTI Hardware Interrupt (RTOS ISR Context)</option>
+        <option value="gpio_blink">GPIO Periodic Task Output</option>
+        <option value="adc_analog">ADC Sensor Task Acquisition</option>
+        <option value="uart_comm">UART Mutex-Protected Printing</option>
+        <option value="timer_pwm">Hardware Timer Tick (SysTick)</option>
+      </select>
+      <button type="button" class="btn-compare" onclick="runInteractiveTranslation('comparator-w9')">Analyze / Map Code</button>
+    </div>
+  </div>
+  <div class="comparator-panes">
+    <div class="pane">
+      <div class="pane-header">
+        <span class="badge-arduino">Arduino C++ (Framework)</span>
+        <span class="hint">Type or paste Arduino code here for live Bare-Metal translation</span>
+      </div>
+      <textarea class="code-input" spellcheck="false"></textarea>
+    </div>
+    <div class="pane">
+      <div class="pane-header">
+        <span class="badge-baremetal">Equivalent Bare-Metal C (Direct Registers)</span>
+        <span class="hint">Live Memory-Mapped Operations</span>
+      </div>
+      <pre class="code-output"><code></code></pre>
+    </div>
+  </div>
+</div>
+```
+
+---
+
+## 7. Concept Check Practice Questions
+
+### Question 1: FreeRTOS Task State Transitions
+
+::: {.callout-note collapse="true"}
+## Click to View Question & Options
+
+When a FreeRTOS task calls `vTaskDelay(pdMS_TO_TICKS(100))`, what state does the task enter, and how does this affect CPU utilization?
+
+**Options:**  
+- **A)** It stays in the Running state and spins in a loop, consuming 100% of CPU cycles  
+- **B)** It enters the Blocked state, allowing lower-priority ready tasks to use the CPU; it consumes 0% CPU cycles while blocked  
+- **C)** It is deleted permanently from SRAM  
+- **D)** It disables the SysTick hardware timer  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: B
+**Explanation:**  
+Calling `vTaskDelay()` removes the task from the scheduler's ready list and places it in the **Blocked state**. While blocked, the task consumes zero CPU processing time, allowing the scheduler to run lower-priority tasks or enter low-power sleep mode until the delay expires.
+:::
+:::
+
+---
+
+### Question 2: Resolving Priority Inversion
+
+::: {.callout-note collapse="true"}
+## Click to View Question & Options
+
+Why must software engineers use a **Mutex** (`xSemaphoreCreateMutex`) rather than a simple **Binary Semaphore** to protect a shared communication peripheral between tasks of different priorities?
+
+**Options:**  
+- **A)** Mutexes run at twice the clock speed of binary semaphores  
+- **B)** Mutexes implement the **Priority Inheritance Protocol**, which temporarily elevates the priority of the task holding the mutex to prevent intermediate-priority tasks from causing priority inversion starvation  
+- **C)** Binary semaphores cannot be placed in SRAM  
+- **D)** Mutexes can only be used by one task per program  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: B
+**Explanation:**  
+Binary semaphores have no concept of ownership or priority inheritance. If a low-priority task holds a binary semaphore, a medium-priority task can preempt it indefinitely, starving a high-priority task waiting on the semaphore. FreeRTOS Mutexes automatically elevate the owner's priority to prevent this deadlock.
+:::
+:::
+
+---
+
+<div class="d-flex justify-content-between mt-4">
+  <a href="Week-8.qmd" class="seek-prev-btn">← Back to Week 8: Design Patterns & Architecture</a>
+  <a href="Week-10.qmd" class="seek-next-btn">NEXT: Week 10 — Efficient Embedded Systems →</a>
+</div>

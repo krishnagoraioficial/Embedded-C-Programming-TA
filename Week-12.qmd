@@ -1,14 +1,681 @@
 ---
-title: "Week 12: Safety, Ethics, and Professional Practices"
+title: "Week 12: Safety, Security & Professional Ethics"
 ---
 
-## Overview
+## 1. The Safety-Critical Imperative
 
-MISRA-C guidelines, Defensive programming, Fail-safe and fault-tolerant embedded design.
+Unlike desktop software where a program crash simply generates an error log, **embedded systems control high voltages, massive mechanical actuators, chemical processes, and life-support machinery**:
 
-::: {.callout-tip}
-### 📌 Coming Up
-This module is part of the CS2101 syllabus outline. Detailed lecture notes, integrated interactive simulations, and question banks will be added here.
+```text
+ DESKTOP APPLICATION CRASH:
+ Null pointer dereference ---> OS terminates process ---> User reopens program.
+
+ EMBEDDED SYSTEM CRASH:
+ Null pointer dereference ---> HardFault in Flight Controller ---> Drone crashes.
+ Arithmetic overflow      ---> Patriot missile radar clock drift ---> Interceptor misses target.
+ Software race condition  ---> Massive radiation overdose        ---> Fatal patient injury.
+```
+
+### Three Historic Lessons in Embedded Software Failures
+
+#### 1. Therac-25 Medical Radiation Disaster (1985–1987)
+* **The Disaster:** Multiple cancer patients received lethal radiation overdoses ($100\times$ intended dosage) from a software-controlled radiation machine.
+* **The Root Cause:** A software **race condition**. If an experienced hospital technician rapidly corrected a typed parameter in under 8 seconds, the software set the magnet positioning flag before the physical collimator magnets moved into place, delivering an unshielded electron beam.
+* **The Engineering Lesson:** Never rely solely on software for human safety; physical electromechanical hardware interlocks are mandatory.
+
+#### 2. Ariane 5 Rocket Explosion (1996)
+* **The Disaster:** A \$500M European space rocket veered off trajectory and self-destructed 37 seconds after liftoff.
+* **The Root Cause:** A 64-bit floating-point velocity number was converted into a 16-bit signed integer without bounds checking. When velocity exceeded $32,767$, the integer conversion overflowed, triggering an unhandled software exception that dumped diagnostic data into the rocket's flight thruster bus!
+* **The Engineering Lesson:** Never reuse software across different hardware architectures without recalculating operational data bounds; defensively check every numeric cast.
+
+#### 3. Patriot Missile Defense Clock Rounding Drift (1991)
+* **The Disaster:** An air defense missile battery failed to intercept an incoming Scud missile in Dhahran, resulting in 28 casualties.
+* **The Root Cause:** Time was tracked by counting tenths of a second ($0.1\text{ s}$) using a 24-bit fixed-point register. Because $0.1$ has an infinite repeating binary expansion, rounding at 24 bits introduced an infinitesimal error of $0.000000095\text{ s}$ per tick. Over 100 hours of continuous uptime, this accumulated to **$0.34\text{ seconds}$**, shifting the radar tracking window by over 500 meters!
+* **The Engineering Lesson:** Minute numerical rounding errors accumulate over continuous execution time; long-running systems require periodic recalibration.
+
+---
+
+## 2. Safety Architectures: Fail-Safe vs. Fail-Operational
+
+When an embedded system detects a critical internal fault or sensor loss, how should it respond?
+
+```text
+ 1. FAIL-SAFE ARCHITECTURE:
+ System detects a critical fault ---> Immediately transitions to a passive, de-energized safe state.
+ * Example: Industrial robot cuts motor power; microwave opens door relay; nuclear control rods drop.
+
+ 2. FAIL-OPERATIONAL ARCHITECTURE:
+ System detects a critical fault ---> MUST CONTINUE FUNCTIONING safely using redundant backup hardware!
+ * Example: Commercial airliner fly-by-wire flight computer; autonomous highway vehicle steering actuator.
+ * Cutting power to car steering at 100 km/h would cause an immediate catastrophic crash!
+```
+
+---
+
+## 3. The MISRA-C Safety Standard
+
+The **Motor Industry Software Reliability Association (MISRA)** defines a standardized subset of the C programming language to eliminate undefined behaviors and software vulnerabilities:
+
+```text
+ +-------------------------------------------------------------------------+
+ |                           CORE MISRA-C SAFETY RULES                     |
+ +-------------------------------------------------------------------------+
+ | Rule 21.3: Dynamic memory allocation (malloc, free) shall not be used.  |
+ |            Eliminates heap fragmentation and non-deterministic latency. |
+ |                                                                         |
+ | Rule 17.2: Functions shall not call themselves (No recursion).          |
+ |            Eliminates the danger of uncontrolled stack overflow.        |
+ |                                                                         |
+ | Directive 4.6: Explicit-width types (stdint.h) must be used.            |
+ |            Use uint32_t, int16_t; avoid ambiguous int, long, short.     |
+ |                                                                         |
+ | Rule 16.4: Every switch statement must have an explicit default label.  |
+ |            Guarantees a safe fallback for corrupted state variables.    |
+ |                                                                         |
+ | Rule 17.7: Return values of non-void functions must be checked.         |
+ |            Prevents ignoring peripheral hardware failure return codes.  |
+ +-------------------------------------------------------------------------+
+```
+
+---
+
+## 4. Security in Embedded Systems
+
+In the era of the Internet of Things (IoT), embedded microcontrollers are connected to the internet and deployed in public spaces. Security is no longer optional.
+
+```text
+ +-------------------------------------------------------------------------+
+ |                       EMBEDDED HARDWARE CYBERSECURITY                   |
+ +-------------------------------------------------------------------------+
+ | 1. Secure Boot:                                                         |
+ |    Before running application code, the hardware bootloader verifies    |
+ |    a cryptographic digital signature (RSA / ECDSA) to ensure the        |
+ |    firmware was not tampered with or replaced by an attacker!           |
+ |                                                                         |
+ | 2. Readout Protection (RDP):                                            |
+ |    Microcontrollers feature fuse bits (e.g. STM32 RDP Level 1 / 2) that  |
+ |    permanently disable JTAG/SWD debug reading, preventing attackers from|
+ |    extracting proprietary code and encryption keys from Flash ROM!      |
+ |                                                                         |
+ | 3. Buffer Overflow Prevention (CWE-120):                                |
+ |    Functions like strcpy() and gets() are banned. Always use bounded    |
+ |    functions (strncpy, snprintf) to prevent remote shellcode injection.|
+ +-------------------------------------------------------------------------+
+```
+
+---
+
+## 5. Professional Ethics for Embedded Engineers
+
+As an embedded systems engineer, your code directly controls the physical world. Your decisions can save or endanger human lives:
+
+```text
+ +-------------------------------------------------------------------------+
+ |                    CODE OF ETHICS FOR EMBEDDED ENGINEERS                |
+ +-------------------------------------------------------------------------+
+ | 1. Paramount Safety:                                                    |
+ |    Hold paramount the safety, health, and welfare of the public above    |
+ |    commercial ship dates, marketing pressures, or project budgets.      |
+ |                                                                         |
+ | 2. Transparency & Honesty:                                              |
+ |    Never conceal known safety risks, unhandled exceptions, or test      |
+ |    failures from clients, regulatory bodies, or the public.             |
+ |                                                                         |
+ | 3. Ethical Whistleblowing:                                              |
+ |    If pressured to deploy dangerous firmware (such as defeating vehicle |
+ |    emissions testing or ignoring flight control bugs), an engineer has  |
+ |    an ethical duty to escalate the safety hazard through proper channels|
+ +-------------------------------------------------------------------------+
+```
+
+---
+
+## 6. Mini-Project 1: Fail-Safe Dual-Sensor Safety Interlock 🛡️⚙️
+
+### 🎯 Objective
+In functional safety engineering (IEC 61508 / ISO 26262), a single sensor failure must never result in an undetected hazard. In this project, you will build a redundant **Dual-Sensor Safety Interlock (1oo2 Architecture)** on the **STM32 Nucleo-C031C6** to control a high-power industrial safety relay.
+
+### 🛠️ Hardware Setup (Wokwi)
+The circuit connects two analog potentiometers (simulating redundant temperature sensors), a safety relay indicator LED, and an alarm indicator LED:
+* **Sensor Channel A (Primary):** Potentiometer on `A0` (`PA0`).
+* **Sensor Channel B (Redundant):** Potentiometer on `A1` (`PA1`).
+* **Safety Relay Status LED (Green):** User LED on `D8` (`PC7`) (HIGH = Energized / Safe to Run).
+* **Fault / Emergency LED (Red):** LED on `D13` (`PA5`) (HIGH = Emergency Shutdown).
+
+### Pin Wiring Table
+| Component | Pin / Terminal | STM32 / Board Pin | Electrical Function |
+| :--- | :--- | :---: | :--- |
+| **Sensor A (Primary)** | SIG / VCC / GND | `A0` / `3.3V` / `GND` | Primary analog temperature channel |
+| **Sensor B (Redundant)**| SIG / VCC / GND | `A1` / `3.3V` / `GND` | Secondary cross-checking channel |
+| **Safety Relay LED (Green)**| Anode (via 220Ω) | `D8` (`PC7`) | HIGH = Relay Energized (System Operational) |
+| **Alarm LED (Red)** | Anode (via 220Ω) | `D13` (`PA5`) | HIGH = Critical Fault / Safety Shutdown |
+| **Both LEDs** | Cathodes | `GND` | Common Ground Reference |
+
+### 📝 Problem Statement & Logic Flow
+1. **Default Fail-Safe Boot:** On system boot/reset, initialize `RELAY_PIN` (`D8`) to **LOW** (de-energized safe state) and `ALARM_LED` (`D13`) to **LOW**.
+2. **Temperature Conversion:** Read analog values from `A0` and `A1` (bash$ to 023$) and map each to temperature Celsius (bash^\circ	ext{C}$ to 00^\circ	ext{C}$):
+   33	ext{Temp} = rac{	ext{Reading} 	imes 100}{1023}33
+3. **Dual Safety Voting Checks:**
+   * **Rule 1 (Over-Temperature Trip):** If either  > 50^\circ	ext{C}$ OR  > 50^\circ	ext{C}$, trigger immediate emergency shutdown and log: `"[CRITICAL ALARM]: Over-temperature threshold exceeded!"`.
+   * **Rule 2 (Channel Discrepancy Fault):** If $|T_A - T_B| > 5^\circ	ext{C}$, a sensor drift or open-circuit wire fault is detected! Trigger immediate emergency shutdown and log: `"[SENSOR FAULT]: Sensor channel discrepancy detected!"`.
+4. **Relay Control Action:**
+   * If any fault is detected: Drive `RELAY_PIN` (`D8`) **LOW** immediately (kill power to machinery) and light `ALARM_LED` (`D13`) **HIGH**.
+   * If both sensors agree within $\pm 5^\circ	ext{C}$ and temperatures are $\le 50^\circ	ext{C}$: Drive `RELAY_PIN` **HIGH** and turn `ALARM_LED` **LOW**.
+
+```text
+[STATUS]: Sensor A = 32 C | Sensor B = 33 C | Status: NORMAL -> Relay ENERGIZED
+[SENSOR FAULT]: Sensor A = 32 C | Sensor B = 45 C | Discrepancy > 5 C!
+--> RELAY DE-ENERGIZED (Safety Power Cutoff) | Red Alarm LED ON <--
+```
+
+### Interactive Simulation
+
+::: {.simulation-container}
+<iframe 
+  src="https://wokwi.com/projects/479963095271968769?embed=1" 
+  title="Safety Interlock Simulation Workspace"
+  loading="lazy"
+  allowfullscreen>
+</iframe>
+<div class="sim-info-bar">
+  <span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span>
+  <span>Click Play, wire Dual Sensors to A0/A1 and Safety Contactor Relay to D13</span>
+</div>
 :::
 
-[← Back to Main Page](index.qmd){.btn .btn-outline-secondary .mt-4}
+### Implementation Code: High-Level Framework vs. Bare-Metal Embedded C
+
+::: {.panel-tabset}
+
+### 🔷 High-Level Framework (Running in Simulation)
+
+```cpp
+// ============================================================================
+// Mini-Project 1: Dual-Sensor Fail-Safe Interlock (Nucleo-C031C6)
+// ============================================================================
+
+#define SENSOR_A_PIN A0
+#define SENSOR_B_PIN A1
+#define RELAY_PIN    8  // Safety Relay Power Output (PC7)
+#define ALARM_LED    13 // Fault Alarm LED (PA5)
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(RELAY_PIN, OUTPUT);
+  pinMode(ALARM_LED, OUTPUT);
+
+  // Fail-safe defaults: Relay DE-ENERGIZED (cut power) on boot
+  digitalWrite(RELAY_PIN, LOW);
+  digitalWrite(ALARM_LED, LOW);
+
+  Serial.println("=============================================");
+  Serial.println("   Dual-Channel Safety Interlock Initialized ");
+  Serial.println("   Architecture: 1oo2 Cross-Channel Voting   ");
+  Serial.println("=============================================");
+}
+
+void loop() {
+  // Step 1: Read redundant sensors
+  int rawA = analogRead(SENSOR_A_PIN);
+  int rawB = analogRead(SENSOR_B_PIN);
+
+  // Step 2: Convert to temperature Celsius (0 - 100 C) using integer math
+  int tempA = ((uint32_t)rawA * 100UL) / 1023UL;
+  int tempB = ((uint32_t)rawB * 100UL) / 1023UL;
+
+  // Step 3: Evaluate Safety Interlock Rules
+  bool overTempFault    = (tempA > 50 || tempB > 50);
+  bool discrepancyFault = (abs(tempA - tempB) > 5);
+
+  if (overTempFault || discrepancyFault) {
+    // FAULT DETECTED: Immediate Fail-Safe Shutdown
+    digitalWrite(RELAY_PIN, LOW); // De-energize high-voltage power relay
+    digitalWrite(ALARM_LED, HIGH);
+
+    if (overTempFault) {
+      Serial.println("[CRITICAL ALARM]: Over-Temperature Detected (> 50 C)!");
+    }
+    if (discrepancyFault) {
+      Serial.println("[SENSOR FAULT]: Redundant Channel Drift / Wire Disconnect (> 5 C diff)!");
+    }
+  } else {
+    // ALL CHANNELS VERIFIED HEALTHY: Energize Relay
+    digitalWrite(RELAY_PIN, HIGH);
+    digitalWrite(ALARM_LED, LOW);
+
+    Serial.print("[NORMAL]: Temp A = ");
+    Serial.print(tempA);
+    Serial.print(" C | Temp B = ");
+    Serial.print(tempB);
+    Serial.println(" C | Relay ENERGIZED");
+  }
+
+  delay(300); // 3.3 Hz supervisory cycle
+}
+```
+
+---
+
+### 🔶 Equivalent Bare-Metal Embedded C (MISRA-C Compliant Direct Register Interlock)
+
+```c
+// ============================================================================
+// Mini-Project 1: Bare-Metal MISRA-C Safety Interlock (Direct Register)
+// ============================================================================
+#include <stdint.h>
+#include <stdbool.h>
+
+#define GPIOC_BASE  (0x50000800UL)
+#define GPIOC_BSRR  (*(volatile uint32_t *)(GPIOC_BASE + 0x18UL)) // Relay on PC7
+
+#define GPIOA_BASE  (0x50000000UL)
+#define GPIOA_BSRR  (*(volatile uint32_t *)(GPIOA_BASE + 0x18UL)) // Alarm on PA5
+
+// MISRA Rule: Explicit fixed-width integer safety evaluator
+void safety_interlock_evaluate(uint16_t raw_a, uint16_t raw_b) {
+    uint32_t temp_a = ((uint32_t)raw_a * 100UL) / 1023UL;
+    uint32_t temp_b = ((uint32_t)raw_b * 100UL) / 1023UL;
+    
+    int32_t diff = (int32_t)temp_a - (int32_t)temp_b;
+    if (diff < 0) { diff = -diff; }
+
+    if ((temp_a > 50UL) || (temp_b > 50UL) || (diff > 5)) {
+        // De-assert PC7 (Relay LOW), Assert PA5 (Alarm HIGH)
+        GPIOC_BSRR = (1UL << (7 + 16));
+        GPIOA_BSRR = (1UL << 5);
+    } else {
+        // Assert PC7 (Relay HIGH), De-assert PA5 (Alarm LOW)
+        GPIOC_BSRR = (1UL << 7);
+        GPIOA_BSRR = (1UL << (5 + 16));
+    }
+}
+```
+
+:::
+
+### 🔍 How Mini-Project 1 Applies Week 12 Concepts
+
+#### 1. Hardware & Circuit-Level Concept Mapping
+
+| Circuit Component | Week 12 Theoretical Concept | Technical Function in System |
+| :--- | :--- | :--- |
+| **Sensors A & B (A0, A1)** | **1oo2 Hardware Redundancy** | Dual sensors measure the identical physical parameter. Cross-comparison catches drift, open circuits, and sensor bonding failures. |
+| **Normally-Open Relay (D8)**| **De-energize to Trip (Fail-Safe)** | Spring-return relay contacts open physically if MCU power fails or if firmware cuts power, cutting machine actuator energy. |
+
+#### 2. Firmware Code-to-Concept Breakdown
+
+| Code Statement (Framework / Bare-Metal) | Week 12 Theoretical Concept | Deep-Dive Explanation |
+| :--- | :--- | :--- |
+| `abs(tempA - tempB) > 5` | **Cross-Channel Plausibility Check** | Detects subtle sensor drift faults before an undetected drift leads to an uncommanded machine runaway. |
+| `digitalWrite(RELAY_PIN, LOW);` | **Default Fail-Safe Safe State** | System immediately transitions into the defined Safe State upon *any* detected discrepancy. |
+
+---
+
+## 7. Mini-Project 2: Defensive Watchdog Supervision Architecture 🐕⚡
+
+### 🎯 Objective
+In safety-critical avionics and automotive electronics, firmware must never freeze or get trapped in infinite deadlocks. Microcontrollers feature an **Independent Watchdog (IWDG)** timer powered by its own dedicated internal low-speed oscillator (2	ext{ kHz}$). In this project, you will build a **Defensive Multi-Task Watchdog Supervisor** on the **STM32 Nucleo-C031C6** that detects software hangs and triggers an autonomous hardware system reset.
+
+### 🛠️ Hardware Setup (Wokwi)
+The circuit connects a fault injection button to pin `D2`:
+* **Fault Injection Trigger:** Pushbutton on `D2` (`PA10`) with internal pull-up.
+* **Supervisory Heartbeat LED:** User LED on `D13` (`PA5`).
+* **Diagnostic Serial Console:** Virtual COM Port at **115200 baud**.
+
+### Pin Wiring Table
+| Component | Pin / Terminal | Board Connection | Electrical Notes |
+| :--- | :--- | :---: | :--- |
+| **Fault Inject Button** | Terminal 1.L / 2.L | `D2` / `GND` | Push to simulate software deadlock (`INPUT_PULLUP`) |
+| **Heartbeat LED** | Anode (`PA5`) | `D13` | Toggles on each valid watchdog refresh cycle |
+| **Common Ground** | Cathode / GND | `GND` | Ground Reference |
+
+### 📝 Problem Statement & Logic Flow
+1. **Multi-Task Health Bitmask:**
+   * Allocate health tracking bitmask: `uint32_t taskHealthBits = 0;`.
+   * Simulate two independent tasks in your loop:
+     * **Task 1 (Sensor Acquisition):** Sets bit 0 upon successful execution: `taskHealthBits |= (1 << 0);`.
+     * **Task 2 (Actuator Control):** Sets bit 1 upon successful execution: `taskHealthBits |= (1 << 1);`.
+2. **Defensive Supervisor Rule:**
+   * Kicking/feeding the watchdog is permitted **only** when both tasks confirm health: `(taskHealthBits & 0x03) == 0x03`.
+   * When healthy, toggle Heartbeat LED on `D13`, print `"[SUPERVISOR]: All tasks healthy -> Watchdog Refreshed."`, and reset `taskHealthBits = 0`.
+3. **Simulated Fault Injection:**
+   * If button on `D2` is pressed, simulate a catastrophic software deadlock by trapping the CPU: `while(1);`.
+   * Because the loop is trapped, Task 2 cannot complete, the watchdog is starved of refresh pulses, and the hardware timer expires, triggering an MCU reset!
+4. **Boot Notification:** On power-up/reset, print `"[SYSTEM]: Watchdog-Supervised System Booted."` to prove when a reset occurs.
+
+```text
+[SYSTEM]: Watchdog-Supervised System Booted.
+[SUPERVISOR]: All tasks healthy -> Watchdog Refreshed.
+[SUPERVISOR]: All tasks healthy -> Watchdog Refreshed.
+--> [FAULT INJECTED]: Trapping CPU in while(1) loop...
+[SYSTEM]: Watchdog-Supervised System Booted. (Automatic Hardware Reset Verified!)
+```
+
+### Interactive Simulation
+
+::: {.simulation-container}
+<iframe 
+  src="https://wokwi.com/projects/479963095271968769?embed=1" 
+  title="Watchdog Simulation Workspace"
+  loading="lazy"
+  allowfullscreen>
+</iframe>
+<div class="sim-info-bar">
+  <span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span>
+  <span>Click Play, wire Heartbeat LED to D13 and Fault Button to D2</span>
+</div>
+:::
+
+### Implementation Code: High-Level Framework vs. Bare-Metal Embedded C
+
+::: {.panel-tabset}
+
+### 🔷 High-Level Framework (Running in Simulation)
+
+```cpp
+// ============================================================================
+// Mini-Project 2: Defensive Watchdog Supervision Architecture (Nucleo-C031C6)
+// ============================================================================
+
+#define FAULT_INJECT_BTN 2  // D2 (Push to inject software deadlock)
+#define HEARTBEAT_LED    13 // D13 (Heartbeat LED)
+
+uint32_t taskHealthBits = 0;
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(HEARTBEAT_LED, OUTPUT);
+  pinMode(FAULT_INJECT_BTN, INPUT_PULLUP);
+
+  Serial.println("
+=============================================");
+  Serial.println("  [SYSTEM]: Watchdog-Supervised System Booted  ");
+  Serial.println("=============================================");
+}
+
+void loop() {
+  // Step 1: Simulate Task 1 (Sensors)
+  delay(100);
+  taskHealthBits |= (1 << 0); // Task 1 healthy!
+
+  // Step 2: Fault Injection Button Check
+  if (digitalRead(FAULT_INJECT_BTN) == LOW) {
+    Serial.println("
+--> [FAULT INJECTED]: Trapping CPU in while(1) deadlock! Watchdog starved!");
+    Serial.flush();
+    while (1) {
+      // Deadlock trap: CPU frozen, watchdog timer expires and triggers MCU reset!
+    }
+  }
+
+  // Step 3: Simulate Task 2 (Actuators)
+  delay(100);
+  taskHealthBits |= (1 << 1); // Task 2 healthy!
+
+  // Step 4: Watchdog Supervisor Check
+  // Feed watchdog ONLY if both Task 1 and Task 2 completed cleanly
+  if ((taskHealthBits & 0x03) == 0x03) {
+    digitalWrite(HEARTBEAT_LED, !digitalRead(HEARTBEAT_LED));
+    Serial.println("[SUPERVISOR]: All tasks healthy -> Watchdog Refreshed.");
+    taskHealthBits = 0; // Reset tracking bits for next cycle
+  }
+
+  delay(300);
+}
+```
+
+---
+
+### 🔶 Equivalent Bare-Metal Embedded C (Direct STM32 IWDG Hardware Registers)
+
+```c
+// ============================================================================
+// Mini-Project 2: Direct STM32 Independent Watchdog (IWDG) Driver
+// Target: STM32 Nucleo-C031C6 (ARM Cortex-M0+)
+// ============================================================================
+#include <stdint.h>
+
+#define IWDG_BASE   (0x40003000UL)
+#define IWDG_KR     (*(volatile uint32_t *)(IWDG_BASE + 0x00UL)) // Key Register
+#define IWDG_PR     (*(volatile uint32_t *)(IWDG_BASE + 0x04UL)) // Prescaler Register
+#define IWDG_RLR    (*(volatile uint32_t *)(IWDG_BASE + 0x08UL)) // Reload Register
+
+void iwdg_hardware_init(void) {
+    IWDG_KR  = 0x5555UL; // Enable register write access
+    IWDG_PR  = 0x04UL;   // Prescaler /64 (~500 Hz clock from 32 kHz LSI)
+    IWDG_RLR = 1000UL;   // 1000 ticks = ~2.0 second hardware timeout window
+    IWDG_KR  = 0xAAAAUL; // Reload countdown register
+    IWDG_KR  = 0xCCCCUL; // Start the Independent Watchdog timer!
+}
+
+void kick_watchdog_safe(uint8_t health_flags) {
+    // Kicking watchdog permitted ONLY if all subsystems reported healthy
+    if (health_flags == 0x03) {
+        IWDG_KR = 0xAAAAUL; // Feed watchdog counter
+    }
+}
+```
+
+:::
+
+### 🔍 How Mini-Project 2 Applies Week 12 Concepts
+
+#### 1. Hardware & Circuit-Level Concept Mapping
+
+| Circuit Component | Week 12 Theoretical Concept | Technical Function in System |
+| :--- | :--- | :--- |
+| **Independent Watchdog (IWDG)** | **Hardware Out-of-Band Supervisor** | Driven by internal Low-Speed Oscillator (2	ext{ kHz}$) isolated from the main PLL clock. Resets the MCU if firmware locks up. |
+| **Fault Button (D2)** | **Software Failure Simulation** | Grounding the pin triggers a simulated deadlock trap to verify autonomous watchdog reset recovery. |
+
+#### 2. Firmware Code-to-Concept Breakdown
+
+| Code Statement (Framework / Bare-Metal) | Week 12 Theoretical Concept | Deep-Dive Explanation |
+| :--- | :--- | :--- |
+| `taskHealthBits |= (1 << 0);` | **Multi-Task Health Consensus** | Guarantees that the watchdog is not blindly refreshed by a timer ISR while worker tasks are deadlocked. |
+| `IWDG_KR = 0xAAAA;` | **Key Register Hardware Protection** | The watchdog cannot be accidentally reloaded by random pointer corruption; it strictly requires writing magic key `0xAAAA`. |
+
+---
+
+## 8. Hands-On Practice Challenge (For Students to Solve) 🎯
+
+### 🎯 Objective & Scenario
+In heavy manufacturing environments, mechanical stamping presses exert tons of crushing force. To prevent amputations and fatal workplace injuries, the controller must monitor multiple redundant safety interlocks: dual Normally-Closed (NC) Emergency Stop buttons and an optical safety light curtain. In this challenge, you will implement an **Automated Industrial Press E-Stop & Dual-Relay Interlock** on the **STM32 Nucleo-C031C6** conforming to MISRA-C principles.
+
+### 🛠️ Hardware Setup & Pin Wiring Table
+Connect safety inputs, the press solenoid relay, and alarm indicators:
+
+| Component | Pin / Terminal | Board Connection | Electrical Notes |
+| :--- | :--- | :---: | :--- |
+| **E-Stop Button 1** | Terminal 1.L / 2.L | `D2` (`PA10`) / `GND` | Normally-Closed Safety Contact (`INPUT_PULLUP`) |
+| **E-Stop Button 2** | Terminal 1.L / 2.L | `D3` (`PB3`) / `GND` | Redundant NC Safety Contact (`INPUT_PULLUP`) |
+| **Optical Curtain Sensor** | Signal / GND | `D4` (`PB5`) / `GND` | Active LOW Beam Interruption (`INPUT_PULLUP`) |
+| **Authorized Reset Button**| Terminal 1.L / 2.L | `D5` (`PB4`) / `GND` | Latch Clearing Switch (`INPUT_PULLUP`) |
+| **Press Solenoid Relay**| Anode (via 220Ω) | `D8` (`PC7`) | HIGH = Press Arm Energized (Motor Active) |
+| **Safety Lockout Alarm**| Anode (via 220Ω) | `D13` (`PA5`) | HIGH = Latched Fault State |
+| **Common Ground** | Cathodes / GND | `GND` | Common Ground Reference |
+
+### 📋 Problem Statement & Functional Requirements
+1. **Safety Verification Condition:**
+   * All three safety inputs (`D2`, `D3`, `D4`) must read **LOW** (meaning contacts are intact and beam is unobstructed).
+   * Only when all three conditions are satisfied can the press solenoid on `D8` be energized **HIGH**.
+2. **Instantaneous Trip ($< 10	ext{ ms}$):**
+   * If *any* safety contact opens (`HIGH`) or a wire breaks, immediately de-energize `D8` to **LOW** and latch into **Safety Lockout State**.
+   * Turn Safety Alarm LED on `D13` **HIGH** and log: `"[ESTOP TRIPPED]: Safety boundary breached! Power cut."`.
+3. **Anti-Tie-Down Manual Reset:**
+   * The system must **never** restart automatically when the E-Stop button pops back up!
+   * To restore power, all safety inputs must be closed, and the operator must press the Reset Button on `D5` for at least 1000 ms.
+
+### 💻 Starter Code Template
+```cpp
+// ============================================================================
+// Student Practice Challenge: Industrial Press E-Stop Interlock
+// Target: board-st-nucleo-c031c6
+// ============================================================================
+
+#define PIN_ESTOP_1   2
+#define PIN_ESTOP_2   3
+#define PIN_CURTAIN   4
+#define PIN_RESET_BTN 5
+#define PIN_SOLENOID  8
+#define PIN_ALARM     13
+
+bool isSafetyLatched = false;
+
+void setup() {
+  // TODO 1: Initialize Serial at 115200 baud
+  // TODO 2: Configure input pull-ups for PIN_ESTOP_1, PIN_ESTOP_2, PIN_CURTAIN, PIN_RESET_BTN
+  // TODO 3: Configure PIN_SOLENOID and PIN_ALARM as OUTPUTs
+  // TODO 4: Fail-safe initialization: Solenoid LOW (Power cut)
+}
+
+void loop() {
+  // TODO 5: Read safety inputs (All must be LOW for safe operation)
+  // TODO 6: If any input opens (HIGH), immediately cut PIN_SOLENOID, set isSafetyLatched = true
+  // TODO 7: Implement manual reset sequence (Check PIN_RESET_BTN)
+  // TODO 8: Keep loop non-blocking with sub-10ms response time
+}
+```
+
+### 🧪 Verification & Expected Test Cases
+| Operating Scenario | Safety Inputs (D2, D3, D4) | Press Solenoid (D8) | Alarm LED (D13) | Machine Status |
+| :--- | :---: | :---: | :---: | :--- |
+| **Normal Operation** | All LOW (Intact) | **ON (HIGH)** | OFF | Press running safely |
+| **E-Stop 1 Hit** | D2 reads HIGH | **OFF (LOW)** | **ON (HIGH)** | Instant cutoff ($< 10	ext{ ms}$) |
+| **E-Stop Released** | All LOW again | **OFF (LOW)** | **ON (HIGH)** | **Latched!** (No auto-start) |
+| **Reset Pressed** | All LOW + D5 held | **ON (HIGH)** | OFF | Authorized restart |
+
+<details>
+<summary>💡 Need a Hint? Click to Reveal</summary>
+
+* **Fail-Safe NC Wiring:** In industrial safety standards, Emergency Stop buttons are wired Normally-Closed (NC). When closed, current flows to ground (LOW). If an operator hits the button, or if a rat chews through the wire, the circuit opens to HIGH, triggering an immediate trip.
+* **Latching Logic:**
+  ```cpp
+  if (digitalRead(PIN_ESTOP_1) == HIGH || digitalRead(PIN_ESTOP_2) == HIGH || digitalRead(PIN_CURTAIN) == HIGH) {
+      digitalWrite(PIN_SOLENOID, LOW);
+      digitalWrite(PIN_ALARM, HIGH);
+      isSafetyLatched = true;
+  }
+  ```
+</details>
+
+::: {.simulation-container}
+<iframe 
+  src="https://wokwi.com/projects/479963095271968769?embed=1" 
+  title="Industrial E-Stop Simulation Workspace"
+  loading="lazy"
+  allowfullscreen>
+</iframe>
+<div class="sim-info-bar">
+  <span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span>
+  <span>Click Play to build and test your fail-safe dual-relay press safety interlock</span>
+</div>
+:::
+
+```{=html}
+<div id="comparator-w12" class="code-comparator-widget">
+  <div class="comparator-header">
+    <div class="comparator-title">
+      <span class="icon">🔄</span>
+      <span><strong>Simultaneous Code Explorer:</strong> Arduino Framework ↔ Bare-Metal C</span>
+    </div>
+    <div class="comparator-controls">
+      <label>Load Preset:</label>
+      <select class="preset-select">
+        <option value="gpio_blink">Fail-Safe Contactor / Heartbeat LED</option>
+        <option value="adc_analog">Dual Redundant ADC Sensor Comparison</option>
+        <option value="exti_interrupt">Emergency Stop EXTI Interrupt</option>
+        <option value="uart_comm">Safety Audit Diagnostic Logging</option>
+        <option value="timer_pwm">Hardware Watchdog Timeout Window</option>
+      </select>
+      <button type="button" class="btn-compare" onclick="runInteractiveTranslation('comparator-w12')">Analyze / Map Code</button>
+    </div>
+  </div>
+  <div class="comparator-panes">
+    <div class="pane">
+      <div class="pane-header">
+        <span class="badge-arduino">Arduino C++ (Framework)</span>
+        <span class="hint">Type or paste Arduino code here for live Bare-Metal translation</span>
+      </div>
+      <textarea class="code-input" spellcheck="false"></textarea>
+    </div>
+    <div class="pane">
+      <div class="pane-header">
+        <span class="badge-baremetal">Equivalent Bare-Metal C (Direct Registers)</span>
+        <span class="hint">Live Memory-Mapped Operations</span>
+      </div>
+      <pre class="code-output"><code></code></pre>
+    </div>
+  </div>
+</div>
+```
+---
+
+## 9. Concept Check Practice Questions
+
+### Question 1: MISRA-C Dynamic Memory Restrictions
+
+::: {.callout-note collapse="true"}
+## Click to View Question & Options
+
+Why does MISRA-C Rule 21.3 strictly ban the use of `malloc()` and `free()` in safety-critical embedded systems?
+
+**Options:**  
+- **A)** Because `malloc()` emits high-frequency radio waves  
+- **B)** Because dynamic heap allocation introduces memory fragmentation, memory leaks, and non-deterministic allocation latency that can cause system crashes and missed real-time deadlines  
+- **C)** Because Flash memory cannot execute C code  
+- **D)** Because `free()` inverts the stack pointer  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: B
+**Explanation:**  
+In embedded devices that run for years without rebooting, repeated heap allocations inevitably lead to **fragmentation**, where allocation requests fail even if total free memory seems adequate. Furthermore, `malloc()` execution time is unpredictable, violating real-time determinism.
+:::
+:::
+
+---
+
+### Question 2: Fail-Safe vs. Fail-Operational Architectures
+
+::: {.callout-note collapse="true"}
+## Click to View Question & Options
+
+Which of the following embedded systems mandates a **Fail-Operational** design architecture rather than a simple Fail-Safe (shut down and stop) design architecture?
+
+**Options:**  
+- **A)** An autonomous highway truck steer-by-wire system  
+- **B)** A home microwave oven  
+- **C)** A workshop table saw  
+- **D)** A commercial washing machine  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: A
+**Explanation:**  
+In a microwave oven or table saw, cutting power upon a fault (Fail-Safe) makes the machine safe. In an autonomous vehicle traveling at 100 km/h on a highway, simply turning off the steering motor would cause an immediate fatal accident; it requires redundant backup channels to **continue steering safely (Fail-Operational)**.
+:::
+:::
+
+---
+
+## 10. 🎓 Course Graduation & Engineering Checklist
+
+Congratulations on completing the **IIT Madras CS2101: Embedded C Programming** curriculum! You have developed a comprehensive foundation across all 12 modules:
+
+- [x] **Week 1:** Mastered MCU vs. MPU architectures, Von Neumann vs. Harvard buses, and memory-mapped hardware.
+- [x] **Week 2:** Mastered bitwise masking, fixed-width integer types (`stdint.h`), and SRAM memory segments.
+- [x] **Week 3:** Programmed ARM Cortex-M AHB/APB buses, RCC clock gating, and atomic GPIO pin registers (`BSRR`).
+- [x] **Week 4:** Configured hardware timers, prescalers, auto-reload PWM generation, and 12-bit SAR ADC sampling.
+- [x] **Week 5:** Interfaced digital communication protocols: Asynchronous UART, High-Speed SPI, and Open-Drain $I^2C$.
+- [x] **Week 6:** Mastered the GNU toolchain, memory layout (.text, .data, .bss), boot sequences, interrupts, and power-saving modes.
+- [x] **Week 7:** Developed production firmware for STM32 HAL multi-LED chasers, ATmega CTC timers, and 50 Hz servo PWM.
+- [x] **Week 8:** Architected clean firmware using Finite State Machines (FSMs), the Observer pattern, and defensive error handling.
+- [x] **Week 9:** Mastered preemptive real-time operating systems (FreeRTOS), task context switching, queues, semaphores, and Priority Inheritance.
+- [x] **Week 10:** Maximized embedded efficiency using Direct Memory Access (DMA), Cache memory, DVFS power scaling, and code optimization.
+- [x] **Week 11:** Mastered hardware debugging with SWD/JTAG, DWT cycle counter profiling, static analysis, and embedded unit testing.
+- [x] **Week 12:** Applied certified MISRA-C safety rules, fail-safe architectures, embedded cybersecurity, and engineering ethics.
+
+---
+
+<div class="d-flex justify-content-between mt-4">
+  <a href="Week-11.qmd" class="seek-prev-btn">← Back to Week 11: Testing & Debugging</a>
+  <a href="index.qmd" class="seek-next-btn">Return to Course Overview 🏠</a>
+</div>

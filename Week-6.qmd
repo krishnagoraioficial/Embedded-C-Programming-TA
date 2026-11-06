@@ -1,14 +1,688 @@
 ---
-title: "Week 6: Advanced Peripheral Interfacing II"
+title: "Week 6: Compilation, Runtime, Memory & Power Management"
 ---
 
-## Overview
+## 1. The Journey from C Code to Silicon Execution
 
-Direct Memory Access (DMA), Digital-to-Analog Converters (DAC), Independent & Window Watchdog timers.
+When you click "Build" or "Flash" in an embedded IDE, your human-readable C source code undergoes a multi-stage transformation before becoming electrical signals that drive transistors inside a microcontroller:
 
-::: {.callout-tip}
-### 📌 Coming Up
-This module is part of the CS2101 syllabus outline. Detailed lecture notes, integrated interactive simulations, and question banks will be added here.
+```text
+ +-------------------------------------------------------------------------+
+ |                       THE 4 STAGES OF THE GNU TOOLCHAIN                 |
+ +-------------------------------------------------------------------------+
+ |                                                                         |
+ |  1. PREPROCESSOR (arm-none-eabi-cpp)                                    |
+ |     Input:  main.c, headers (#include <stdint.h>, #define LED_PIN 5)    |
+ |     Action: Expands macros, strips comments, processes #ifdef           |
+ |     Output: Preprocessed source (main.i)                                |
+ |                            |                                            |
+ |                            v                                            |
+ |  2. COMPILER (arm-none-eabi-gcc)                                        |
+ |     Input:  main.i                                                      |
+ |     Action: Checks syntax/types, applies optimizations (-O2), translates|
+ |             C statements into target ARM assembly instructions          |
+ |     Output: Assembly file (main.s)                                      |
+ |                            |                                            |
+ |                            v                                            |
+ |  3. ASSEMBLER (arm-none-eabi-as)                                        |
+ |     Input:  main.s                                                      |
+ |     Action: Translates assembly opcodes (LDR, STR, ADD) into binary     |
+ |             machine code instructions                                   |
+ |     Output: Relocatable Object File (main.o)                            |
+ |                            |                                            |
+ |                            v                                            |
+ |  4. LINKER (arm-none-eabi-ld)                                           |
+ |     Input:  main.o, driver.o, libc.a, and Linker Script (linker.ld)     |
+ |     Action: Resolves function addresses, stitches object files, maps    |
+ |             code into physical Flash and RAM memory addresses           |
+ |     Output: Final Executable Binary (firmware.elf, firmware.bin)        |
+ +-------------------------------------------------------------------------+
+```
+
+---
+
+## 2. Microcontroller Memory Layout Made Simple
+
+Unlike a desktop PC where an Operating System loads programs into virtual memory, a microcontroller has **fixed, physical silicon memory blocks**:
+
+```text
+ 0x0800 0000 +-------------------------------------------------------------+
+             | FLASH ROM (Non-Volatile: Retained when power is turned OFF) |
+             |                                                             |
+             | [ Vector Table ] -> Initial Stack Pointer & ISR Addresses   |
+             | [ .text ]        -> Your compiled executable machine code   |
+             | [ .rodata ]      -> Read-only constants & string literals   |
+             | [ .data (LMA) ]  -> Initial values for global variables     |
+ 0x0804 0000 +-------------------------------------------------------------+
+ 
+ 0x2000 0000 +-------------------------------------------------------------+
+             | SRAM (Volatile: Wiped clean whenever power is turned OFF)   |
+             |                                                             |
+             | [ .data (VMA) ]  -> Initialized globals (copied from Flash) |
+             | [ .bss ]         -> Zero-initialized global variables       |
+             | [ Heap ]         -> Dynamic memory (malloc)    ^            |
+             |                  (Grows upwards)               |            |
+             |                                                |            |
+             |                  (Grows downwards)             v            |
+             | [ Stack ]        -> Local variables, function return frames |
+ 0x2000 5000 +-------------------------------------------------------------+
+             ^ Top of RAM (_estack)
+```
+
+### The Key Memory Segments
+
+| Memory Segment | Physical Location | What Lives Here? | Example C Code |
+| :--- | :--- | :--- | :--- |
+| **`.text`** | Flash ROM | Executable program instructions | `void calculate_crc() { ... }` |
+| **`.rodata`** | Flash ROM | Constants and strings that never change | `const float PI = 3.14159f;` |
+| **`.data`** | Flash (initial) $\to$ RAM (run) | Global/static variables with non-zero initial values | `uint32_t baud_rate = 115200;` |
+| **`.bss`** | SRAM | Global/static variables initialized to zero (or uninitialized) | `uint8_t rx_buffer[256];` |
+| **Stack** | High SRAM | Local function variables, parameters, return addresses | `int temp = 42;` (inside function) |
+| **Heap** | Low SRAM | Dynamically allocated memory blocks | `malloc(64);` (Avoid in embedded!) |
+
+---
+
+## 3. The Boot Process: What Happens at Power-On?
+
+What happens during the first microsecond when a battery is connected to an ARM Cortex-M microcontroller?
+
+```text
+ 1. HARDWARE RESET (Cycle 0)
+    Hardware automatically reads Address 0x0800 0000 -> Loads Initial Main Stack Pointer (MSP).
+    Hardware automatically reads Address 0x0800 0004 -> Loads Program Counter (PC) with Reset_Handler.
+                                  |
+                                  v
+ 2. EXECUTE Reset_Handler (Startup Code)
+    Step A: Copies initialized variables (.data) from Flash ROM into SRAM.
+    Step B: Writes zeroes across the entire .bss section in SRAM.
+    Step C: Calls SystemInit() to set up CPU clock PLLs.
+                                  |
+                                  v
+ 3. JUMP TO YOUR APPLICATION
+    Calls main() -> Your application code begins running!
+```
+
+---
+
+## 4. Microcontroller Power Management
+
+Power consumption in CMOS microcontroller circuits consists of two components:
+
+$$\text{Total Power } P = P_{\text{dynamic}} + P_{\text{static}} = C \cdot V_{DD}^2 \cdot f + V_{DD} \cdot I_{\text{leakage}}$$
+
+- **Dynamic Power ($C \cdot V^2 \cdot f$):** Consumed every time a digital transistor switches state. Directly proportional to clock frequency ($f$).
+- **Static Leakage ($V \cdot I_{\text{leakage}}$):** Current lost through semiconductor leakage even when the CPU is frozen.
+
+### Low-Power Modes Summary
+1. **RUN Mode (Active):** CPU running at full clock speed ($5\text{ mA} - 25\text{ mA}$).
+2. **SLEEP Mode:** CPU core clock stopped via `__WFI()`. Peripherals continue running ($1\text{ mA} - 3\text{ mA}$). Wakes up on ANY interrupt.
+3. **STOP Mode:** All high-speed clocks off. SRAM preserved ($2\,\mu\text{A} - 15\,\mu\text{A}$). Wakes on external pin change.
+4. **STANDBY Mode:** Entire core powered down ($< 1\,\mu\text{A}$). Wakes via Reset pin or watchdog (reboots).
+
+---
+
+## 5. Official Course Practice Assignments (Wokwi Templates)
+
+The official curriculum provides 6 hands-on practice templates on Wokwi to build muscle memory:
+
+| Problem | Title | Concept Focus | Official Template Link |
+| :---: | :--- | :--- | :---: |
+| **1** | **LED Blink** | GPIO Output & basic delay | [Open Wokwi Template ↗](https://wokwi.com/projects/402279250659723265) |
+| **2** | **Two LED Blink Different Delays** | Non-blocking timing | [Open Wokwi Template ↗](https://wokwi.com/projects/402282080522717185) |
+| **3** | **Pushbutton Pull-up and Pull-down** | Input resistors & voltage levels | [Open Wokwi Template ↗](https://wokwi.com/projects/402294137825896449) |
+| **4** | **Pushbutton Debounce & Count** | Mechanical bounce & serial counter | [Open Wokwi Template ↗](https://wokwi.com/projects/402320950294153217) |
+| **5** | **Analog Sensor (LDR) Reading** | ADC analog read & thresholding | [Open Wokwi Template ↗](https://wokwi.com/projects/402396891406840833) |
+| **6** | **LED Delay Change using Interrupts** | External interrupts (EXTI / ISR) | [Open Wokwi Template ↗](https://wokwi.com/projects/402409006800657409) |
+
+---
+
+## 6. Mini-Project 1: EXTI Hardware Interrupt with Debounced Frequency Toggle ⚡🔘
+
+### 🎯 Objective
+In mission-critical firmware, polling input buttons in a `loop()` wastes millions of CPU cycles and fails to detect quick transient button taps. In this project, you will configure a hardware **External Interrupt (EXTI)** on the **STM32 Nucleo-C031C6** to instantly alter an LED's flashing frequency without using blocking delays.
+
+### 🛠️ Hardware Setup (Wokwi)
+The circuit connects the following to an **STM32 Nucleo-C031C6** board:
+* **1x Pushbutton:** Connected to pin `D2` (`PA10`) as an external interrupt trigger.
+* **Onboard User LED:** Connected to pin `D13` (`PA5`).
+
+### Pin Wiring Table
+| Component | Pin / Terminal | STM32 / Board Pin | Electrical Function |
+| :--- | :--- | :---: | :--- |
+| **Pushbutton** | Terminal 1.L | `D2` (`PA10`) | EXTI External Interrupt Line |
+| **Pushbutton** | Terminal 2.L | `GND` | Pulls pin to logic LOW on press |
+| **Onboard User LED** | Anode (`PA5`) | `D13` | Green LED driven directly by MCU |
+| **Internal Pull-Up** | Internal to MCU | `D2` | Pulls pin to 3.3V when button is open |
+
+### 📝 Problem Statement & Logic Flow
+1. **Initialization (`setup`):**
+   * Start UART Serial communication at **115200 baud**.
+   * Configure `LED_PIN` (`D13`) as `OUTPUT`.
+   * Configure `BUTTON_PIN` (`D2`) as `INPUT_PULLUP`.
+   * Attach hardware interrupt on `D2` on `FALLING` edge (press to GND).
+2. **Interrupt Service Routine (`buttonISR`):**
+   * Executes immediately when the falling edge triggers.
+   * Debounces the mechanical button contacts by enforcing a 200 ms lockout.
+   * Inverts the volatile shared variable `blinkInterval` between **Slow (1000 ms)** and **Fast (200 ms)**.
+3. **Continuous Loop (`loop`):**
+   * Uses non-blocking `millis()` timestamp comparison to toggle the LED.
+   * Proves that the CPU main loop remains completely free to run other background tasks!
+
+```text
+[INIT] EXTI Interrupt Frequency Controller Ready.
+Current Mode: 500 ms (1.0 Hz)
+[INTERRUPT DETECTED]: Switched to 250 ms (2.0 Hz)
+[INTERRUPT DETECTED]: Switched to 100 ms (5.0 Hz)
+[INTERRUPT DETECTED]: Switched to 50 ms (10.0 Hz)
+```
+
+### Interactive Simulation
+
+::: {.simulation-container}
+<iframe 
+  src="https://wokwi.com/projects/479952547535016961?embed=1" 
+  title="Interrupt LED Simulation"
+  loading="lazy"
+  allowfullscreen>
+</iframe>
+<div class="sim-info-bar">
+  <span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span>
+  <span>Click Play, then click the pushbutton on pin D2 to cycle through 4 blink frequencies (1Hz, 2Hz, 5Hz, 10Hz)</span>
+</div>
 :::
 
-[← Back to Main Page](index.qmd){.btn .btn-outline-secondary .mt-4}
+### Implementation Code: High-Level Framework vs. Bare-Metal Embedded C
+
+::: {.panel-tabset}
+
+### 🔷 High-Level Framework (Running in Simulation)
+
+```cpp
+// ============================================================================
+// Mini-Project 1: Interrupt-Driven LED Speed Controller (Nucleo-C031C6)
+// ============================================================================
+
+#define BUTTON_PIN 2           // D2 (PA10 with EXTI)
+#define LED_PIN    LED_BUILTIN // D13 (PA5 User LED)
+
+volatile int currentDelayIndex = 0;
+const int blinkDelays[] = {500, 250, 100, 50}; // 1Hz, 2Hz, 5Hz, 10Hz
+const int numModes = 4;
+volatile unsigned long lastDebounceTime = 0;
+const unsigned long debounceDelay = 200; // ms
+
+void handleButtonPressISR() {
+  unsigned long now = millis();
+  if ((now - lastDebounceTime) > debounceDelay) {
+    currentDelayIndex = (currentDelayIndex + 1) % numModes;
+    lastDebounceTime = now;
+  }
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(LED_PIN, OUTPUT);
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), handleButtonPressISR, FALLING);
+  Serial.println("[INIT] EXTI Interrupt Frequency Controller Ready.");
+}
+
+void loop() {
+  digitalWrite(LED_PIN, HIGH);
+  delay(blinkDelays[currentDelayIndex]);
+  digitalWrite(LED_PIN, LOW);
+  delay(blinkDelays[currentDelayIndex]);
+}
+```
+
+---
+
+### 🔶 Equivalent Bare-Metal Embedded C (Direct Register Access)
+
+```c
+// ============================================================================
+// Mini-Project 1: Bare-Metal EXTI Interrupt Driver (Direct Register Access)
+// Hardware: STM32 Nucleo-C031C6 (EXTI Line 10 on PA10/D2, LED on PA5/D13)
+// ============================================================================
+#include <stdint.h>
+
+#define RCC_BASE        (0x40021000UL)
+#define RCC_IOPENR      (*(volatile uint32_t *)(RCC_BASE + 0x34UL))
+
+#define GPIOA_BASE      (0x50000000UL)
+#define GPIOA_MODER     (*(volatile uint32_t *)(GPIOA_BASE + 0x00UL))
+#define GPIOA_PUPDR     (*(volatile uint32_t *)(GPIOA_BASE + 0x0CUL))
+#define GPIOA_BSRR      (*(volatile uint32_t *)(GPIOA_BASE + 0x18UL))
+
+#define EXTI_BASE       (0x40021800UL)
+#define EXTI_FTSR1      (*(volatile uint32_t *)(EXTI_BASE + 0x04UL)) // Falling Trigger Selection
+#define EXTI_IMR1       (*(volatile uint32_t *)(EXTI_BASE + 0x80UL)) // Interrupt Mask Register
+#define EXTI_FPR1       (*(volatile uint32_t *)(EXTI_BASE + 0x90UL)) // Falling Pending Register
+
+#define NVIC_ISER       (*(volatile uint32_t *)0xE000E100UL)         // NVIC Interrupt Set-Enable
+
+void exti_init(void) {
+    RCC_IOPENR |= (1UL << 0); // Enable GPIOA clock
+
+    // PA5 as Output (LED)
+    GPIOA_MODER &= ~(3UL << (5 * 2));
+    GPIOA_MODER |=  (1UL << (5 * 2));
+
+    // PA10 as Input with Pull-Up
+    GPIOA_MODER &= ~(3UL << (10 * 2));
+    GPIOA_PUPDR |=  (1UL << (10 * 2));
+
+    // Configure EXTI Line 10: Falling trigger and Unmask interrupt
+    EXTI_FTSR1 |= (1UL << 10);
+    EXTI_IMR1  |= (1UL << 10);
+
+    // Enable EXTI Line 4-15 IRQ in NVIC
+    NVIC_ISER |= (1UL << 7);
+}
+
+void EXTI4_15_IRQHandler(void) {
+    if (EXTI_FPR1 & (1UL << 10)) {
+        EXTI_FPR1 |= (1UL << 10); // Clear pending flag by writing 1
+        GPIOA_BSRR = (1UL << 5);   // Toggle / service hardware
+    }
+}
+```
+
+:::
+
+### 🔍 How Mini-Project 1 Applies Week 6 Concepts
+
+#### 1. Hardware & Circuit-Level Concept Mapping
+
+| Circuit Component | Week 6 Theoretical Concept | Technical Function in System |
+| :--- | :--- | :--- |
+| **Pushbutton on D2 (PA10)** | **Edge-Triggered Asynchronous Event** | Pulls the EXTI line LOW. The edge detector circuit inside the MCU registers a falling transition within nanoseconds, bypassing the main clock loop. |
+| **Internal Pull-Up Resistor** | **Floating Input Prevention** | Prevents electromagnetic stray noise on an open copper trace from causing spurious false interrupt triggers. |
+
+#### 2. Firmware Code-to-Concept Breakdown
+
+| Code Statement (Framework / Bare-Metal) | Week 6 Theoretical Concept | Deep-Dive Explanation |
+| :--- | :--- | :--- |
+| `volatile uint32_t blinkInterval;` | **Compiler Optimization Invalidation (`volatile`)** | Forces the compiler to re-read the value directly from SRAM on every single comparison in `loop()`, ensuring ISR updates are immediately visible. |
+| `attachInterrupt(..., FALLING);`<br>`EXTI_FTSR1 \|= (1UL << 10);` | **Interrupt Vector Table (IVT) Dispatch** | When the falling edge occurs, hardware halts current execution, pushes registers `R0-R3, R12, LR, PC, xPSR` to the stack, and branches to `buttonISR()`. |
+
+---
+
+## 7. Mini-Project 2: Dual-Interrupt Emergency Pause & Reset Supervisor ⚡⏸️
+
+### 🎯 Objective
+In industrial automated assembly lines and medical infusion pumps, critical safety inputs must preempt background processing immediately. In this project, you will develop a **Dual-Line Hardware Interrupt Supervisor** on the **STM32 Nucleo-C031C6**. The microcontroller manages an active sequential process using two distinct external interrupt lines: **Button 1 on `D2`** (EXTI line 10) toggles an emergency pause state, while **Button 2 on `D3`** (EXTI line 3) asynchronously resets the process counter to zero.
+
+### 🛠️ Hardware Setup (Wokwi)
+The circuit connects the following components to an **STM32 Nucleo-C031C6** board:
+* **2x Pushbuttons (`wokwi-pushbutton`):**
+  * `BTN_PAUSE`: Connected to pin `D2` (`PA10`) as an asynchronous Pause/Resume trigger.
+  * `BTN_RESET`: Connected to pin `D3` (`PB3`) as an asynchronous Counter Reset trigger.
+* **Onboard User LED:** Connected to pin `D13` (`PA5`) as an active process heartbeat indicator.
+
+### Pin Wiring Table
+| Component | Pin / Terminal | STM32 Pin | Electrical Function |
+| :--- | :--- | :---: | :--- |
+| **Pause/Resume Button** | Pin 1.L / Pin 2.L | `D2` (`PA10`) / `GND` | Active-LOW EXTI Line 10 trigger |
+| **Reset Button** | Pin 1.L / Pin 2.L | `D3` (`PB3`) / `GND` | Active-LOW EXTI Line 3 trigger |
+| **Onboard User LED** | Anode (`PA5`) | `D13` | Process Heartbeat (Blinks when RUNNING, OFF when PAUSED) |
+| **Internal Pull-Ups** | Internal to MCU | `D2` & `D3` | Logic HIGH reference in idle state |
+
+### 📝 Problem Statement & Logic Flow
+1. **Interrupt Architecture:**
+   * Configure `D2` with an external interrupt on the **FALLING** edge to toggle `isPaused`.
+   * Configure `D3` with an external interrupt on the **FALLING** edge to clear `processCounter = 0`.
+2. **Main Execution Loop (`loop`):**
+   * If `isPaused == false` (Running):
+     - Increment `processCounter` every 500 ms.
+     - Toggle the user LED on `D13` on each step.
+     - Print telemetry: `"[RUNNING] Process Step: <counter>"`.
+   * If `isPaused == true` (Paused):
+     - Turn the user LED on `D13` **LOW**.
+     - Halt counter increments without locking up the MCU.
+     - Print `"[PAUSED] System in Standby. Press D2 to Resume, D3 to Reset"`.
+
+```text
+[INIT] Dual-Interrupt Controller Ready.
+[RUNNING] Process Step: 1
+[RUNNING] Process Step: 2
+--> [INTERRUPT EXTI 10]: System PAUSED! <--
+[PAUSED] System in Standby.
+--> [INTERRUPT EXTI 3]: Counter RESET to 0! <--
+--> [INTERRUPT EXTI 10]: System RESUMED! <--
+[RUNNING] Process Step: 1
+```
+
+### Interactive Simulation
+
+::: {.simulation-container}
+<iframe 
+  src="https://wokwi.com/projects/479963095271968769?embed=1" 
+  title="Dual Interrupt Supervisor Simulation"
+  loading="lazy"
+  allowfullscreen>
+</iframe>
+<div class="sim-info-bar">
+  <span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span>
+  <span>Click Play, click D2 to Pause/Resume, click D3 to Reset counter asynchronously</span>
+</div>
+:::
+
+### Implementation Code: High-Level Framework vs. Bare-Metal Embedded C
+
+::: {.panel-tabset}
+
+### 🔷 High-Level Framework (Running in Simulation)
+
+```cpp
+// ============================================================================
+// Mini-Project 2: Dual-Interrupt Emergency Pause & Reset Supervisor
+// Target Board: STM32 Nucleo-C031C6 (ARM Cortex-M0+)
+// ============================================================================
+
+#define BTN_PAUSE  2           // D2 (PA10 with EXTI line 10)
+#define BTN_RESET  3           // D3 (PB3 with EXTI line 3)
+#define LED_PIN    LED_BUILTIN // D13 (PA5 User LED)
+
+volatile bool isPaused = false;
+volatile uint32_t processCounter = 0;
+volatile unsigned long lastPausePress = 0;
+volatile unsigned long lastResetPress = 0;
+
+// ISR 1: Toggle Pause State
+void pauseToggleISR() {
+  unsigned long now = millis();
+  if (now - lastPausePress > 200) { // Software debounce
+    isPaused = !isPaused;
+    lastPausePress = now;
+  }
+}
+
+// ISR 2: Reset Process Counter
+void resetCounterISR() {
+  unsigned long now = millis();
+  if (now - lastResetPress > 200) {
+    processCounter = 0;
+    lastResetPress = now;
+  }
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(LED_PIN, OUTPUT);
+  pinMode(BTN_PAUSE, INPUT_PULLUP);
+  pinMode(BTN_RESET, INPUT_PULLUP);
+
+  // Attach independent hardware interrupts
+  attachInterrupt(digitalPinToInterrupt(BTN_PAUSE), pauseToggleISR, FALLING);
+  attachInterrupt(digitalPinToInterrupt(BTN_RESET), resetCounterISR, FALLING);
+
+  Serial.println("[INIT] Dual-Interrupt Controller Ready.");
+}
+
+void loop() {
+  static unsigned long lastStepTime = 0;
+
+  if (!isPaused) {
+    // Active Running Mode
+    if (millis() - lastStepTime >= 500) {
+      lastStepTime = millis();
+      processCounter++;
+      digitalWrite(LED_PIN, !digitalRead(LED_PIN)); // Heartbeat toggle
+
+      Serial.print("[RUNNING] Process Step: ");
+      Serial.println(processCounter);
+    }
+  } else {
+    // Paused Standby Mode
+    digitalWrite(LED_PIN, LOW);
+    if (millis() - lastStepTime >= 1000) {
+      lastStepTime = millis();
+      Serial.println("[PAUSED] System Halted. Press D2 to Resume, D3 to Reset.");
+    }
+  }
+}
+```
+
+---
+
+### 🔶 Equivalent Bare-Metal Embedded C (Direct Register Access)
+
+```c
+// ============================================================================
+// Mini-Project 2: Bare-Metal STM32 Dual EXTI Configuration
+// Target: STM32 Nucleo-C031C6 (ARM Cortex-M0+)
+// ============================================================================
+#include <stdint.h>
+#include <stdbool.h>
+
+#define EXTI_BASE       (0x40021800UL)
+#define EXTI_IMR1       (*(volatile uint32_t *)(EXTI_BASE + 0x00UL))
+#define EXTI_FTSR1      (*(volatile uint32_t *)(EXTI_BASE + 0x04UL))
+#define EXTI_RPR1       (*(volatile uint32_t *)(EXTI_BASE + 0x0CUL))
+#define NVIC_ISER       (*(volatile uint32_t *)(0xE000E100UL))
+
+void dual_exti_init(void) {
+    // 1. Unmask Line 10 (PA10) and Line 3 (PB3) in IMR1
+    EXTI_IMR1 |= (1UL << 10) | (1UL << 3);
+
+    // 2. Select Falling Edge Trigger on both lines
+    EXTI_FTSR1 |= (1UL << 10) | (1UL << 3);
+
+    // 3. Enable EXTI Line 2-3 and Line 4-15 vectors in NVIC
+    NVIC_ISER |= (1UL << 6) | (1UL << 7);
+}
+```
+
+:::
+
+### 🔍 How Mini-Project 2 Applies Week 6 Concepts
+
+#### 1. Hardware & Circuit-Level Concept Mapping
+
+| Circuit Component | Week 6 Theoretical Concept | Technical Function in System |
+| :--- | :--- | :--- |
+| **Activity LED (D13)** | **Dynamic vs. Static Power Visualization** | When the LED is lit, the MCU draws ~15 mA. In sleep mode, current drops under 2 mA as CPU clocks are gated off. |
+| **Wakeup Line (D2)** | **Asynchronous NVIC Wakeup Event** | The NVIC remains powered in sleep mode, monitoring external pins to reignite the main clock generator. |
+
+#### 2. Firmware Code-to-Concept Breakdown
+
+| Code Statement (Framework / Bare-Metal) | Week 6 Theoretical Concept | Deep-Dive Explanation |
+| :--- | :--- | :--- |
+| `Serial.flush();` | **Peripheral Buffer Draining** | Ensures that all serialized bits in the UART shift register are physically emitted before the MCU gates off its clock trees. |
+| `__asm volatile("wfi");` | **Wait-For-Interrupt Core Instruction** | Directly signals the ARM Cortex-M clock management unit to suspend clock pulses to the instruction fetch unit until an unmasked interrupt occurs. |
+
+---
+
+## 8. Hands-On Practice Challenge (For Students to Solve) 🎯
+
+### 🎯 Objective & Scenario
+In modern robotic manufacturing cells and CNC milling centers, safety interlocks must instantly halt dangerous moving machinery upon an emergency condition. In this challenge, you will implement a **Hardware Interrupt Emergency-Stop & Latching Fault Supervisor** on the **STM32 Nucleo-C031C6**.
+
+### 🛠️ Hardware Setup & Pin Wiring Table
+Connect two pushbuttons and an external alarm LED to the Nucleo board:
+
+| Component | Pin / Terminal on Component | STM32 Nucleo-C031C6 Pin | Electrical Function |
+| :--- | :--- | :---: | :--- |
+| **E-Stop Button** | Pin 1.L / Pin 2.L | `D2` (`PA10`) / `GND` | Emergency Interrupt Line (Active-LOW) |
+| **Fault Reset Button** | Pin 1.L / Pin 2.L | `D3` (`PB3`) / `GND` | Supervisor Reset Line (Active-LOW) |
+| **Hazard Alarm LED (Red)** | Anode (via 220Ω) | `D4` (`PB5`) | Emergency Hazard Indicator |
+| **Hazard Alarm LED (Red)** | Cathode | `GND` | Ground Reference |
+| **Status LED (Green)** | Anode | `D13` (`PA5`) | Normal Machinery Running Indicator |
+
+### 📋 Problem Statement & Functional Requirements
+1. **Normal Operating State:**
+   * Green LED on `D13` blinks at **1.0 Hz** (500 ms ON, 500 ms OFF), indicating normal machine operation.
+   * Red Alarm LED on `D4` is strictly **OFF**.
+   * Transmit status telemetry every 1000 ms: `"[STATUS] Machinery Active | Normal Operations"`.
+2. **Emergency Interrupt Handling (`D2`):**
+   * When the E-Stop button on `D2` is pressed, trigger an **EXTI FALLING** edge interrupt immediately.
+   * Inside the ISR, set an atomic `volatile bool emergencyLatched = true`.
+   * Immediately extinguish the Green LED on `D13`.
+3. **Emergency Latch State:**
+   * While `emergencyLatched == true`, normal machine operation must be completely blocked.
+   * Pulse the Red Alarm LED on `D4` rapidly at **5 Hz** (100 ms ON, 100 ms OFF).
+   * Emit `"[ALERT] EMERGENCY STOP TRIPPED! Machinery Halted."` over UART.
+4. **Fault Recovery Handling (`D3`):**
+   * When the Reset button on `D3` is pressed via a second EXTI interrupt, clear the fault: `emergencyLatched = false`.
+   * Normal machine operation on `D13` resumes cleanly.
+
+### 💻 Starter Code Template
+```cpp
+// ============================================================================
+// Student Practice Challenge: Industrial Emergency-Stop & Fault Supervisor
+// Target: board-st-nucleo-c031c6
+// ============================================================================
+
+#define BTN_ESTOP    2           // D2 (PA10 EXTI)
+#define BTN_RESET    3           // D3 (PB3 EXTI)
+#define LED_ALARM    4           // D4 (PB5 Red LED)
+#define LED_STATUS   LED_BUILTIN // D13 (PA5 Green LED)
+
+volatile bool emergencyLatched = false;
+
+void estopISR() {
+  // TODO 1: Set emergencyLatched to true immediately
+}
+
+void resetISR() {
+  // TODO 2: Clear emergencyLatched to false
+}
+
+void setup() {
+  // TODO 3: Initialize Serial at 115200 baud
+  // TODO 4: Configure LED_STATUS and LED_ALARM as OUTPUT
+  // TODO 5: Configure BTN_ESTOP and BTN_RESET as INPUT_PULLUP
+  // TODO 6: Attach FALLING interrupts to BTN_ESTOP and BTN_RESET
+}
+
+void loop() {
+  // TODO 7: If NOT emergency: blink LED_STATUS at 1 Hz, keep LED_ALARM LOW
+  // TODO 8: If emergency: keep LED_STATUS LOW, blink LED_ALARM at 5 Hz, log alert
+}
+```
+
+### 🧪 Verification & Expected Test Cases
+| System State | Green Status LED (D13) | Red Alarm LED (D4) | Serial Monitor Telemetry |
+| :--- | :---: | :---: | :--- |
+| **Normal Operation** | **Blinking at 1 Hz** | OFF | `[STATUS] Machinery Active \| Normal Operations` |
+| **E-Stop Triggered (D2)** | **OFF** | **Blinking at 5 Hz** | `[ALERT] EMERGENCY STOP TRIPPED! Machinery Halted.` |
+| **Reset Pressed (D3)** | **Resumes 1 Hz** | OFF | `[STATUS] Fault Cleared -> Resuming Machinery.` |
+
+<details>
+<summary>💡 Need a Hint? Click to Reveal</summary>
+
+* **Non-Blocking 5 Hz Alarm Pulse:**
+  ```cpp
+  static unsigned long lastAlarmToggle = 0;
+  if (millis() - lastAlarmToggle >= 100) {
+      lastAlarmToggle = millis();
+      digitalWrite(LED_ALARM, !digitalRead(LED_ALARM));
+  }
+  ```
+* **Atomic Reset:** Make sure `emergencyLatched` is declared `volatile bool` so changes made by `resetISR()` are immediately visible to `loop()`.
+</details>
+
+::: {.simulation-container}
+<iframe 
+  src="https://wokwi.com/projects/479963095271968769?embed=1" 
+  title="Industrial Emergency-Stop Simulation"
+  loading="lazy"
+  allowfullscreen>
+</iframe>
+<div class="sim-info-bar">
+  <span><strong>Practice Challenge:</strong> Industrial Emergency-Stop & Latching Supervisor</span>
+  <span>Click Play, press E-Stop (D2) to trip hazard mode, press Reset (D3) to restore</span>
+</div>
+:::
+
+```{=html}
+<div id="comparator-w6" class="code-comparator-widget">
+  <div class="comparator-header">
+    <div class="comparator-title">
+      <span class="icon">🔄</span>
+      <span><strong>Simultaneous Code Explorer:</strong> Arduino Framework ↔ Bare-Metal STM32 C</span>
+    </div>
+    <div class="comparator-controls">
+      <label>Load Preset:</label>
+      <select class="preset-select">
+        <option value="exti_interrupt">EXTI Hardware Interrupts (E-Stop / Reset)</option>
+        <option value="gpio_input">GPIO Input (Buttons & Pull-Ups)</option>
+        <option value="gpio_blink">GPIO Output (Activity / Alarm LEDs)</option>
+        <option value="uart_comm">UART Telemetry Logging</option>
+        <option value="timer_pwm">Hardware Timer PWM</option>
+      </select>
+      <button type="button" class="btn-compare" onclick="runInteractiveTranslation('comparator-w6')">Analyze / Map Code</button>
+    </div>
+  </div>
+  <div class="comparator-panes">
+    <div class="pane">
+      <div class="pane-header">
+        <span class="badge-arduino">Arduino C++ (Framework)</span>
+        <span class="hint">Type or paste Arduino code here for live Bare-Metal translation</span>
+      </div>
+      <textarea class="code-input" spellcheck="false"></textarea>
+    </div>
+    <div class="pane">
+      <div class="pane-header">
+        <span class="badge-baremetal">Equivalent Bare-Metal C (STM32 Registers)</span>
+        <span class="hint">Live Memory-Mapped Operations</span>
+      </div>
+      <pre class="code-output"><code></code></pre>
+    </div>
+  </div>
+</div>
+```
+
+---
+
+## 8. Concept Check Practice Questions
+
+### Question 1: Memory Segments & Flash Storage
+
+::: {.callout-note collapse="true"}
+## Click to View Question & Options
+
+Which of the following variable declarations consumes **zero bytes of permanent storage** in microcontroller Flash ROM?
+
+**Options:**  
+- **A)** `const uint8_t lookup_table[256] = {1, 2, ...};`  
+- **B)** `uint32_t active_baud_rate = 115200;`  
+- **C)** `uint8_t serial_rx_buffer[1024];` (declared at global scope)  
+- **D)** `char welcome_message[] = "System Ready";`  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: C
+**Explanation:**  
+Uninitialized global variables (or globals initialized to zero) reside in the `.bss` segment. Because their initial value is known to be all zeroes, the compiler does not waste Flash ROM storing zeroes; the startup code simply wipes that block of SRAM to zero during the boot sequence.
+:::
+:::
+
+---
+
+### Question 2: Microcontroller Hardware Boot Vector
+
+::: {.callout-note collapse="true"}
+## Click to View Question & Options
+
+What information is physically stored at memory address `0x08000000` and `0x08000004` on an ARM Cortex-M microcontroller?
+
+**Options:**  
+- **A)** The UART baud rate divider and peripheral clock frequency  
+- **B)** The initial Main Stack Pointer (MSP) address and the entry point address of `Reset_Handler`  
+- **C)** The Flash memory encryption key  
+- **D)** The first instructions of the `main()` function  
+
+::: {.callout-tip collapse="true"}
+### ✅ Correct Answer: B
+**Explanation:**  
+The ARM Cortex-M architecture hardwires cycle 0 of reset to read address `0x08000000` to initialize the Main Stack Pointer (MSP), followed immediately by address `0x08000004` to load the Program Counter with the memory address of `Reset_Handler`.
+:::
+:::
+
+---
+
+<div class="d-flex justify-content-between mt-4">
+  <a href="Week-5.qmd" class="seek-prev-btn">← Back to Week 5: Communication Protocols</a>
+  <a href="Week-7.qmd" class="seek-next-btn">NEXT: Week 7 — Programming Assignments Lab →</a>
+</div>

@@ -245,7 +245,7 @@ h3 {
 
 .simulation-container iframe {
   width: 100%;
-  height: 420px;
+  height: 600px;
   border: none;
   display: block;
 }
@@ -466,4 +466,193 @@ body.quarto-dark .sim-info-bar {
   background: #0f172a;
   border-top-color: #334155;
   color: #94a3b8;
+}
+
+/* ==========================================================================
+   Interactive Code Comparator Widget (Arduino vs. Bare-Metal Embedded C)
+   ========================================================================== */
+.code-comparator-widget {
+  margin: 1.5rem 0 2rem 0;
+  background: var(--seek-card-bg, #ffffff);
+  border: 1px solid var(--seek-border, #e2e8f0);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.comparator-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.85rem 1.25rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-bottom: 1px solid var(--seek-border, #cbd5e1);
+}
+
+.comparator-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  color: #1e293b;
+}
+
+.comparator-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.comparator-controls select {
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #1e293b;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.comparator-controls button.btn-compare {
+  padding: 0.35rem 0.8rem;
+  border-radius: 6px;
+  border: none;
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.comparator-controls button.btn-compare:hover {
+  background: #1d4ed8;
+}
+
+.comparator-panes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+
+@media (max-width: 768px) {
+  .comparator-panes {
+    grid-template-columns: 1fr;
+  }
+}
+
+.comparator-panes .pane {
+  display: flex;
+  flex-direction: column;
+}
+
+.comparator-panes .pane:first-child {
+  border-right: 1px solid var(--seek-border, #cbd5e1);
+}
+
+.pane-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 0.78rem;
+}
+
+.badge-arduino {
+  background: #0284c7;
+  color: #ffffff;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.badge-baremetal {
+  background: #d97706;
+  color: #ffffff;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.pane-header .hint {
+  color: #64748b;
+  font-style: italic;
+}
+
+.pane textarea.code-input {
+  width: 100%;
+  height: 280px;
+  padding: 0.85rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.83rem;
+  line-height: 1.45;
+  color: #0f172a;
+  background: #f8fafc;
+  border: none;
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.pane pre.code-output {
+  margin: 0;
+  height: 280px;
+  padding: 0.85rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.83rem;
+  line-height: 1.45;
+  color: #0f172a;
+  background: #ffffff;
+  border: none;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+/* Dark mode overrides for code comparator */
+body.quarto-dark .code-comparator-widget {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+body.quarto-dark .comparator-header {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-bottom-color: #334155;
+}
+
+body.quarto-dark .comparator-title {
+  color: #f1f5f9;
+}
+
+body.quarto-dark .comparator-controls select {
+  background: #1e293b;
+  color: #f1f5f9;
+  border-color: #475569;
+}
+
+body.quarto-dark .pane-header {
+  background: #1e293b;
+  border-bottom-color: #334155;
+}
+
+body.quarto-dark .pane-header .hint {
+  color: #94a3b8;
+}
+
+body.quarto-dark .comparator-panes .pane:first-child {
+  border-right-color: #334155;
+}
+
+body.quarto-dark .pane textarea.code-input {
+  background: #090d16;
+  color: #e2e8f0;
+}
+
+body.quarto-dark .pane pre.code-output {
+  background: #0f172a;
+  color: #38bdf8;
 }
