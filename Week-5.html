@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Week 5: Digital Communication Protocols – CS2101: Embedded C</title>
+<title>Week 5: Communication Protocols in Embedded Systems – CS2101: Embedded C</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -25,6 +25,41 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -48,9 +83,9 @@ ul.task-list li input[type="checkbox"] {
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-1efc6d65981d7f926cfe85ef7b0c751f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-f08d384c0165829aba50fd8ee00b4b4f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-1efc6d65981d7f926cfe85ef7b0c751f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-64d0f6d14e372c61dcd2002aecce1639.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-49095d02d3de05fbda1b5d708a7a597d.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-64d0f6d14e372c61dcd2002aecce1639.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -80,6 +115,35 @@ ul.task-list li input[type="checkbox"] {
 }</script>
 <style>html{ scroll-behavior: smooth; }</style>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -379,7 +443,51 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
+  <li><a href="#why-do-embedded-systems-need-communication-protocols" id="toc-why-do-embedded-systems-need-communication-protocols" class="nav-link active" data-scroll-target="#why-do-embedded-systems-need-communication-protocols">1. Why Do Embedded Systems Need Communication Protocols?</a></li>
+  <li><a href="#serial-vs.-parallel-communication" id="toc-serial-vs.-parallel-communication" class="nav-link" data-scroll-target="#serial-vs.-parallel-communication">2. Serial vs.&nbsp;Parallel Communication</a>
+  <ul class="collapse">
+  <li><a href="#why-serial-communication-won" id="toc-why-serial-communication-won" class="nav-link" data-scroll-target="#why-serial-communication-won">Why Serial Communication Won:</a></li>
+  </ul></li>
+  <li><a href="#the-big-three-microcontroller-serial-protocols" id="toc-the-big-three-microcontroller-serial-protocols" class="nav-link" data-scroll-target="#the-big-three-microcontroller-serial-protocols">3. The Big Three Microcontroller Serial Protocols</a>
+  <ul class="collapse">
+  <li><a href="#uart-universal-asynchronous-receiver-transmitter" id="toc-uart-universal-asynchronous-receiver-transmitter" class="nav-link" data-scroll-target="#uart-universal-asynchronous-receiver-transmitter">3.1 UART (Universal Asynchronous Receiver-Transmitter)</a></li>
+  <li><a href="#spi-serial-peripheral-interface" id="toc-spi-serial-peripheral-interface" class="nav-link" data-scroll-target="#spi-serial-peripheral-interface">3.2 SPI (Serial Peripheral Interface)</a></li>
+  <li><a href="#i2c-inter-integrated-circuit" id="toc-i2c-inter-integrated-circuit" class="nav-link" data-scroll-target="#i2c-inter-integrated-circuit">3.3 <span class="math inline">\(I^2C\)</span> (Inter-Integrated Circuit)</a></li>
+  </ul></li>
+  <li><a href="#networking-concepts-industrial-fieldbus-protocols" id="toc-networking-concepts-industrial-fieldbus-protocols" class="nav-link" data-scroll-target="#networking-concepts-industrial-fieldbus-protocols">4. Networking Concepts &amp; Industrial Fieldbus Protocols</a></li>
+  <li><a href="#mini-project-1-two-way-uart-command-echo-parser" id="toc-mini-project-1-two-way-uart-command-echo-parser" class="nav-link" data-scroll-target="#mini-project-1-two-way-uart-command-echo-parser">5. Mini-Project 1: Two-Way UART Command &amp; Echo Parser 📡💬</a>
+  <ul class="collapse">
+  <li><a href="#objective" id="toc-objective" class="nav-link" data-scroll-target="#objective">🎯 Objective</a></li>
+  <li><a href="#hardware-setup-wokwi" id="toc-hardware-setup-wokwi" class="nav-link" data-scroll-target="#hardware-setup-wokwi">🛠️ Hardware Setup (Wokwi)</a></li>
+  <li><a href="#pin-wiring-table" id="toc-pin-wiring-table" class="nav-link" data-scroll-target="#pin-wiring-table">Pin Wiring Table</a></li>
+  <li><a href="#problem-statement-logic-flow" id="toc-problem-statement-logic-flow" class="nav-link" data-scroll-target="#problem-statement-logic-flow">📝 Problem Statement &amp; Logic Flow</a></li>
+  <li><a href="#interactive-simulation" id="toc-interactive-simulation" class="nav-link" data-scroll-target="#interactive-simulation">Interactive Simulation</a></li>
+  <li><a href="#implementation-code-high-level-framework-vs.-bare-metal-embedded-c" id="toc-implementation-code-high-level-framework-vs.-bare-metal-embedded-c" class="nav-link" data-scroll-target="#implementation-code-high-level-framework-vs.-bare-metal-embedded-c">Implementation Code: High-Level Framework vs.&nbsp;Bare-Metal Embedded C</a></li>
+  <li><a href="#how-mini-project-1-applies-week-5-concepts" id="toc-how-mini-project-1-applies-week-5-concepts" class="nav-link" data-scroll-target="#how-mini-project-1-applies-week-5-concepts">🔍 How Mini-Project 1 Applies Week 5 Concepts</a></li>
+  </ul></li>
+  <li><a href="#mini-project-2-ev-battery-thermal-voltage-supervisor" id="toc-mini-project-2-ev-battery-thermal-voltage-supervisor" class="nav-link" data-scroll-target="#mini-project-2-ev-battery-thermal-voltage-supervisor">6. Mini-Project 2: EV Battery Thermal &amp; Voltage Supervisor 🔋⚡</a>
+  <ul class="collapse">
+  <li><a href="#objective-1" id="toc-objective-1" class="nav-link" data-scroll-target="#objective-1">🎯 Objective</a></li>
+  <li><a href="#hardware-setup-wokwi-1" id="toc-hardware-setup-wokwi-1" class="nav-link" data-scroll-target="#hardware-setup-wokwi-1">🛠️ Hardware Setup (Wokwi)</a></li>
+  <li><a href="#pin-wiring-table-1" id="toc-pin-wiring-table-1" class="nav-link" data-scroll-target="#pin-wiring-table-1">Pin Wiring Table</a></li>
+  <li><a href="#problem-statement-functional-requirements" id="toc-problem-statement-functional-requirements" class="nav-link" data-scroll-target="#problem-statement-functional-requirements">📝 Problem Statement &amp; Functional Requirements</a></li>
+  <li><a href="#interactive-simulation-1" id="toc-interactive-simulation-1" class="nav-link" data-scroll-target="#interactive-simulation-1">Interactive Simulation</a></li>
+  <li><a href="#implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1" id="toc-implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1" class="nav-link" data-scroll-target="#implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1">Implementation Code: High-Level Framework vs.&nbsp;Bare-Metal Embedded C</a></li>
+  <li><a href="#how-mini-project-2-applies-week-5-concepts" id="toc-how-mini-project-2-applies-week-5-concepts" class="nav-link" data-scroll-target="#how-mini-project-2-applies-week-5-concepts">🔍 How Mini-Project 2 Applies Week 5 Concepts</a></li>
+  </ul></li>
+  <li><a href="#hands-on-practice-challenge-for-students-to-solve" id="toc-hands-on-practice-challenge-for-students-to-solve" class="nav-link" data-scroll-target="#hands-on-practice-challenge-for-students-to-solve">7. Hands-On Practice Challenge (For Students to Solve) 🎯</a>
+  <ul class="collapse">
+  <li><a href="#objective-scenario" id="toc-objective-scenario" class="nav-link" data-scroll-target="#objective-scenario">🎯 Objective &amp; Scenario</a></li>
+  <li><a href="#hardware-setup-wokwi-2" id="toc-hardware-setup-wokwi-2" class="nav-link" data-scroll-target="#hardware-setup-wokwi-2">🛠️ Hardware Setup (Wokwi)</a></li>
+  <li><a href="#problem-statement-functional-requirements-1" id="toc-problem-statement-functional-requirements-1" class="nav-link" data-scroll-target="#problem-statement-functional-requirements-1">📋 Problem Statement &amp; Functional Requirements</a></li>
+  <li><a href="#starter-code-template" id="toc-starter-code-template" class="nav-link" data-scroll-target="#starter-code-template">💻 Starter Code Template</a></li>
+  <li><a href="#verification-expected-test-cases" id="toc-verification-expected-test-cases" class="nav-link" data-scroll-target="#verification-expected-test-cases">🧪 Verification &amp; Expected Test Cases</a></li>
+  </ul></li>
+  <li><a href="#concept-check-practice-questions" id="toc-concept-check-practice-questions" class="nav-link" data-scroll-target="#concept-check-practice-questions">8. Concept Check Practice Questions</a>
+  <ul class="collapse">
+  <li><a href="#question-1-serial-vs.-parallel-bus-trade-offs" id="toc-question-1-serial-vs.-parallel-bus-trade-offs" class="nav-link" data-scroll-target="#question-1-serial-vs.-parallel-bus-trade-offs">Question 1: Serial vs.&nbsp;Parallel Bus Trade-Offs</a></li>
+  <li><a href="#question-2-i2c-pull-up-resistor-function" id="toc-question-2-i2c-pull-up-resistor-function" class="nav-link" data-scroll-target="#question-2-i2c-pull-up-resistor-function">Question 2: <span class="math inline">\(I^2C\)</span> Pull-Up Resistor Function</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -389,7 +497,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Week 5: Digital Communication Protocols</h1>
+<h1 class="title">Week 5: Communication Protocols in Embedded Systems</h1>
 </div>
 
 
@@ -406,28 +514,1499 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="overview" class="level2">
-<h2 class="anchored" data-anchor-id="overview">Overview</h2>
-<p>UART asynchronous protocol, SPI synchronous bus, I2C two-wire interface, master-slave communication.</p>
-<div class="callout callout-style-default callout-tip callout-titled">
+<section id="why-do-embedded-systems-need-communication-protocols" class="level2">
+<h2 class="anchored" data-anchor-id="why-do-embedded-systems-need-communication-protocols">1. Why Do Embedded Systems Need Communication Protocols?</h2>
+<p>Imagine a modern car or a smart home: you have dozens of sensors measuring temperature, wheel speed, and battery voltage, along with multiple microcontrollers controlling motors, displays, and actuators.</p>
+<p>If every sensor required its own dedicated bundle of analog wires directly connected to the central CPU, the wiring harness would weigh hundreds of kilograms and cost thousands of dollars.</p>
+<pre class="text"><code> WITHOUT A COMMUNICATION PROTOCOL (Chaotic &amp; Expensive):
+ [Sensor 1] ======= 8 Dedicated Wires =======&gt; [ Microcontroller ]
+ [Sensor 2] ======= 8 Dedicated Wires =======&gt; [ Microcontroller ]
+ [Display ] ======= 16 Dedicated Wires ======&gt; [ Microcontroller ]
+ * Bulky wiring, pin exhaustion, high cost, and zero interoperability!
+
+ WITH A STANDARDIZED PROTOCOL (Organized &amp; Efficient):
+ [Sensor 1] --+
+ [Sensor 2] --+=== Shared 2-Wire Serial Bus (e.g., I2C / CAN) ===&gt; [ Microcontroller ]
+ [Display ] --+
+ * Only 2 to 4 shared wires, low cost, scalable, and standardized!</code></pre>
+<p>A <strong>Communication Protocol</strong> is simply an agreed-upon set of rules that defines: 1. <strong>Physical Signaling:</strong> Voltage levels, timing intervals, and clock frequencies. 2. <strong>Data Framing:</strong> How bits are grouped into packets, bytes, start bits, and stop bits. 3. <strong>Addressing:</strong> How a master processor identifies which specific sensor it wants to talk to on a shared bus. 4. <strong>Error Handling:</strong> How the receiver detects if electrical noise corrupted a transmitted bit (e.g., Parity, Checksum, CRC).</p>
+<hr>
+</section>
+<section id="serial-vs.-parallel-communication" class="level2">
+<h2 class="anchored" data-anchor-id="serial-vs.-parallel-communication">2. Serial vs.&nbsp;Parallel Communication</h2>
+<p>In the early days of computing, <strong>parallel communication</strong> (sending 8, 16, or 32 bits simultaneously over 8, 16, or 32 physical wires) was faster because clock speeds were low. However, in modern embedded systems, <strong>serial communication</strong> (sending data bit-by-bit over a single wire) has almost completely replaced parallel buses.</p>
+<pre class="text"><code> PARALLEL BUS (8 Bits Sent Simultaneously)
+ Sender [D0] -----------------------------&gt; Receiver [D0]
+        [D1] -----------------------------&gt;          [D1]
+        [D2] -----------------------------&gt;          [D2]
+        ...
+        [CLK] ----------------------------&gt;          [CLK]
+ * Problem: Clock Skew! Bits arrive at slightly different nanoseconds over different trace lengths.
+
+ SERIAL BUS (1 Bit Sent at a Time in Rapid Succession)
+ Sender [TX] ---- Bit 7, 6, 5, 4, 3, 2, 1, 0 ----&gt; Receiver [RX]
+ * Solved: Zero trace-to-trace skew, simple 1-wire trace, works reliably over long distances!</code></pre>
+<section id="why-serial-communication-won" class="level3">
+<h3 class="anchored" data-anchor-id="why-serial-communication-won">Why Serial Communication Won:</h3>
+<ul>
+<li><strong>No Clock Skew:</strong> In parallel buses, slight differences in PCB copper trace lengths cause bits to arrive at slightly different times (<strong>clock skew</strong>). At high speeds, this scrambles data. Serial sends one bit at a time, eliminating skew.</li>
+<li><strong>Fewer Microcontroller Pins:</strong> Serial protocols only require 1 to 4 pins, allowing microcontrollers to come in tiny, inexpensive chip packages (QFN, TSSOP).</li>
+<li><strong>Reduced Cross-Talk &amp; Noise:</strong> Routing 16 parallel high-speed traces close together causes electromagnetic interference (cross-talk). Serial routing is clean and compact.</li>
+<li><strong>Longer Distance:</strong> Serial signals can travel meters or even kilometers (e.g., RS-485, CAN bus), whereas parallel buses are restricted to a few centimeters.</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="the-big-three-microcontroller-serial-protocols" class="level2">
+<h2 class="anchored" data-anchor-id="the-big-three-microcontroller-serial-protocols">3. The Big Three Microcontroller Serial Protocols</h2>
+<p>Microcontrollers typically feature hardware peripheral engines for three fundamental serial standards: <strong>UART</strong>, <strong>SPI</strong>, and <strong><span class="math inline">\(I^2C\)</span></strong>.</p>
+<pre class="text"><code> +-----------------------------------------------------------------------------------------+
+ |                               THE CORE PROTOCOL COMPARISON                              |
+ +-----------------------------------------------------------------------------------------+
+ | Feature             | UART                       | SPI                  | I2C           |
+ +---------------------+----------------------------+----------------------+---------------+
+ | Type                | Asynchronous (No clock)    | Synchronous (SCK)    | Synchronous   |
+ | Wires (Excl. GND)   | 2 (TX, RX)                 | 4 (MOSI, MISO,SCK,CS)| 2 (SDA, SCL)  |
+ | Speed Range         | 9.6 kbps to 1 Mbps         | 10 Mbps to 80+ Mbps  | 100k - 3.4M   |
+ | Duplex              | Full Duplex                | Full Duplex          | Half Duplex   |
+ | Bus Architecture    | Point-to-Point (1 to 1)    | Master-Slave (Multi) | Multi-Master  |
+ | Best Suited For     | Debug serial, GPS, Modems  | Flash memory, Displays| Low-speed sen|
+ +-----------------------------------------------------------------------------------------+</code></pre>
+<hr>
+<section id="uart-universal-asynchronous-receiver-transmitter" class="level3">
+<h3 class="anchored" data-anchor-id="uart-universal-asynchronous-receiver-transmitter">3.1 UART (Universal Asynchronous Receiver-Transmitter)</h3>
+<p><strong>UART</strong> is an <strong>asynchronous</strong> protocol. “Asynchronous” means there is <strong>no shared clock wire</strong> between the sender and the receiver.</p>
+<p>Instead, both devices are pre-configured to run at the exact same transmission speed, known as the <strong>Baud Rate</strong> (e.g., 9600, 115200 bits per second).</p>
+<pre class="text"><code> UART WIRING (Cross-over connection):
+ MCU 1 [TX Pin] ------------------------------&gt; MCU 2 [RX Pin]
+ MCU 1 [RX Pin] &lt;------------------------------ MCU 2 [TX Pin]
+ MCU 1 [GND   ] ------------------------------- MCU 2 [GND   ]</code></pre>
+<section id="the-uart-data-frame" class="level4">
+<h4 class="anchored" data-anchor-id="the-uart-data-frame">The UART Data Frame</h4>
+<p>When no data is being sent, the line idles at a steady logic <strong>HIGH</strong> (<span class="math inline">\(V_{CC}\)</span>). To transmit a byte, the UART hardware wraps the 8 data bits in a standardized frame:</p>
+<pre class="text"><code> Idle (1) | Start (0) | D0 | D1 | D2 | D3 | D4 | D5 | D6 | D7 | Parity | Stop (1) | Idle (1)
+ ---------+           +----+----+----+----+----+----+----+----+--------+----------+---------
+          |___________|                                                |
+            1 Bit-Time             8 Data Bits (LSB First)                1-2 Bits</code></pre>
+<ol type="1">
+<li><strong>Start Bit (Always 0):</strong> The sender pulls the line LOW for 1 bit-time. This falling edge wakes up the receiver and starts its internal sampling timer.</li>
+<li><strong>Data Payload (5 to 9 bits, typically 8 bits):</strong> The byte is sent <strong>Least Significant Bit (LSB) first</strong>.</li>
+<li><strong>Optional Parity Bit:</strong> Adds basic error detection (Even or Odd parity).</li>
+<li><strong>Stop Bit(s) (Always 1):</strong> The line returns HIGH for 1 or 2 bit-times, allowing the receiver to shift the byte into its buffer and prepare for the next frame.</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="spi-serial-peripheral-interface" class="level3">
+<h3 class="anchored" data-anchor-id="spi-serial-peripheral-interface">3.2 SPI (Serial Peripheral Interface)</h3>
+<p><strong>SPI</strong> is a <strong>synchronous, full-duplex</strong> bus designed by Motorola. Because it includes an explicit clock line (<strong>SCK</strong>) driven by the Master, it can achieve speeds exceeding <span class="math inline">\(50\text{ MHz}\)</span>.</p>
+<ul>
+<li><strong>MOSI (Master Out Slave In):</strong> Data sent from the Master to the Slave.</li>
+<li><strong>MISO (Master In Slave Out):</strong> Data sent from the Slave back to the Master.</li>
+<li><strong>SCK (Serial Clock):</strong> Clock pulses generated exclusively by the Master to time bit transfers.</li>
+<li><strong>CS / SS (Chip Select / Slave Select):</strong> Active-low pin used to wake up and select a specific slave.</li>
+</ul>
+<hr>
+</section>
+<section id="i2c-inter-integrated-circuit" class="level3">
+<h3 class="anchored" data-anchor-id="i2c-inter-integrated-circuit">3.3 <span class="math inline">\(I^2C\)</span> (Inter-Integrated Circuit)</h3>
+<p><strong><span class="math inline">\(I^2C\)</span></strong> is a <strong>synchronous, half-duplex, multi-device</strong> bus that requires only <strong>two wires</strong>, regardless of how many devices are attached: - <strong>SDA (Serial Data):</strong> Bi-directional data line. - <strong>SCL (Serial Clock):</strong> Synchronizing clock line driven by the Master.</p>
+<section id="open-drain-architecture-pull-up-resistors" class="level4">
+<h4 class="anchored" data-anchor-id="open-drain-architecture-pull-up-resistors">Open-Drain Architecture &amp; Pull-Up Resistors</h4>
+<p><span class="math inline">\(I^2C\)</span> pins use <strong>open-drain</strong> output stages. They can pull the line LOW to <span class="math inline">\(0\text{V}\)</span>, but cannot actively drive it HIGH. External <strong>pull-up resistors (<span class="math inline">\(R_p\)</span>, typically <span class="math inline">\(4.7\text{ k}\Omega\)</span>)</strong> pull the bus voltage back up to <span class="math inline">\(3.3\text{V}\)</span> when all devices release the line.</p>
+<hr>
+</section>
+</section>
+</section>
+<section id="networking-concepts-industrial-fieldbus-protocols" class="level2">
+<h2 class="anchored" data-anchor-id="networking-concepts-industrial-fieldbus-protocols">4. Networking Concepts &amp; Industrial Fieldbus Protocols</h2>
+<p>In harsh factory environments or automobiles, consumer protocols like <span class="math inline">\(I^2C\)</span> fail due to electrical motor noise. <strong>Fieldbus protocols</strong> provide robust, noise-immune communication: - <strong>CAN Bus (Controller Area Network):</strong> Used across automotive ECUs with balanced differential signaling (<code>CAN_H</code> and <code>CAN_L</code>). - <strong>RS-485 / Modbus:</strong> Industrial balanced serial standard for distances up to 1200 meters. - <strong>LIN Bus:</strong> Single-wire cost-effective automotive bus for sub-systems like power mirrors and window switches. - <strong>Wireless Protocols (BLE, Zigbee, LoRa):</strong> For cable-free remote IoT and sensor node networking.</p>
+<hr>
+</section>
+<section id="mini-project-1-two-way-uart-command-echo-parser" class="level2">
+<h2 class="anchored" data-anchor-id="mini-project-1-two-way-uart-command-echo-parser">5. Mini-Project 1: Two-Way UART Command &amp; Echo Parser 📡💬</h2>
+<section id="objective" class="level3">
+<h3 class="anchored" data-anchor-id="objective">🎯 Objective</h3>
+<p>In field automation and diagnostic consoles, microcontrollers frequently communicate with a host computer or test harness via a serial terminal. In this project, you will build an interactive ASCII Command-Line Interface (CLI) over UART at <strong>115200 baud</strong> running on the <strong>STM32 Nucleo-C031C6</strong> that parses incoming text commands, toggles the onboard LED, and replies with structured acknowledgement frames.</p>
+</section>
+<section id="hardware-setup-wokwi" class="level3">
+<h3 class="anchored" data-anchor-id="hardware-setup-wokwi">🛠️ Hardware Setup (Wokwi)</h3>
+<p>The circuit connects the following to an <strong>STM32 Nucleo-C031C6</strong> board: * <strong>Onboard User LED:</strong> Connected to pin <code>PA5</code> (<code>D13</code>) to visualize command states. * <strong>UART USB VCP:</strong> Direct hardware serial link over ST-LINK Virtual COM Port. * <em>(Optional breadboard LED: Anode to <code>D13</code> via 220Ω resistor, Cathode to <code>GND</code>).</em></p>
+</section>
+<section id="pin-wiring-table" class="level3">
+<h3 class="anchored" data-anchor-id="pin-wiring-table">Pin Wiring Table</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 23%">
+<col style="width: 23%">
+<col style="width: 29%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Component</th>
+<th style="text-align: left;">Pin / Terminal</th>
+<th style="text-align: center;">STM32 / Board Pin</th>
+<th style="text-align: left;">Electrical Function</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Onboard User LED</strong></td>
+<td style="text-align: left;">Anode (<code>PA5</code>)</td>
+<td style="text-align: center;"><code>D13</code></td>
+<td style="text-align: left;">Green LED driven directly by MCU pin <code>PA5</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>UART TX</strong></td>
+<td style="text-align: left;">Transmit (<code>PA2</code>)</td>
+<td style="text-align: center;">Virtual COM Port</td>
+<td style="text-align: left;">Transmits ASCII data to Host PC</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>UART RX</strong></td>
+<td style="text-align: left;">Receive (<code>PA3</code>)</td>
+<td style="text-align: center;">Virtual COM Port</td>
+<td style="text-align: left;">Receives ASCII commands from Host PC</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>GND</strong></td>
+<td style="text-align: left;">Ground</td>
+<td style="text-align: center;"><code>GND</code></td>
+<td style="text-align: left;">Common Logic Ground Reference</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="problem-statement-logic-flow" class="level3">
+<h3 class="anchored" data-anchor-id="problem-statement-logic-flow">📝 Problem Statement &amp; Logic Flow</h3>
+<ol type="1">
+<li><strong>Initialization (<code>setup</code>):</strong>
+<ul>
+<li>Start UART Serial communication at <strong>115200 baud rate</strong>.</li>
+<li>Configure onboard LED pin (<code>D13</code> / <code>PA5</code>) as <code>OUTPUT</code> and set initial state to <code>LOW</code>.</li>
+<li>Print a startup welcome banner listing all supported CLI commands.</li>
+</ul></li>
+<li><strong>Continuous Loop (<code>loop</code>):</strong>
+<ul>
+<li><strong>Poll Receive Buffer:</strong> Check if characters are available with <code>Serial.available()</code>.</li>
+<li><strong>Extract Command Line:</strong> Read incoming characters until newline (<code>\n</code>) and trim whitespace.</li>
+<li><strong>Parse Commands (Case-Insensitive):</strong>
+<ul>
+<li><code>"LED ON"</code> <span class="math inline">\(\rightarrow\)</span> Drive <code>D13</code> HIGH and reply <code>"[ACK] LED is now ON"</code>.</li>
+<li><code>"LED OFF"</code> <span class="math inline">\(\rightarrow\)</span> Drive <code>D13</code> LOW and reply <code>"[ACK] LED is now OFF"</code>.</li>
+<li><code>"LED TOGGLE"</code> <span class="math inline">\(\rightarrow\)</span> Invert current LED state and report new state.</li>
+<li><code>"PING"</code> <span class="math inline">\(\rightarrow\)</span> Reply <code>"[ACK] PONG!"</code>.</li>
+<li><code>"STATUS"</code> <span class="math inline">\(\rightarrow\)</span> Report current LED status and uptime in seconds (<code>millis() / 1000</code>).</li>
+</ul></li>
+<li><strong>Defensive Fallback:</strong> If command is unrecognized, report <code>"[ERR] Unknown command: &lt;cmd&gt;"</code>.</li>
+</ul></li>
+</ol>
+<pre class="text"><code>======================================
+  STM32 UART Command Parser Ready     
+  Commands: 'LED ON', 'LED OFF', 'PING'
+======================================
+&gt; LED ON
+[ACK] LED is now ON
+&gt; STATUS
+[STATUS] LED: ON | Uptime: 12s</code></pre>
+</section>
+<section id="interactive-simulation" class="level3">
+<h3 class="anchored" data-anchor-id="interactive-simulation">Interactive Simulation</h3>
+<div class="simulation-container">
+<iframe src="https://wokwi.com/projects/479951814265564161?embed=1" title="UART Serial Simulation" loading="lazy" allowfullscreen="">
+</iframe>
+<div class="sim-info-bar">
+<p><span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span> <span>Click Play, open Serial Monitor at 115200 baud, and type commands</span></p>
+</div>
+</div>
+</section>
+<section id="implementation-code-high-level-framework-vs.-bare-metal-embedded-c" class="level3">
+<h3 class="anchored" data-anchor-id="implementation-code-high-level-framework-vs.-bare-metal-embedded-c">Implementation Code: High-Level Framework vs.&nbsp;Bare-Metal Embedded C</h3>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="">🔷 High-Level Framework (Running in Simulation)</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">🔶 Equivalent Bare-Metal Embedded C (Direct Register Access)</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Mini-Project 1: Two-Way UART Command &amp; Echo Parser (Nucleo-C031C6)</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#define LED_PIN </span>LED_BUILTIN<span class="pp"> </span><span class="co">// PA5 / D13</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setup<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>begin<span class="op">(</span><span class="dv">115200</span><span class="op">);</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>LED_PIN<span class="op">,</span> OUTPUT<span class="op">);</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  digitalWrite<span class="op">(</span>LED_PIN<span class="op">,</span> LOW<span class="op">);</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"======================================"</span><span class="op">);</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"  STM32 UART Command Parser Ready     "</span><span class="op">);</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"  Commands: 'LED ON', 'LED OFF', 'PING'"</span><span class="op">);</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"======================================"</span><span class="op">);</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> loop<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>Serial<span class="op">.</span>available<span class="op">()</span> <span class="op">&gt;</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    String cmd <span class="op">=</span> Serial<span class="op">.</span>readStringUntil<span class="op">(</span><span class="ch">'</span><span class="sc">\n</span><span class="ch">'</span><span class="op">);</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    cmd<span class="op">.</span>trim<span class="op">();</span> <span class="co">// Strip newline and carriage returns</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>cmd<span class="op">.</span>equalsIgnoreCase<span class="op">(</span><span class="st">"LED ON"</span><span class="op">))</span> <span class="op">{</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>      digitalWrite<span class="op">(</span>LED_PIN<span class="op">,</span> HIGH<span class="op">);</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>      Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"[ACK] LED is now ON"</span><span class="op">);</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> <span class="op">(</span>cmd<span class="op">.</span>equalsIgnoreCase<span class="op">(</span><span class="st">"LED OFF"</span><span class="op">))</span> <span class="op">{</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>      digitalWrite<span class="op">(</span>LED_PIN<span class="op">,</span> LOW<span class="op">);</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>      Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"[ACK] LED is now OFF"</span><span class="op">);</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> <span class="op">(</span>cmd<span class="op">.</span>equalsIgnoreCase<span class="op">(</span><span class="st">"LED TOGGLE"</span><span class="op">))</span> <span class="op">{</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>      digitalWrite<span class="op">(</span>LED_PIN<span class="op">,</span> <span class="op">!</span>digitalRead<span class="op">(</span>LED_PIN<span class="op">));</span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>      Serial<span class="op">.</span>print<span class="op">(</span><span class="st">"[ACK] LED toggled to: "</span><span class="op">);</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>      Serial<span class="op">.</span>println<span class="op">(</span>digitalRead<span class="op">(</span>LED_PIN<span class="op">)</span> <span class="op">?</span> <span class="st">"ON"</span> <span class="op">:</span> <span class="st">"OFF"</span><span class="op">);</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> <span class="op">(</span>cmd<span class="op">.</span>equalsIgnoreCase<span class="op">(</span><span class="st">"PING"</span><span class="op">))</span> <span class="op">{</span></span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>      Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"[ACK] PONG!"</span><span class="op">);</span></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> <span class="op">(</span>cmd<span class="op">.</span>equalsIgnoreCase<span class="op">(</span><span class="st">"STATUS"</span><span class="op">))</span> <span class="op">{</span></span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>      Serial<span class="op">.</span>print<span class="op">(</span><span class="st">"[STATUS] LED: "</span><span class="op">);</span></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>      Serial<span class="op">.</span>print<span class="op">(</span>digitalRead<span class="op">(</span>LED_PIN<span class="op">)</span> <span class="op">?</span> <span class="st">"ON"</span> <span class="op">:</span> <span class="st">"OFF"</span><span class="op">);</span></span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>      Serial<span class="op">.</span>print<span class="op">(</span><span class="st">" | Uptime: "</span><span class="op">);</span></span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>      Serial<span class="op">.</span>print<span class="op">(</span>millis<span class="op">()</span> <span class="op">/</span> <span class="dv">1000</span><span class="op">);</span></span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>      Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"s"</span><span class="op">);</span></span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> <span class="op">(</span>cmd<span class="op">.</span>length<span class="op">()</span> <span class="op">&gt;</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a>      Serial<span class="op">.</span>print<span class="op">(</span><span class="st">"[ERR] Unknown command: "</span><span class="op">);</span></span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a>      Serial<span class="op">.</span>println<span class="op">(</span>cmd<span class="op">);</span></span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Mini-Project 1: Bare-Metal STM32 UART Driver (Direct Register Access)</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Hardware: STM32 Nucleo-C031C6 (USART2 on PA2/PA3, LED on PA5)</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdint.h&gt;</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#define RCC_BASE        </span><span class="op">(</span><span class="bn">0x40021000</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#define RCC_IOPENR      </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span>RCC_BASE<span class="pp"> </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x34</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#define RCC_APBENR1     </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span>RCC_BASE<span class="pp"> </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x3C</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOA_BASE      </span><span class="op">(</span><span class="bn">0x50000000</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOA_MODER     </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">GPIOA_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x00</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOA_AFRL      </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">GPIOA_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x20</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOA_BSRR      </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">GPIOA_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x18</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="pp">#define USART2_BASE     </span><span class="op">(</span><span class="bn">0x40004400</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="pp">#define USART2_CR1      </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span>USART2_BASE<span class="pp"> </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x00</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a><span class="pp">#define USART2_BRR      </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span>USART2_BASE<span class="pp"> </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x0C</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a><span class="pp">#define USART2_ISR      </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span>USART2_BASE<span class="pp"> </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x1C</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a><span class="pp">#define USART2_TDR      </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span>USART2_BASE<span class="pp"> </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x28</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a><span class="pp">#define USART2_RDR      </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span>USART2_BASE<span class="pp"> </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x24</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> uart_init<span class="op">(</span><span class="dt">uint32_t</span> pclk<span class="op">,</span> <span class="dt">uint32_t</span> baud<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>    RCC_IOPENR  <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">0</span><span class="op">);</span>        <span class="co">// Enable GPIOA clock</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>    RCC_APBENR1 <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">17</span><span class="op">);</span>       <span class="co">// Enable USART2 clock</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Configure PA2 as Alternate Function (AF1 for USART2_TX)</span></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>    GPIOA_MODER <span class="op">&amp;=</span> <span class="op">~(</span><span class="dv">3</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">2</span> <span class="op">*</span> <span class="dv">2</span><span class="op">));</span></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>    GPIOA_MODER <span class="op">|=</span>  <span class="op">(</span><span class="dv">2</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">2</span> <span class="op">*</span> <span class="dv">2</span><span class="op">));</span></span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>    GPIOA_AFRL  <span class="op">|=</span>  <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">2</span> <span class="op">*</span> <span class="dv">4</span><span class="op">));</span></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Configure PA5 as Output (User LED)</span></span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>    GPIOA_MODER <span class="op">&amp;=</span> <span class="op">~(</span><span class="dv">3</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">5</span> <span class="op">*</span> <span class="dv">2</span><span class="op">));</span></span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>    GPIOA_MODER <span class="op">|=</span>  <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">5</span> <span class="op">*</span> <span class="dv">2</span><span class="op">));</span></span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Set Baud Rate (pclk / baud)</span></span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>    USART2_BRR <span class="op">=</span> pclk <span class="op">/</span> baud<span class="op">;</span></span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>    USART2_CR1 <span class="op">=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">3</span><span class="op">)</span> <span class="op">|</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">2</span><span class="op">)</span> <span class="op">|</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">0</span><span class="op">);</span> <span class="co">// TE, RE, UE</span></span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> uart_send_char<span class="op">(</span><span class="dt">char</span> c<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(!(</span>USART2_ISR <span class="op">&amp;</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">7</span><span class="op">)));</span> <span class="co">// Wait for TXE (Transmit Empty)</span></span>
+<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a>    USART2_TDR <span class="op">=</span> <span class="op">(</span><span class="dt">uint8_t</span><span class="op">)</span>c<span class="op">;</span></span>
+<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> uart_send_str<span class="op">(</span><span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>s<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(*</span>s<span class="op">)</span> uart_send_char<span class="op">(*</span>s<span class="op">++);</span></span>
+<span id="cb8-48"><a href="#cb8-48" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-caution callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>📌 Coming Up
+<span class="screen-reader-only">Caution</span>⚠️ Code Verification &amp; Assistance
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>This module is part of the CS2101 syllabus outline. Detailed lecture notes, integrated interactive simulations, and question banks will be added here.</p>
+<p>All high-level framework and bare-metal implementation codes are verified for the target microcontroller (<strong>STM32 Nucleo-C031C6</strong> / ARM Cortex-M0+). If you encounter any compilation errors, unexpected simulation behavior, or discrepancies with this code, Please report to the Course instructor or the TA via email.</p>
 </div>
 </div>
-<p><a href="./index.html" class="btn btn-outline-secondary mt-4">← Back to Main Page</a></p>
+</section>
+<section id="how-mini-project-1-applies-week-5-concepts" class="level3">
+<h3 class="anchored" data-anchor-id="how-mini-project-1-applies-week-5-concepts">🔍 How Mini-Project 1 Applies Week 5 Concepts</h3>
+<section id="hardware-circuit-level-concept-mapping" class="level4">
+<h4 class="anchored" data-anchor-id="hardware-circuit-level-concept-mapping">1. Hardware &amp; Circuit-Level Concept Mapping</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Circuit Component</th>
+<th style="text-align: left;">Week 5 Theoretical Concept</th>
+<th style="text-align: left;">Technical Function in System</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Virtual COM Port over USB</strong></td>
+<td style="text-align: left;"><strong>Asynchronous Serial Framing (UART)</strong></td>
+<td style="text-align: left;">Data packets are framed with 1 Start bit, 8 Data bits, 0 Parity, and 1 Stop bit (8-N-1). Both MCU and host clock independently at 115200 baud.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>PA5 User LED</strong></td>
+<td style="text-align: left;"><strong>Actuator Status Indicator</strong></td>
+<td style="text-align: left;">Direct memory-mapped logic drive: setting PA5 to 3.3V illuminates the onboard green LED to confirm received packets.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="firmware-code-to-concept-breakdown" class="level4">
+<h4 class="anchored" data-anchor-id="firmware-code-to-concept-breakdown">2. Firmware Code-to-Concept Breakdown</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Code Statement (Framework / Bare-Metal)</th>
+<th style="text-align: left;">Week 5 Theoretical Concept</th>
+<th style="text-align: left;">Deep-Dive Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>Serial.begin(115200);</code><br><code>USART2_BRR = pclk / baud;</code></td>
+<td style="text-align: left;"><strong>Baud Rate Clock Division</strong></td>
+<td style="text-align: left;">Generates the sampling clock. The internal peripheral clock is divided down so the receiver samples the RX line exactly at the center of each bit period (<span class="math inline">\(8.68\,\mu\text{s}\)</span>).</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>while (!(USART2_ISR &amp; (1UL &lt;&lt; 7)));</code></td>
+<td style="text-align: left;"><strong>Hardware Handshaking via Status Flags</strong></td>
+<td style="text-align: left;">Checks the <code>TXE</code> (Transmit Data Register Empty) bit before writing to <code>TDR</code> to avoid overwriting characters mid-transmission.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+</section>
+<section id="mini-project-2-ev-battery-thermal-voltage-supervisor" class="level2">
+<h2 class="anchored" data-anchor-id="mini-project-2-ev-battery-thermal-voltage-supervisor">6. Mini-Project 2: EV Battery Thermal &amp; Voltage Supervisor 🔋⚡</h2>
+<section id="objective-1" class="level3">
+<h3 class="anchored" data-anchor-id="objective-1">🎯 Objective</h3>
+<p>In Electric Vehicle (EV) battery management systems, thermal runaway can cause catastrophic fires. In this mini-project, you will build an autonomous <strong>EV Battery Thermal Transducer &amp; Alarm Supervisor</strong> on the <strong>STM32 Nucleo-C031C6</strong> that samples an analog temperature transducer and triggers safety indicators and alarms.</p>
+</section>
+<section id="hardware-setup-wokwi-1" class="level3">
+<h3 class="anchored" data-anchor-id="hardware-setup-wokwi-1">🛠️ Hardware Setup (Wokwi)</h3>
+<p>The circuit connects the following components to an <strong>STM32 Nucleo-C031C6</strong> board: * <strong>1x Potentiometer (<code>wokwi-potentiometer</code>):</strong> Connected to <code>A0</code> (<code>PA0</code>) to simulate the analog temperature transducer (<span class="math inline">\(0.0^\circ\text{C}\)</span> to <span class="math inline">\(100.0^\circ\text{C}\)</span>). * <strong>1x Green Status LED:</strong> Connected to <code>D2</code> (<code>PA10</code>) via <span class="math inline">\(220\,\Omega\)</span> resistor (Safe State Indicator). * <strong>1x Red Hazard LED:</strong> Connected to <code>D3</code> (<code>PB3</code>) via <span class="math inline">\(220\,\Omega\)</span> resistor (Overheat Hazard Indicator). * <strong>1x Warning Buzzer (<code>wokwi-buzzer</code>):</strong> Connected to <code>D5</code> (<code>PB4</code>) for audible emergency alerting.</p>
+</section>
+<section id="pin-wiring-table-1" class="level3">
+<h3 class="anchored" data-anchor-id="pin-wiring-table-1">Pin Wiring Table</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 23%">
+<col style="width: 23%">
+<col style="width: 29%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Component</th>
+<th style="text-align: left;">Pin / Terminal on Component</th>
+<th style="text-align: center;">STM32 Nucleo-C031C6 Pin</th>
+<th style="text-align: left;">Electrical Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Potentiometer</strong></td>
+<td style="text-align: left;"><code>GND</code> / <code>VCC</code></td>
+<td style="text-align: center;"><code>GND</code> / <code>3.3V</code></td>
+<td style="text-align: left;">Analog Reference Power Rails</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Potentiometer</strong></td>
+<td style="text-align: left;"><code>SIG</code> (Wiper)</td>
+<td style="text-align: center;"><code>A0</code> (<code>PA0</code>)</td>
+<td style="text-align: left;">Analog Thermal Transducer (<span class="math inline">\(0.0^\circ\text{C}-100.0^\circ\text{C}\)</span>)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Safe LED (Green)</strong></td>
+<td style="text-align: left;">Anode (via 220Ω)</td>
+<td style="text-align: center;"><code>D2</code> (<code>PA10</code>)</td>
+<td style="text-align: left;">Normal thermal state indicator</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Hazard LED (Red)</strong></td>
+<td style="text-align: left;">Anode (via 220Ω)</td>
+<td style="text-align: center;"><code>D3</code> (<code>PB3</code>)</td>
+<td style="text-align: left;">Thermal runaway hazard indicator</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Warning Buzzer</strong></td>
+<td style="text-align: left;">Positive (<span class="math inline">\(+\)</span>)</td>
+<td style="text-align: center;"><code>D5</code> (<code>PB4</code>)</td>
+<td style="text-align: left;">Audible alarm actuator</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Common Ground</strong></td>
+<td style="text-align: left;">Cathodes / GND</td>
+<td style="text-align: center;"><code>GND</code></td>
+<td style="text-align: left;">Ground Reference</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="problem-statement-functional-requirements" class="level3">
+<h3 class="anchored" data-anchor-id="problem-statement-functional-requirements">📝 Problem Statement &amp; Functional Requirements</h3>
+<ol type="1">
+<li><strong>Transducer Acquisition:</strong>
+<ul>
+<li>Sample the analog temperature transducer on pin <code>A0</code> continuously.</li>
+<li>Map the 10-bit ADC reading (<span class="math inline">\(0 - 1023\)</span>) to temperature: <span class="math inline">\(\text{Temp}(^\circ\text{C}) = \frac{\text{raw} \times 100.0}{1023.0}\)</span>.</li>
+</ul></li>
+<li><strong>Thermal State Decision Logic:</strong>
+<ul>
+<li><strong>Safe State (&lt; 45.0°C):</strong> Green LED on <code>D2</code> is <strong>ON</strong>, Red LED on <code>D3</code> is <strong>OFF</strong>, and Buzzer on <code>D5</code> is <strong>OFF</strong>.</li>
+<li><strong>Hazard State (&gt;= 45.0°C):</strong> Green LED is <strong>OFF</strong>, Red LED is <strong>ON</strong>, Buzzer pulses at <strong>2 Hz</strong> (250 ms ON, 250 ms OFF), and send <code>"[ALERT] OVERHEAT HAZARD: &lt;temp&gt; C"</code> over UART at 115200 baud.</li>
+</ul></li>
+<li><strong>Non-Blocking Constraint:</strong> The buzzer pulse is driven using <code>millis()</code> timing comparisons.</li>
+</ol>
+</section>
+<section id="interactive-simulation-1" class="level3">
+<h3 class="anchored" data-anchor-id="interactive-simulation-1">Interactive Simulation</h3>
+<div class="simulation-container">
+<iframe src="https://wokwi.com/projects/479961310618297345?embed=1" title="EV Battery Thermal Supervisor Simulation" loading="lazy" allowfullscreen="">
+</iframe>
+<div class="sim-info-bar">
+<p><span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span> <span>Click Play, rotate the potentiometer to test safe (&lt; 45°C) vs overheat (≥ 45°C) modes</span></p>
+</div>
+</div>
+</section>
+<section id="implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1" class="level3">
+<h3 class="anchored" data-anchor-id="implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1">Implementation Code: High-Level Framework vs.&nbsp;Bare-Metal Embedded C</h3>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">🔷 High-Level Framework (Running in Simulation)</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">🔶 Equivalent Bare-Metal Embedded C (Direct Register Access)</a></li></ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Mini-Project 2: EV Battery Thermal &amp; Voltage Supervisor</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Target Board: STM32 Nucleo-C031C6</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SENSOR_PIN    </span>A0<span class="pp"> </span><span class="co">// Temperature Transducer (0 - 100 C)</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#define LED_GREEN_PIN </span><span class="dv">2</span><span class="pp">  </span><span class="co">// D2 Safe State</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#define LED_RED_PIN   </span><span class="dv">3</span><span class="pp">  </span><span class="co">// D3 Hazard State</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#define BUZZER_PIN    </span><span class="dv">5</span><span class="pp">  </span><span class="co">// D5 Alarm Buzzer</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setup<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>begin<span class="op">(</span><span class="dv">115200</span><span class="op">);</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>LED_GREEN_PIN<span class="op">,</span> OUTPUT<span class="op">);</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>LED_RED_PIN<span class="op">,</span> OUTPUT<span class="op">);</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>BUZZER_PIN<span class="op">,</span> OUTPUT<span class="op">);</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>  digitalWrite<span class="op">(</span>LED_GREEN_PIN<span class="op">,</span> HIGH<span class="op">);</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>  digitalWrite<span class="op">(</span>LED_RED_PIN<span class="op">,</span> LOW<span class="op">);</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>  digitalWrite<span class="op">(</span>BUZZER_PIN<span class="op">,</span> LOW<span class="op">);</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> loop<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int</span> raw <span class="op">=</span> analogRead<span class="op">(</span>SENSOR_PIN<span class="op">);</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>  <span class="dt">float</span> temp <span class="op">=</span> <span class="op">(</span>raw <span class="op">*</span> <span class="fl">100.0</span><span class="bu">f</span><span class="op">)</span> <span class="op">/</span> <span class="fl">1023.0</span><span class="bu">f</span><span class="op">;</span> <span class="co">// 0.0 to 100.0 °C</span></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="dt">unsigned</span> <span class="dt">long</span> lastToggle <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="dt">bool</span> buzzerState <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>temp <span class="op">&gt;=</span> <span class="fl">45.0</span><span class="bu">f</span><span class="op">)</span> <span class="op">{</span> <span class="co">// Overheat hazard</span></span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>    digitalWrite<span class="op">(</span>LED_GREEN_PIN<span class="op">,</span> LOW<span class="op">);</span></span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>    digitalWrite<span class="op">(</span>LED_RED_PIN<span class="op">,</span> HIGH<span class="op">);</span></span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2 Hz non-blocking toggle (250 ms ON, 250 ms OFF)</span></span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>millis<span class="op">()</span> <span class="op">-</span> lastToggle <span class="op">&gt;=</span> <span class="dv">250</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a>      lastToggle <span class="op">=</span> millis<span class="op">();</span></span>
+<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a>      buzzerState <span class="op">=</span> <span class="op">!</span>buzzerState<span class="op">;</span></span>
+<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a>      digitalWrite<span class="op">(</span>BUZZER_PIN<span class="op">,</span> buzzerState <span class="op">?</span> HIGH <span class="op">:</span> LOW<span class="op">);</span></span>
+<span id="cb9-38"><a href="#cb9-38" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-39"><a href="#cb9-39" aria-hidden="true" tabindex="-1"></a>    Serial<span class="op">.</span>print<span class="op">(</span><span class="st">"[ALERT] OVERHEAT HAZARD: "</span><span class="op">);</span></span>
+<span id="cb9-40"><a href="#cb9-40" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span> <span class="co">// Safe state</span></span>
+<span id="cb9-41"><a href="#cb9-41" aria-hidden="true" tabindex="-1"></a>    digitalWrite<span class="op">(</span>LED_GREEN_PIN<span class="op">,</span> HIGH<span class="op">);</span></span>
+<span id="cb9-42"><a href="#cb9-42" aria-hidden="true" tabindex="-1"></a>    digitalWrite<span class="op">(</span>LED_RED_PIN<span class="op">,</span> LOW<span class="op">);</span></span>
+<span id="cb9-43"><a href="#cb9-43" aria-hidden="true" tabindex="-1"></a>    digitalWrite<span class="op">(</span>BUZZER_PIN<span class="op">,</span> LOW<span class="op">);</span></span>
+<span id="cb9-44"><a href="#cb9-44" aria-hidden="true" tabindex="-1"></a>    Serial<span class="op">.</span>print<span class="op">(</span><span class="st">"[STATUS] Battery Temp Safe: "</span><span class="op">);</span></span>
+<span id="cb9-45"><a href="#cb9-45" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb9-46"><a href="#cb9-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-47"><a href="#cb9-47" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>print<span class="op">(</span>temp<span class="op">,</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb9-48"><a href="#cb9-48" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">" C"</span><span class="op">);</span></span>
+<span id="cb9-49"><a href="#cb9-49" aria-hidden="true" tabindex="-1"></a>  delay<span class="op">(</span><span class="dv">250</span><span class="op">);</span></span>
+<span id="cb9-50"><a href="#cb9-50" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Mini-Project 2: Bare-Metal EV Battery Thermal &amp; Voltage Supervisor</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Target: STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdint.h&gt;</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdbool.h&gt;</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co">// 1. Bus Clock Registers</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#define RCC_BASE        </span><span class="op">(</span><span class="bn">0x40021000</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#define RCC_IOPENR      </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span>RCC_BASE<span class="pp"> </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x34</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#define RCC_APBENR2     </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span>RCC_BASE<span class="pp"> </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x40</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="co">// 2. GPIO Registers (GPIOA &amp; GPIOB)</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOA_BASE      </span><span class="op">(</span><span class="bn">0x50000000</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOA_MODER     </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">GPIOA_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x00</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOA_BSRR      </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">GPIOA_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x18</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOB_BASE      </span><span class="op">(</span><span class="bn">0x50000400</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOB_MODER     </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">GPIOB_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x00</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOB_BSRR      </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">GPIOB_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x18</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a><span class="co">// 3. ADC1 Registers</span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a><span class="pp">#define ADC1_BASE       </span><span class="op">(</span><span class="bn">0x40012400</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a><span class="pp">#define ADC1_ISR        </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">ADC1_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x00</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a><span class="pp">#define ADC1_CR         </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">ADC1_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x08</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a><span class="pp">#define ADC1_CHSELR     </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">ADC1_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x28</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a><span class="pp">#define ADC1_DR         </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">ADC1_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x40</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> hardware_init<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Enable GPIOA, GPIOB, and ADC1 peripheral bus clocks</span></span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>    RCC_IOPENR <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">0</span><span class="op">)</span> <span class="op">|</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>    RCC_APBENR2 <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">20</span><span class="op">);</span> <span class="co">// ADC1EN</span></span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>    <span class="co">// PA0 (A0) as Analog Mode ('11')</span></span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>    GPIOA_MODER <span class="op">|=</span> <span class="op">(</span><span class="dv">3</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">0</span> <span class="op">*</span> <span class="dv">2</span><span class="op">));</span></span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a>    <span class="co">// PA10 (D2 Green LED) as General Purpose Output ('01')</span></span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a>    GPIOA_MODER <span class="op">&amp;=</span> <span class="op">~(</span><span class="dv">3</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">10</span> <span class="op">*</span> <span class="dv">2</span><span class="op">));</span></span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>    GPIOA_MODER <span class="op">|=</span>  <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">10</span> <span class="op">*</span> <span class="dv">2</span><span class="op">));</span></span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a>    <span class="co">// PB3 (D3 Red LED) as General Purpose Output ('01')</span></span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a>    GPIOB_MODER <span class="op">&amp;=</span> <span class="op">~(</span><span class="dv">3</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">3</span> <span class="op">*</span> <span class="dv">2</span><span class="op">));</span></span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a>    GPIOB_MODER <span class="op">|=</span>  <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">3</span> <span class="op">*</span> <span class="dv">2</span><span class="op">));</span></span>
+<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a>    <span class="co">// PB4 (D5 Buzzer) as General Purpose Output ('01')</span></span>
+<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a>    GPIOB_MODER <span class="op">&amp;=</span> <span class="op">~(</span><span class="dv">3</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">4</span> <span class="op">*</span> <span class="dv">2</span><span class="op">));</span></span>
+<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a>    GPIOB_MODER <span class="op">|=</span>  <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">4</span> <span class="op">*</span> <span class="dv">2</span><span class="op">));</span></span>
+<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Configure ADC1: Channel 0 (PA0)</span></span>
+<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a>    ADC1_CHSELR <span class="op">=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a>    ADC1_CR <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">0</span><span class="op">);</span> <span class="co">// Enable ADC</span></span>
+<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(!(</span>ADC1_ISR <span class="op">&amp;</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">0</span><span class="op">)));</span> <span class="co">// Wait for ADRDY</span></span>
+<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a><span class="dt">uint16_t</span> adc_read<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-56"><a href="#cb10-56" aria-hidden="true" tabindex="-1"></a>    ADC1_CR <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">2</span><span class="op">);</span> <span class="co">// Start conversion (ADSTART)</span></span>
+<span id="cb10-57"><a href="#cb10-57" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(!(</span>ADC1_ISR <span class="op">&amp;</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">2</span><span class="op">)));</span> <span class="co">// Wait for End-Of-Conversion (EOC)</span></span>
+<span id="cb10-58"><a href="#cb10-58" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">(</span><span class="dt">uint16_t</span><span class="op">)</span>ADC1_DR<span class="op">;</span></span>
+<span id="cb10-59"><a href="#cb10-59" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-60"><a href="#cb10-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-61"><a href="#cb10-61" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-62"><a href="#cb10-62" aria-hidden="true" tabindex="-1"></a>    hardware_init<span class="op">();</span></span>
+<span id="cb10-63"><a href="#cb10-63" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(</span><span class="dv">1</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-64"><a href="#cb10-64" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint16_t</span> raw <span class="op">=</span> adc_read<span class="op">();</span></span>
+<span id="cb10-65"><a href="#cb10-65" aria-hidden="true" tabindex="-1"></a>        <span class="co">// 45°C corresponds to raw threshold: (45.0 * 1023 / 100.0) ≈ 460</span></span>
+<span id="cb10-66"><a href="#cb10-66" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>raw <span class="op">&gt;=</span> <span class="dv">460</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-67"><a href="#cb10-67" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Hazard State: Green OFF, Red ON, Buzzer ON</span></span>
+<span id="cb10-68"><a href="#cb10-68" aria-hidden="true" tabindex="-1"></a>            GPIOA_BSRR <span class="op">=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">10</span> <span class="op">+</span> <span class="dv">16</span><span class="op">));</span> <span class="co">// PA10 LOW</span></span>
+<span id="cb10-69"><a href="#cb10-69" aria-hidden="true" tabindex="-1"></a>            GPIOB_BSRR <span class="op">=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">3</span><span class="op">);</span>         <span class="co">// PB3 HIGH</span></span>
+<span id="cb10-70"><a href="#cb10-70" aria-hidden="true" tabindex="-1"></a>            GPIOB_BSRR <span class="op">=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">4</span><span class="op">);</span>         <span class="co">// PB4 HIGH (Buzzer)</span></span>
+<span id="cb10-71"><a href="#cb10-71" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb10-72"><a href="#cb10-72" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Safe State: Green ON, Red OFF, Buzzer OFF</span></span>
+<span id="cb10-73"><a href="#cb10-73" aria-hidden="true" tabindex="-1"></a>            GPIOA_BSRR <span class="op">=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">10</span><span class="op">);</span>        <span class="co">// PA10 HIGH</span></span>
+<span id="cb10-74"><a href="#cb10-74" aria-hidden="true" tabindex="-1"></a>            GPIOB_BSRR <span class="op">=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">3</span> <span class="op">+</span> <span class="dv">16</span><span class="op">));</span>  <span class="co">// PB3 LOW</span></span>
+<span id="cb10-75"><a href="#cb10-75" aria-hidden="true" tabindex="-1"></a>            GPIOB_BSRR <span class="op">=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">4</span> <span class="op">+</span> <span class="dv">16</span><span class="op">));</span>  <span class="co">// PB4 LOW</span></span>
+<span id="cb10-76"><a href="#cb10-76" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb10-77"><a href="#cb10-77" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">volatile</span> <span class="dt">uint32_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">600000</span><span class="op">;</span> i<span class="op">++);</span> <span class="co">// Short loop delay</span></span>
+<span id="cb10-78"><a href="#cb10-78" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-79"><a href="#cb10-79" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-caution callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Caution</span>⚠️ Code Verification &amp; Assistance
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>All high-level framework and bare-metal implementation codes are verified for the target microcontroller (<strong>STM32 Nucleo-C031C6</strong> / ARM Cortex-M0+). If you encounter any compilation errors, unexpected simulation behavior, or discrepancies with this code, Please report to the Course instructor or the TA via email.</p>
+</div>
+</div>
+</section>
+<section id="how-mini-project-2-applies-week-5-concepts" class="level3">
+<h3 class="anchored" data-anchor-id="how-mini-project-2-applies-week-5-concepts">🔍 How Mini-Project 2 Applies Week 5 Concepts</h3>
+<section id="hardware-circuit-level-concept-mapping-1" class="level4">
+<h4 class="anchored" data-anchor-id="hardware-circuit-level-concept-mapping-1">1. Hardware &amp; Circuit-Level Concept Mapping</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Circuit Component</th>
+<th style="text-align: left;">Week 5 Theoretical Concept</th>
+<th style="text-align: left;">Technical Function in System</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Potentiometer on A0</strong></td>
+<td style="text-align: left;"><strong>Analog-to-Digital Transduction</strong></td>
+<td style="text-align: left;">Converts continuous physical temperature variation into 10-bit quantized discrete integer values.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Status LEDs on D2/D3</strong></td>
+<td style="text-align: left;"><strong>Digital Actuator Drive</strong></td>
+<td style="text-align: left;">Direct memory-mapped logic drive: provides immediate visual feedback of thermal supervisor safety states.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Audible Buzzer on D5</strong></td>
+<td style="text-align: left;"><strong>Acoustic Emergency Alerting</strong></td>
+<td style="text-align: left;">Switched via open-drain/push-pull driver to generate high-priority safety alarms during thermal runaway.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+</section>
+<section id="hands-on-practice-challenge-for-students-to-solve" class="level2">
+<h2 class="anchored" data-anchor-id="hands-on-practice-challenge-for-students-to-solve">7. Hands-On Practice Challenge (For Students to Solve) 🎯</h2>
+<section id="objective-scenario" class="level3">
+<h3 class="anchored" data-anchor-id="objective-scenario">🎯 Objective &amp; Scenario</h3>
+<p>In modern automotive systems, an Electronic Control Unit (ECU) streams periodic sensor telemetry packets over serial to a central dashboard. In this practice challenge, you will implement an <strong>Automotive Serial Diagnostic Console &amp; Parameter Logger</strong> on the <strong>STM32 Nucleo-C031C6</strong> that samples temperature on <code>A0</code> and streams formatted ASCII telemetry frames over UART at <strong>115200 baud</strong>, responding dynamically to interactive console commands.</p>
+</section>
+<section id="hardware-setup-wokwi-2" class="level3">
+<h3 class="anchored" data-anchor-id="hardware-setup-wokwi-2">🛠️ Hardware Setup (Wokwi)</h3>
+<p>The circuit connects to the <strong>STM32 Nucleo-C031C6</strong> board: * <strong>1x Potentiometer:</strong> Wiper to <code>A0</code> (<code>PA0</code>), ends to <code>GND</code> and <code>3.3V</code>. * <strong>Onboard LED:</strong> On <code>D13</code> (<code>PA5</code>). * <strong>Virtual COM Port:</strong> USB Serial at 115200 baud.</p>
+</section>
+<section id="problem-statement-functional-requirements-1" class="level3">
+<h3 class="anchored" data-anchor-id="problem-statement-functional-requirements-1">📋 Problem Statement &amp; Functional Requirements</h3>
+<ol type="1">
+<li><strong>Periodic Telemetry Streaming:</strong>
+<ul>
+<li>Every 1000 ms, read the analog transducer on <code>A0</code> and transmit a structured telemetry frame:<br>
+<code>"[TELEMETRY] Temp: &lt;val&gt; C | Status: OK"</code></li>
+</ul></li>
+<li><strong>Interactive Command Handling:</strong>
+<ul>
+<li>When the user types <code>"HELP"</code>, reply with a menu of available commands.</li>
+<li>When the user types <code>"ALERT"</code>, blink the onboard LED on <code>D13</code> 3 times rapidly (100 ms ON, 100 ms OFF).</li>
+</ul></li>
+<li><strong>Defensive Formatting:</strong>
+<ul>
+<li>Filter empty strings and handle unknown commands defensively without locking up the serial buffer.</li>
+</ul></li>
+</ol>
+</section>
+<section id="starter-code-template" class="level3">
+<h3 class="anchored" data-anchor-id="starter-code-template">💻 Starter Code Template</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Student Practice Challenge: Automotive Serial Diagnostic Console</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Target: board-st-nucleo-c031c6</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Simulation Workspace: https://wokwi.com/projects/479963095271968769</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SENSOR_PIN </span>A0<span class="pp">          </span><span class="co">// PA0</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#define LED_PIN    </span>LED_BUILTIN<span class="pp"> </span><span class="co">// D13 (PA5)</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="dt">unsigned</span> <span class="dt">long</span> lastTelemetry <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setup<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 1: Initialize Serial at 115200 baud</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 2: Configure LED_PIN as OUTPUT</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 3: Print diagnostic greeting banner</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> loop<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 4: Check if 1000 ms has elapsed using millis()</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 5: Read A0 analog transducer and transmit formatted telemetry frame</span></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 6: If Serial.available() &gt; 0, read incoming command</span></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 7: Parse 'HELP' and 'ALERT' commands</span></span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="verification-expected-test-cases" class="level3">
+<h3 class="anchored" data-anchor-id="verification-expected-test-cases">🧪 Verification &amp; Expected Test Cases</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Event / Command</th>
+<th style="text-align: left;">Serial Monitor Input</th>
+<th style="text-align: left;">Expected Output Response</th>
+<th style="text-align: left;">LED Action</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Periodic Tick</strong></td>
+<td style="text-align: left;"><em>(None)</em></td>
+<td style="text-align: left;"><code>[TELEMETRY] Temp: 32.4 C \| Status: OK</code></td>
+<td style="text-align: left;">None</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Help Query</strong></td>
+<td style="text-align: left;"><code>HELP</code></td>
+<td style="text-align: left;"><code>[CMD] Available: 'HELP', 'ALERT'</code></td>
+<td style="text-align: left;">None</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Alert Command</strong></td>
+<td style="text-align: left;"><code>ALERT</code></td>
+<td style="text-align: left;"><code>[ALERT] Triggering visual alarm sequence</code></td>
+<td style="text-align: left;">3 rapid blinks on <code>D13</code></td>
+</tr>
+</tbody>
+</table>
+<details>
+<summary>
+💡 Need a Hint? Click to Reveal
+</summary>
+<ul>
+<li><p><strong>Non-Blocking Telemetry Timer:</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>millis<span class="op">()</span> <span class="op">-</span> lastTelemetry <span class="op">&gt;=</span> <span class="dv">1000</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    lastTelemetry <span class="op">=</span> millis<span class="op">();</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> raw <span class="op">=</span> analogRead<span class="op">(</span>SENSOR_PIN<span class="op">);</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    Serial<span class="op">.</span>print<span class="op">(</span><span class="st">"[TELEMETRY] Temp: "</span><span class="op">);</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    Serial<span class="op">.</span>print<span class="op">((</span>raw <span class="op">*</span> <span class="fl">100.0</span><span class="bu">f</span><span class="op">)</span> <span class="op">/</span> <span class="fl">1023.0</span><span class="bu">f</span><span class="op">,</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    Serial<span class="op">.</span>println<span class="op">(</span><span class="st">" C | Status: OK"</span><span class="op">);</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+</ul>
+</details>
+<div class="simulation-container">
+<iframe src="https://wokwi.com/projects/479963095271968769?embed=1" title="Practice Simulation Workspace" loading="lazy" allowfullscreen="">
+</iframe>
+<div class="sim-info-bar">
+<p><span><strong>Practice Challenge Workspace:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span> <span>Click Play to write and test your telemetry console firmware</span></p>
+</div>
+</div>
+<div id="comparator-w5" class="code-comparator-widget">
+  <div class="comparator-header">
+    <div class="comparator-title">
+      <span class="icon">🔄</span>
+      <span><strong>Simultaneous Code Explorer:</strong> Arduino Framework ↔ Bare-Metal STM32 C</span>
+    </div>
+    <div class="comparator-controls">
+      <label>Load Preset:</label>
+      <select class="preset-select">
+        <option value="uart_comm">UART Serial Command Parser</option>
+        <option value="adc_analog">ADC Thermal Transducer Reading</option>
+        <option value="gpio_blink">GPIO Output (Status LED)</option>
+        <option value="gpio_input">GPIO Input (Pushbuttons)</option>
+        <option value="exti_interrupt">EXTI Hardware Interrupt</option>
+        <option value="timer_pwm">Hardware Timer PWM</option>
+      </select>
+      <button type="button" class="btn-compare" onclick="runInteractiveTranslation('comparator-w5')">Analyze / Map Code</button>
+    </div>
+  </div>
+  <div class="comparator-panes">
+    <div class="pane">
+      <div class="pane-header">
+        <span class="badge-arduino">Arduino C++ (Framework)</span>
+        <span class="hint">Type or paste Arduino code here for live Bare-Metal translation</span>
+      </div>
+      <textarea class="code-input" spellcheck="false"></textarea>
+    </div>
+    <div class="pane">
+      <div class="pane-header">
+        <span class="badge-baremetal">Equivalent Bare-Metal C (STM32 Registers)</span>
+        <span class="hint">Live Memory-Mapped Operations</span>
+      </div>
+      <pre class="code-output"><code></code></pre>
+    </div>
+  </div>
+</div>
+<hr>
+</section>
+</section>
+<section id="concept-check-practice-questions" class="level2">
+<h2 class="anchored" data-anchor-id="concept-check-practice-questions">8. Concept Check Practice Questions</h2>
+<section id="question-1-serial-vs.-parallel-bus-trade-offs" class="level3">
+<h3 class="anchored" data-anchor-id="question-1-serial-vs.-parallel-bus-trade-offs">Question 1: Serial vs.&nbsp;Parallel Bus Trade-Offs</h3>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Click to View Question &amp; Options
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Why have modern high-speed embedded systems almost entirely shifted from parallel data buses to serial communication protocols?</p>
+<p><strong>Options:</strong><br>
+- <strong>A)</strong> Parallel communication consumes more software memory in SRAM<br>
+- <strong>B)</strong> Clock skew and cross-talk between closely spaced parallel traces limit speed and distance, whereas serial lines eliminate inter-trace skew and require far fewer microcontroller pins<br>
+- <strong>C)</strong> Serial buses do not require a ground reference<br>
+- <strong>D)</strong> Parallel communication is only supported by 8-bit processors</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>✅ Correct Answer: B
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Explanation:</strong><br>
+In parallel buses, signals on different wires travel at slightly different speeds due to physical trace length variations (<strong>clock skew</strong>). At high frequencies, this causes bits to arrive misaligned. Serial sends one bit at a time, eliminating skew while drastically cutting pin count and PCB complexity.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="question-2-i2c-pull-up-resistor-function" class="level3">
+<h3 class="anchored" data-anchor-id="question-2-i2c-pull-up-resistor-function">Question 2: <span class="math inline">\(I^2C\)</span> Pull-Up Resistor Function</h3>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Click to View Question &amp; Options
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>In an <span class="math inline">\(I^2C\)</span> communication circuit, what is the role of the external pull-up resistors on the SDA and SCL lines?</p>
+<p><strong>Options:</strong><br>
+- <strong>A)</strong> To prevent the microcontroller from resetting during sleep mode<br>
+- <strong>B)</strong> Because <span class="math inline">\(I^2C\)</span> devices have open-drain outputs that can only pull the lines LOW to <span class="math inline">\(0\text{V}\)</span>; pull-up resistors passively pull the lines back HIGH when released<br>
+- <strong>C)</strong> To step down <span class="math inline">\(5\text{V}\)</span> signals to <span class="math inline">\(3.3\text{V}\)</span><br>
+- <strong>D)</strong> To generate the baud rate clock</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>✅ Correct Answer: B
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Explanation:</strong><br>
+<span class="math inline">\(I^2C\)</span> outputs are open-drain. A device can pull a line to ground, but cannot drive it high. When no device is asserting a 0, the external pull-up resistor pulls the voltage up to <span class="math inline">\(V_{DD}\)</span>, creating a wired-AND configuration that enables multi-master arbitration and clock stretching.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<hr>
+<div class="d-flex justify-content-between mt-4">
+<p><a href="./Week-4.html" class="seek-prev-btn">← Back to Week 4: Timers, PWM &amp; ADC</a> <a href="./Week-6.html" class="seek-next-btn">NEXT: Week 6 — Compilation, Runtime &amp; Power →</a></p>
+</div>
 
 
 </section>
+</section>
 
 </main> <!-- /main -->
+<script>
+/**
+ * Interactive Arduino ↔ Bare-Metal STM32 C Code Comparator & Live Translator
+ * Translates Arduino framework calls to equivalent STM32 Nucleo-C031C6 Bare-Metal Register operations.
+ */
+const PRESETS = {
+  gpio_blink: {
+    name: "GPIO Output: LED Blink",
+    arduino: `// Arduino Framework (High-Level)
+#define LED_PIN 13 // PA5 on Nucleo-C031C6
+
+void setup() {
+  pinMode(LED_PIN, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(LED_PIN, HIGH);
+  delay(500);
+  digitalWrite(LED_PIN, LOW);
+  delay(500);
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+
+#define RCC_IOPENR   (*(volatile uint32_t *)(0x40021000UL + 0x34UL))
+#define GPIOA_MODER  (*(volatile uint32_t *)(0x50000000UL + 0x00UL))
+#define GPIOA_BSRR   (*(volatile uint32_t *)(0x50000000UL + 0x18UL))
+
+void gpio_init(void) {
+    // 1. Enable GPIOA Peripheral Bus Clock
+    RCC_IOPENR |= (1UL << 0);
+
+    // 2. Configure PA5 as General Purpose Output ('01' in MODER)
+    GPIOA_MODER &= ~(3UL << (5 * 2));
+    GPIOA_MODER |=  (1UL << (5 * 2));
+}
+
+void delay_cycles(volatile uint32_t count) {
+    while (count--) { __asm volatile("nop"); }
+}
+
+int main(void) {
+    gpio_init();
+    while (1) {
+        // Set PA5 HIGH (bit 5 in BSRR)
+        GPIOA_BSRR = (1UL << 5);
+        delay_cycles(2400000); // ~500 ms at 48 MHz
+
+        // Reset PA5 LOW (bit 5+16 in BSRR)
+        GPIOA_BSRR = (1UL << (5 + 16));
+        delay_cycles(2400000);
+    }
+}`
+  },
+  gpio_input: {
+    name: "GPIO Input: Pushbutton with Internal Pull-Up",
+    arduino: `// Arduino Framework (High-Level)
+#define BUTTON_PIN 2  // PA10
+#define LED_PIN    13 // PA5
+
+void setup() {
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(LED_PIN, OUTPUT);
+}
+
+void loop() {
+  int buttonState = digitalRead(BUTTON_PIN);
+  if (buttonState == LOW) { // Pressed (Active-LOW)
+    digitalWrite(LED_PIN, HIGH);
+  } else {
+    digitalWrite(LED_PIN, LOW);
+  }
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+#include <stdbool.h>
+
+#define RCC_IOPENR   (*(volatile uint32_t *)(0x40021000UL + 0x34UL))
+#define GPIOA_MODER  (*(volatile uint32_t *)(0x50000000UL + 0x00UL))
+#define GPIOA_PUPDR  (*(volatile uint32_t *)(0x50000000UL + 0x0CUL))
+#define GPIOA_IDR    (*(volatile uint32_t *)(0x50000000UL + 0x10UL))
+#define GPIOA_BSRR   (*(volatile uint32_t *)(0x50000000UL + 0x18UL))
+
+void setup_pins(void) {
+    RCC_IOPENR |= (1UL << 0); // Enable GPIOA clock
+
+    // PA10 as Input ('00' in MODER) with Pull-Up ('01' in PUPDR)
+    GPIOA_MODER &= ~(3UL << (10 * 2));
+    GPIOA_PUPDR &= ~(3UL << (10 * 2));
+    GPIOA_PUPDR |=  (1UL << (10 * 2));
+
+    // PA5 as Output ('01' in MODER)
+    GPIOA_MODER &= ~(3UL << (5 * 2));
+    GPIOA_MODER |=  (1UL << (5 * 2));
+}
+
+int main(void) {
+    setup_pins();
+    while (1) {
+        // Read PA10 pin state from Input Data Register (IDR)
+        if (!(GPIOA_IDR & (1UL << 10))) {
+            GPIOA_BSRR = (1UL << 5);        // LED ON (PA5 Set)
+        } else {
+            GPIOA_BSRR = (1UL << (5 + 16)); // LED OFF (PA5 Reset)
+        }
+    }
+}`
+  },
+  exti_interrupt: {
+    name: "EXTI: Hardware Interrupt on Edge Transition",
+    arduino: `// Arduino Framework (High-Level)
+#define BUTTON_PIN 2 // PA10
+
+volatile bool flag = false;
+
+void buttonISR() {
+  flag = true;
+}
+
+void setup() {
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), buttonISR, FALLING);
+}
+
+void loop() {
+  if (flag) {
+    flag = false;
+    // Process interrupt event
+  }
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+#include <stdbool.h>
+
+#define EXTI_BASE       (0x40021800UL)
+#define EXTI_IMR1       (*(volatile uint32_t *)(EXTI_BASE + 0x00UL))
+#define EXTI_FTSR1      (*(volatile uint32_t *)(EXTI_BASE + 0x04UL))
+#define EXTI_RPR1       (*(volatile uint32_t *)(EXTI_BASE + 0x0CUL))
+#define NVIC_ISER       (*(volatile uint32_t *)(0xE000E100UL))
+
+volatile bool flag = false;
+
+void exti_init(void) {
+    // 1. Unmask Line 10 in Interrupt Mask Register (IMR1)
+    EXTI_IMR1 |= (1UL << 10);
+
+    // 2. Enable Falling Edge Trigger for Line 10
+    EXTI_FTSR1 |= (1UL << 10);
+
+    // 3. Enable EXTI line 4-15 IRQ in ARM Cortex-M0+ NVIC
+    NVIC_ISER |= (1UL << 7); // IRQ 7 = EXTI4_15_IRQn
+}
+
+void EXTI4_15_IRQHandler(void) {
+    if (EXTI_RPR1 & (1UL << 10)) {
+        EXTI_RPR1 = (1UL << 10); // Clear pending flag by writing '1'
+        flag = true;             // Atomic flag write
+    }
+}
+
+int main(void) {
+    exti_init();
+    while (1) {
+        if (flag) {
+            flag = false;
+        }
+    }
+}`
+  },
+  uart_comm: {
+    name: "UART: Hardware Serial Communication (115200 Baud)",
+    arduino: `// Arduino Framework (High-Level)
+void setup() {
+  Serial.begin(115200);
+}
+
+void loop() {
+  Serial.println("OK");
+  delay(1000);
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+
+#define USART2_BASE     (0x40004400UL)
+#define USART2_CR1      (*(volatile uint32_t *)(USART2_BASE + 0x00UL))
+#define USART2_BRR      (*(volatile uint32_t *)(USART2_BASE + 0x0CUL))
+#define USART2_ISR      (*(volatile uint32_t *)(USART2_BASE + 0x1CUL))
+#define USART2_TDR      (*(volatile uint32_t *)(USART2_BASE + 0x28UL))
+
+void usart2_init(uint32_t baud, uint32_t pclk) {
+    // 1. Set Baud Rate Register: BRR = Clock / Baud
+    USART2_BRR = pclk / baud; // 48 MHz / 115200 = 416
+
+    // 2. Enable Transmitter (TE) and USART Peripheral (UE)
+    USART2_CR1 |= (1UL << 3) | (1UL << 0);
+}
+
+void usart2_write_char(char c) {
+    // Wait for TXE (Transmit Data Register Empty) flag
+    while (!(USART2_ISR & (1UL << 7)));
+    USART2_TDR = (uint8_t)c;
+}
+
+void usart2_write_str(const char *str) {
+    while (*str) usart2_write_char(*str++);
+}
+
+int main(void) {
+    usart2_init(115200, 48000000UL);
+    while (1) {
+        usart2_write_str("OK\\r\\n");
+        for (volatile uint32_t i = 0; i < 4800000; i++); // ~1 sec delay
+    }
+}`
+  },
+  timer_pwm: {
+    name: "PWM: Hardware Timer Pulse Width Modulation",
+    arduino: `// Arduino Framework (High-Level)
+#define PWM_PIN 9 // D9
+
+void setup() {
+  pinMode(PWM_PIN, OUTPUT);
+}
+
+void loop() {
+  analogWrite(PWM_PIN, 128); // 50% Duty Cycle (128 / 255)
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+
+#define TIM1_BASE       (0x40012C00UL)
+#define TIM1_CR1        (*(volatile uint32_t *)(TIM1_BASE + 0x00UL))
+#define TIM1_CCMR1      (*(volatile uint32_t *)(TIM1_BASE + 0x18UL))
+#define TIM1_CCER       (*(volatile uint32_t *)(TIM1_BASE + 0x20UL))
+#define TIM1_ARR        (*(volatile uint32_t *)(TIM1_BASE + 0x2CUL))
+#define TIM1_CCR1       (*(volatile uint32_t *)(TIM1_BASE + 0x34UL))
+
+void tim1_pwm_init(void) {
+    // 1. Auto-Reload Register: Period = 1000 counts
+    TIM1_ARR = 999;
+
+    // 2. Capture/Compare Register: Duty Cycle = 500 counts (50%)
+    TIM1_CCR1 = 500;
+
+    // 3. Configure Channel 1 as PWM Mode 1 (OC1M = '110')
+    TIM1_CCMR1 |= (6UL << 4);
+
+    // 4. Enable Output Channel 1 (CC1E)
+    TIM1_CCER |= (1UL << 0);
+
+    // 5. Start Timer Counter (CEN)
+    TIM1_CR1 |= (1UL << 0);
+}
+
+int main(void) {
+    tim1_pwm_init();
+    while (1) {
+        // Hardware timer runs autonomously with zero CPU cycles
+    }
+}`
+  },
+  adc_analog: {
+    name: "ADC: Analog Transducer Conversion",
+    arduino: `// Arduino Framework (High-Level)
+#define SENSOR_PIN A0 // PA0
+
+void setup() {
+  Serial.begin(115200);
+}
+
+void loop() {
+  int raw = analogRead(SENSOR_PIN);
+  float voltage = (raw * 3.3f) / 1023.0f;
+  delay(250);
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+
+#define ADC1_BASE       (0x40012400UL)
+#define ADC1_ISR        (*(volatile uint32_t *)(ADC1_BASE + 0x00UL))
+#define ADC1_CR         (*(volatile uint32_t *)(ADC1_BASE + 0x08UL))
+#define ADC1_CHSELR     (*(volatile uint32_t *)(ADC1_BASE + 0x28UL))
+#define ADC1_DR         (*(volatile uint32_t *)(ADC1_BASE + 0x40UL))
+
+void adc_init(void) {
+    // 1. Select ADC Channel 0 (PA0)
+    ADC1_CHSELR = (1UL << 0);
+
+    // 2. Enable ADC Peripheral (ADEN = 1)
+    ADC1_CR |= (1UL << 0);
+    while (!(ADC1_ISR & (1UL << 0))); // Wait for ADRDY
+}
+
+uint16_t adc_read_channel0(void) {
+    // Start conversion (ADSTART = 1)
+    ADC1_CR |= (1UL << 2);
+
+    // Poll End-Of-Conversion (EOC) flag
+    while (!(ADC1_ISR & (1UL << 2)));
+
+    // Return 12-bit conversion result
+    return (uint16_t)ADC1_DR;
+}
+
+int main(void) {
+    adc_init();
+    while (1) {
+        uint16_t sample = adc_read_channel0();
+        // Process analog sample in millivolts: (sample * 3300) / 4095
+    }
+}`
+  }
+};
+
+/**
+ * Intelligent Real-Time Code Translator
+ * Takes arbitrary Arduino C++ code and generates structured STM32 Bare-Metal Register operations.
+ */
+function translateArduinoToBareMetal(code) {
+  if (!code || !code.trim()) {
+    return "// Paste or type standard Arduino code on the left to see\n// real-time equivalent Bare-Metal STM32 C registers here!";
+  }
+
+  let inits = [];
+  let loopBody = [];
+  let defines = new Set();
+  let helperFuncs = [];
+
+  // Always include standard base headers
+  defines.add('#include <stdint.h>');
+  defines.add('#include <stdbool.h>');
+  defines.add('#define RCC_IOPENR   (*(volatile uint32_t *)(0x40021000UL + 0x34UL))');
+
+  let hasGpioOutput = false;
+  let hasGpioInput = false;
+  let hasUart = false;
+  let hasAdc = false;
+  let hasTimer = false;
+  let hasDelay = false;
+
+  const lines = code.split('\n');
+
+  lines.forEach(line => {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('//')) return;
+
+    // 1. PinMode OUTPUT
+    let m = trimmed.match(/pinMode\s*\(\s*(\d+|\w+)\s*,\s*OUTPUT\s*\)/i);
+    if (m) {
+      hasGpioOutput = true;
+      let pin = isNaN(m[1]) ? "5" : m[1];
+      inits.push(`    // Configure Pin ${m[1]} as General Purpose Output`);
+      inits.push(`    RCC_IOPENR |= (1UL << 0); // Enable GPIOA clock`);
+      inits.push(`    GPIOA_MODER &= ~(3UL << (${pin} * 2));`);
+      inits.push(`    GPIOA_MODER |=  (1UL << (${pin} * 2));`);
+    }
+
+    // 2. PinMode INPUT_PULLUP
+    m = trimmed.match(/pinMode\s*\(\s*(\d+|\w+)\s*,\s*INPUT(?:_PULLUP)?\s*\)/i);
+    if (m) {
+      hasGpioInput = true;
+      let pin = isNaN(m[1]) ? "10" : m[1];
+      inits.push(`    // Configure Pin ${m[1]} as Input with Pull-Up`);
+      inits.push(`    RCC_IOPENR |= (1UL << 0); // Enable GPIOA clock`);
+      inits.push(`    GPIOA_MODER &= ~(3UL << (${pin} * 2));`);
+      inits.push(`    GPIOA_PUPDR &= ~(3UL << (${pin} * 2));`);
+      inits.push(`    GPIOA_PUPDR |=  (1UL << (${pin} * 2));`);
+    }
+
+    // 3. digitalWrite HIGH
+    m = trimmed.match(/digitalWrite\s*\(\s*(\d+|\w+)\s*,\s*HIGH\s*\)/i);
+    if (m) {
+      hasGpioOutput = true;
+      let pin = isNaN(m[1]) ? "5" : m[1];
+      loopBody.push(`        // Pin ${m[1]} HIGH via atomic Bit Set register`);
+      loopBody.push(`        GPIOA_BSRR = (1UL << ${pin});`);
+    }
+
+    // 4. digitalWrite LOW
+    m = trimmed.match(/digitalWrite\s*\(\s*(\d+|\w+)\s*,\s*LOW\s*\)/i);
+    if (m) {
+      hasGpioOutput = true;
+      let pin = isNaN(m[1]) ? "5" : m[1];
+      loopBody.push(`        // Pin ${m[1]} LOW via atomic Bit Reset register`);
+      loopBody.push(`        GPIOA_BSRR = (1UL << (${pin} + 16));`);
+    }
+
+    // 5. digitalRead
+    m = trimmed.match(/digitalRead\s*\(\s*(\d+|\w+)\s*\)/i);
+    if (m) {
+      hasGpioInput = true;
+      let pin = isNaN(m[1]) ? "10" : m[1];
+      loopBody.push(`        // Sample Pin ${m[1]} from Input Data Register (IDR)`);
+      loopBody.push(`        bool pinState = ((GPIOA_IDR & (1UL << ${pin})) != 0);`);
+    }
+
+    // 6. Serial.begin
+    m = trimmed.match(/Serial\.begin\s*\(\s*(\d+)\s*\)/i);
+    if (m) {
+      hasUart = true;
+      let baud = m[1];
+      inits.push(`    // Initialize USART2 at ${baud} baud`);
+      inits.push(`    USART2_BRR = 48000000UL / ${baud}UL;`);
+      inits.push(`    USART2_CR1 |= (1UL << 3) | (1UL << 0); // TE + UE`);
+    }
+
+    // 7. Serial.print / println
+    m = trimmed.match(/Serial\.print(?:ln)?\s*\(\s*(.*?)\s*\)/i);
+    if (m) {
+      hasUart = true;
+      let arg = m[1];
+      loopBody.push(`        // Transmit string over USART2`);
+      loopBody.push(`        usart2_print(${arg});`);
+    }
+
+    // 8. analogRead
+    m = trimmed.match(/analogRead\s*\(\s*(\w+)\s*\)/i);
+    if (m) {
+      hasAdc = true;
+      loopBody.push(`        // Trigger ADC1 conversion and wait for End-Of-Conversion (EOC)`);
+      loopBody.push(`        ADC1_CR |= (1UL << 2);`);
+      loopBody.push(`        while (!(ADC1_ISR & (1UL << 2)));`);
+      loopBody.push(`        uint16_t adc_val = (uint16_t)ADC1_DR;`);
+    }
+
+    // 9. analogWrite / PWM
+    m = trimmed.match(/analogWrite\s*\(\s*(\w+)\s*,\s*(\d+|\w+)\s*\)/i);
+    if (m) {
+      hasTimer = true;
+      loopBody.push(`        // Update Timer Compare Register (Duty Cycle)`);
+      loopBody.push(`        TIM1_CCR1 = ${m[2]};`);
+    }
+
+    // 10. delay
+    m = trimmed.match(/delay\s*\(\s*(\d+|\w+)\s*\)/i);
+    if (m) {
+      hasDelay = true;
+      let ms = m[1];
+      loopBody.push(`        delay_ms(${ms});`);
+    }
+  });
+
+  if (hasGpioOutput || hasGpioInput) {
+    defines.add('#define GPIOA_MODER  (*(volatile uint32_t *)(0x50000000UL + 0x00UL))');
+    defines.add('#define GPIOA_PUPDR  (*(volatile uint32_t *)(0x50000000UL + 0x0CUL))');
+    defines.add('#define GPIOA_IDR    (*(volatile uint32_t *)(0x50000000UL + 0x10UL))');
+    defines.add('#define GPIOA_BSRR   (*(volatile uint32_t *)(0x50000000UL + 0x18UL))');
+  }
+
+  if (hasUart) {
+    defines.add('#define USART2_BASE  (0x40004400UL)');
+    defines.add('#define USART2_CR1   (*(volatile uint32_t *)(USART2_BASE + 0x00UL))');
+    defines.add('#define USART2_BRR   (*(volatile uint32_t *)(USART2_BASE + 0x0CUL))');
+    defines.add('#define USART2_ISR   (*(volatile uint32_t *)(USART2_BASE + 0x1CUL))');
+    defines.add('#define USART2_TDR   (*(volatile uint32_t *)(USART2_BASE + 0x28UL))');
+
+    helperFuncs.push(`void usart2_print(const char *s) {
+    while (*s) {
+        while (!(USART2_ISR & (1UL << 7))); // Wait for TXE
+        USART2_TDR = (uint8_t)*s++;
+    }
+}`);
+  }
+
+  if (hasAdc) {
+    defines.add('#define ADC1_BASE    (0x40012400UL)');
+    defines.add('#define ADC1_ISR     (*(volatile uint32_t *)(ADC1_BASE + 0x00UL))');
+    defines.add('#define ADC1_CR      (*(volatile uint32_t *)(ADC1_BASE + 0x08UL))');
+    defines.add('#define ADC1_DR      (*(volatile uint32_t *)(ADC1_BASE + 0x40UL))');
+  }
+
+  if (hasTimer) {
+    defines.add('#define TIM1_BASE    (0x40012C00UL)');
+    defines.add('#define TIM1_CR1     (*(volatile uint32_t *)(TIM1_BASE + 0x00UL))');
+    defines.add('#define TIM1_CCR1    (*(volatile uint32_t *)(TIM1_BASE + 0x34UL))');
+  }
+
+  if (hasDelay) {
+    helperFuncs.push(`void delay_ms(volatile uint32_t ms) {
+    while (ms--) {
+        for (volatile uint32_t i = 0; i < 4800; i++) { __asm volatile("nop"); }
+    }
+}`);
+  }
+
+  let result = [];
+  result.push("// ============================================================================");
+  result.push("// Equivalent Bare-Metal Embedded C (Direct STM32 Nucleo-C031C6 Registers)");
+  result.push("// Generated in real-time from your Arduino code");
+  result.push("// ============================================================================");
+  result.push(Array.from(defines).join('\n'));
+  result.push("");
+
+  if (helperFuncs.length > 0) {
+    result.push(helperFuncs.join('\n\n'));
+    result.push("");
+  }
+
+  result.push("int main(void) {");
+  if (inits.length > 0) {
+    result.push("    // --- Peripherals & Pin Initialization ---");
+    result.push(inits.join('\n'));
+    result.push("");
+  }
+
+  result.push("    // --- Superloop Execution ---");
+  result.push("    while (1) {");
+  if (loopBody.length > 0) {
+    result.push(loopBody.join('\n'));
+  } else {
+    result.push("        // Active runtime processing");
+  }
+  result.push("    }");
+  result.push("}");
+
+  return result.join('\n');
+}
+
+function initCodeComparator(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const select = container.querySelector('.preset-select');
+  const input = container.querySelector('.code-input');
+  const output = container.querySelector('.code-output code');
+
+  if (!select || !input || !output) return;
+
+  function loadPreset() {
+    const val = select.value;
+    if (PRESETS[val]) {
+      input.value = PRESETS[val].arduino;
+      output.textContent = PRESETS[val].baremetal;
+    }
+  }
+
+  function handleLiveInput() {
+    output.textContent = translateArduinoToBareMetal(input.value);
+  }
+
+  select.addEventListener('change', loadPreset);
+  input.addEventListener('input', handleLiveInput);
+  loadPreset();
+}
+
+function runInteractiveTranslation(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const input = container.querySelector('.code-input');
+  const output = container.querySelector('.code-output code');
+  if (input && output) {
+    output.textContent = translateArduinoToBareMetal(input.value);
+  }
+}
+
+function setupAllComparators() {
+  document.querySelectorAll('.code-comparator-widget').forEach((el, idx) => {
+    if (!el.id) el.id = 'comparator-' + idx;
+    initCodeComparator(el.id);
+  });
+}
+
+// Ensure execution whether DOM is loading or already ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupAllComparators);
+} else {
+  setupAllComparators();
+}
+</script>
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
@@ -953,6 +2532,19 @@ ul.task-list li input[type="checkbox"] {
   window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
   </script>
 </div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>CS2101: Embedded C Programming — IIT Madras</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+<p>Made by TA: Krishna Gorai</p>
+</div>
+  </div>
+</footer>
 
 
 

@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Week 8: Embedded Software Design Patterns and System Architecture – CS2101: Embedded C</title>
+<title>Week 8: Software Architecture &amp; Embedded Design Patterns – CS2101: Embedded C</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -25,6 +25,41 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -48,9 +83,9 @@ ul.task-list li input[type="checkbox"] {
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-1efc6d65981d7f926cfe85ef7b0c751f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-f08d384c0165829aba50fd8ee00b4b4f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-1efc6d65981d7f926cfe85ef7b0c751f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-64d0f6d14e372c61dcd2002aecce1639.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-49095d02d3de05fbda1b5d708a7a597d.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-64d0f6d14e372c61dcd2002aecce1639.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -80,6 +115,35 @@ ul.task-list li input[type="checkbox"] {
 }</script>
 <style>html{ scroll-behavior: smooth; }</style>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -379,7 +443,49 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
+  <li><a href="#why-software-architecture-matters-in-embedded-systems" id="toc-why-software-architecture-matters-in-embedded-systems" class="nav-link active" data-scroll-target="#why-software-architecture-matters-in-embedded-systems">1. Why Software Architecture Matters in Embedded Systems</a>
+  <ul class="collapse">
+  <li><a href="#the-core-goals-of-good-embedded-architecture" id="toc-the-core-goals-of-good-embedded-architecture" class="nav-link" data-scroll-target="#the-core-goals-of-good-embedded-architecture">The Core Goals of Good Embedded Architecture:</a></li>
+  </ul></li>
+  <li><a href="#core-architectural-patterns" id="toc-core-architectural-patterns" class="nav-link" data-scroll-target="#core-architectural-patterns">2. Core Architectural Patterns</a></li>
+  <li><a href="#the-state-machine-pattern-fsm" id="toc-the-state-machine-pattern-fsm" class="nav-link" data-scroll-target="#the-state-machine-pattern-fsm">3. The State Machine Pattern (FSM)</a>
+  <ul class="collapse">
+  <li><a href="#why-fsms-are-essential" id="toc-why-fsms-are-essential" class="nav-link" data-scroll-target="#why-fsms-are-essential">Why FSMs Are Essential:</a></li>
+  </ul></li>
+  <li><a href="#the-observer-pattern-publish-subscribe" id="toc-the-observer-pattern-publish-subscribe" class="nav-link" data-scroll-target="#the-observer-pattern-publish-subscribe">4. The Observer Pattern (Publish-Subscribe)</a></li>
+  <li><a href="#mini-project-1-non-blocking-smart-vending-machine-fsm" id="toc-mini-project-1-non-blocking-smart-vending-machine-fsm" class="nav-link" data-scroll-target="#mini-project-1-non-blocking-smart-vending-machine-fsm">5. Mini-Project 1: Non-Blocking Smart Vending Machine FSM 🎰🍫</a>
+  <ul class="collapse">
+  <li><a href="#objective" id="toc-objective" class="nav-link" data-scroll-target="#objective">🎯 Objective</a></li>
+  <li><a href="#hardware-setup-wokwi" id="toc-hardware-setup-wokwi" class="nav-link" data-scroll-target="#hardware-setup-wokwi">🛠️ Hardware Setup (Wokwi)</a></li>
+  <li><a href="#pin-wiring-table" id="toc-pin-wiring-table" class="nav-link" data-scroll-target="#pin-wiring-table">Pin Wiring Table</a></li>
+  <li><a href="#problem-statement-logic-flow" id="toc-problem-statement-logic-flow" class="nav-link" data-scroll-target="#problem-statement-logic-flow">📝 Problem Statement &amp; Logic Flow</a></li>
+  <li><a href="#interactive-simulation" id="toc-interactive-simulation" class="nav-link" data-scroll-target="#interactive-simulation">Interactive Simulation</a></li>
+  <li><a href="#implementation-code-high-level-framework-vs.-bare-metal-embedded-c" id="toc-implementation-code-high-level-framework-vs.-bare-metal-embedded-c" class="nav-link" data-scroll-target="#implementation-code-high-level-framework-vs.-bare-metal-embedded-c">Implementation Code: High-Level Framework vs.&nbsp;Bare-Metal Embedded C</a></li>
+  <li><a href="#how-mini-project-1-applies-week-8-concepts" id="toc-how-mini-project-1-applies-week-8-concepts" class="nav-link" data-scroll-target="#how-mini-project-1-applies-week-8-concepts">🔍 How Mini-Project 1 Applies Week 8 Concepts</a></li>
+  </ul></li>
+  <li><a href="#mini-project-2-observer-pattern-multi-sensor-alert-system" id="toc-mini-project-2-observer-pattern-multi-sensor-alert-system" class="nav-link" data-scroll-target="#mini-project-2-observer-pattern-multi-sensor-alert-system">6. Mini-Project 2: Observer Pattern Multi-Sensor Alert System 📡🔔</a>
+  <ul class="collapse">
+  <li><a href="#objective-1" id="toc-objective-1" class="nav-link" data-scroll-target="#objective-1">🎯 Objective</a></li>
+  <li><a href="#hardware-setup-wokwi-1" id="toc-hardware-setup-wokwi-1" class="nav-link" data-scroll-target="#hardware-setup-wokwi-1">🛠️ Hardware Setup (Wokwi)</a></li>
+  <li><a href="#pin-wiring-table-1" id="toc-pin-wiring-table-1" class="nav-link" data-scroll-target="#pin-wiring-table-1">Pin Wiring Table</a></li>
+  <li><a href="#problem-statement-logic-flow-1" id="toc-problem-statement-logic-flow-1" class="nav-link" data-scroll-target="#problem-statement-logic-flow-1">📝 Problem Statement &amp; Logic Flow</a></li>
+  <li><a href="#interactive-simulation-1" id="toc-interactive-simulation-1" class="nav-link" data-scroll-target="#interactive-simulation-1">Interactive Simulation</a></li>
+  <li><a href="#implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1" id="toc-implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1" class="nav-link" data-scroll-target="#implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1">Implementation Code: High-Level Framework vs.&nbsp;Bare-Metal Embedded C</a></li>
+  <li><a href="#how-mini-project-2-applies-week-8-concepts" id="toc-how-mini-project-2-applies-week-8-concepts" class="nav-link" data-scroll-target="#how-mini-project-2-applies-week-8-concepts">🔍 How Mini-Project 2 Applies Week 8 Concepts</a></li>
+  </ul></li>
+  <li><a href="#hands-on-practice-challenge-for-students-to-solve" id="toc-hands-on-practice-challenge-for-students-to-solve" class="nav-link" data-scroll-target="#hands-on-practice-challenge-for-students-to-solve">7. Hands-On Practice Challenge (For Students to Solve) 🎯</a>
+  <ul class="collapse">
+  <li><a href="#objective-scenario" id="toc-objective-scenario" class="nav-link" data-scroll-target="#objective-scenario">🎯 Objective &amp; Scenario</a></li>
+  <li><a href="#hardware-setup-pin-wiring-table" id="toc-hardware-setup-pin-wiring-table" class="nav-link" data-scroll-target="#hardware-setup-pin-wiring-table">🛠️ Hardware Setup &amp; Pin Wiring Table</a></li>
+  <li><a href="#problem-statement-functional-requirements" id="toc-problem-statement-functional-requirements" class="nav-link" data-scroll-target="#problem-statement-functional-requirements">📋 Problem Statement &amp; Functional Requirements</a></li>
+  <li><a href="#starter-code-template" id="toc-starter-code-template" class="nav-link" data-scroll-target="#starter-code-template">💻 Starter Code Template</a></li>
+  <li><a href="#verification-expected-test-cases" id="toc-verification-expected-test-cases" class="nav-link" data-scroll-target="#verification-expected-test-cases">🧪 Verification &amp; Expected Test Cases</a></li>
+  </ul></li>
+  <li><a href="#concept-check-practice-questions" id="toc-concept-check-practice-questions" class="nav-link" data-scroll-target="#concept-check-practice-questions">8. Concept Check Practice Questions</a>
+  <ul class="collapse">
+  <li><a href="#question-1-finite-state-machine-advantages" id="toc-question-1-finite-state-machine-advantages" class="nav-link" data-scroll-target="#question-1-finite-state-machine-advantages">Question 1: Finite State Machine Advantages</a></li>
+  <li><a href="#question-2-the-observer-pattern-in-embedded-c" id="toc-question-2-the-observer-pattern-in-embedded-c" class="nav-link" data-scroll-target="#question-2-the-observer-pattern-in-embedded-c">Question 2: The Observer Pattern in Embedded C</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -389,7 +495,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Week 8: Embedded Software Design Patterns and System Architecture</h1>
+<h1 class="title">Week 8: Software Architecture &amp; Embedded Design Patterns</h1>
 </div>
 
 
@@ -406,28 +512,1574 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="overview" class="level2">
-<h2 class="anchored" data-anchor-id="overview">Overview</h2>
-<p>Superloop vs Event-Driven architecture, Finite State Machines (FSM), interrupt-driven scheduling.</p>
-<div class="callout callout-style-default callout-tip callout-titled">
+<section id="why-software-architecture-matters-in-embedded-systems" class="level2">
+<h2 class="anchored" data-anchor-id="why-software-architecture-matters-in-embedded-systems">1. Why Software Architecture Matters in Embedded Systems</h2>
+<p>When beginners write embedded code, they often lump everything into one giant <code>main.c</code> file: sensor reading, pin toggling, delay loops, math calculations, and serial printing.</p>
+<p>While this works for simple LED blinkers, it quickly turns complex commercial projects into an unmaintainable nightmare known as <strong>Spaghetti Code</strong>:</p>
+<pre class="text"><code> MONOLITHIC SPAGHETTI FIRMWARE (Fragile &amp; Hard to Debug):
+ +-------------------------------------------------------------------------+
+ | while(1) {                                                              |
+ |   if (digitalRead(2)) { analogWrite(9, 120); Serial.print("Running"); } |
+ |   delay(500); // Freezes everything! Misses sensor alarms!              |
+ |   // 2000 lines of mixed hardware registers, calculations, and UI code  |
+ | }                                                                       |
+ +-------------------------------------------------------------------------+
+
+ CLEAN LAYERED ARCHITECTURE (Modular, Testable &amp; Scalable):
+ +-------------------------------------------------------------------------+
+ | Application Layer:    High-Level Business Logic (e.g., Thermostat Logic)|
+ | Service / Middleware: Event Dispatcher, State Machines, Buffer Queues   |
+ | Driver / HAL Layer:   I2C Driver, UART Driver, Timer Driver             |
+ | Silicon Hardware:     ARM Cortex-M Transistors &amp; Memory-Mapped Registers|
+ +-------------------------------------------------------------------------+</code></pre>
+<section id="the-core-goals-of-good-embedded-architecture" class="level3">
+<h3 class="anchored" data-anchor-id="the-core-goals-of-good-embedded-architecture">The Core Goals of Good Embedded Architecture:</h3>
+<ol type="1">
+<li><strong>Modularity:</strong> Changing a sensor chip should only require updating that sensor’s driver file, without touching the application logic.</li>
+<li><strong>Determinism:</strong> Ensuring the system responds to real-time physical events within guaranteed time limits.</li>
+<li><strong>Reusability:</strong> Clean hardware drivers can be reused across different projects and microcontrollers.</li>
+<li><strong>Testability:</strong> Decoupled code can be unit-tested on a host PC without needing physical hardware connected.</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="core-architectural-patterns" class="level2">
+<h2 class="anchored" data-anchor-id="core-architectural-patterns">2. Core Architectural Patterns</h2>
+<p>Firmware systems are organized around one of three foundational execution models:</p>
+<pre class="text"><code> 1. SUPERLOOP (POLLING)               2. FOREGROUND / BACKGROUND           3. EVENT-DRIVEN / FSM
+ +--------------------------+        +--------------------------+        +--------------------------+
+ | while(1) {               |        | ISRs (Foreground):       |        | Event Queue:             |
+ |   read_temp();           |        |   Capture events into    |        |   [Evt 1][Evt 2][Evt 3]  |
+ |   delay(100); // STALL!  |        |   ring buffers / flags   |        |             |            |
+ |   update_display();      |        |                          |        |             v            |
+ |   check_button();        |        | Main Loop (Background):  |        | Dispatcher -&gt; State FSM  |
+ | }                        |        |   while(1) { process(); }|        | (Zero blocking delays)   |
+ +--------------------------+        +--------------------------+        +--------------------------+</code></pre>
+<hr>
+</section>
+<section id="the-state-machine-pattern-fsm" class="level2">
+<h2 class="anchored" data-anchor-id="the-state-machine-pattern-fsm">3. The State Machine Pattern (FSM)</h2>
+<p>A <strong>Finite State Machine (FSM)</strong> is the single most valuable design pattern in embedded systems. It models a system as a set of <strong>States</strong>, <strong>Events</strong>, and <strong>Transitions</strong>.</p>
+<pre class="text"><code>                       [ Button Pressed ]
+            +----------------------------------------+
+            |                                        |
+            v                                        |
+     +--------------+     [ Timer Expired ]    +--------------+
+     |  STATE_IDLE  | -----------------------&gt; | STATE_ACTIVE |
+     +--------------+                          +--------------+
+            ^                                        |
+            |            [ Fault Detected ]          |
+            +----------------------------------------+</code></pre>
+<section id="why-fsms-are-essential" class="level3">
+<h3 class="anchored" data-anchor-id="why-fsms-are-essential">Why FSMs Are Essential:</h3>
+<ul>
+<li><strong>No Blocking Delays:</strong> Instead of stalling the CPU with <code>delay(5000)</code>, an FSM simply checks if a timer flag has elapsed, allowing other tasks to run freely.</li>
+<li><strong>Predictable &amp; Deterministic:</strong> At any moment in time, the system is in exactly one well-defined state. Illegal transitions are impossible.</li>
+<li><strong>Easy to Debug:</strong> Finding a bug is as simple as logging state transitions over serial: <code>[IDLE] -&gt; [HEATING] -&gt; [ALARM]</code>.</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="the-observer-pattern-publish-subscribe" class="level2">
+<h2 class="anchored" data-anchor-id="the-observer-pattern-publish-subscribe">4. The Observer Pattern (Publish-Subscribe)</h2>
+<p>In many embedded systems, a single sensor measurement is needed by multiple consumers. For example, a temperature reading must be: 1. Shown on an LCD Display 2. Logged to an SD Card 3. Checked by a Safety Cooling Fan Controller</p>
+<pre class="text"><code> WITHOUT OBSERVER PATTERN (Tightly Coupled):
+ Temperature_Sensor_Read() ---&gt; Directly calls Display_Update()
+                               ---&gt; Directly calls SD_Card_Write()
+                               ---&gt; Directly calls Fan_Controller_Check()
+
+ WITH OBSERVER PATTERN (Decoupled Publish-Subscribe):
+ [ Temperature Sensor ]  ======== Publishes Event: TEMP_UPDATED (32.4 C) ========&gt;
+                                               |
+         +-------------------------------------+---------------------------------+
+         |                                     |                                 |
+         v                                     v                                 v
+ [ Observer 1: LCD Display ]          [ Observer 2: SD Logger ]        [ Observer 3: Fan Controller ]</code></pre>
+<hr>
+</section>
+<section id="mini-project-1-non-blocking-smart-vending-machine-fsm" class="level2">
+<h2 class="anchored" data-anchor-id="mini-project-1-non-blocking-smart-vending-machine-fsm">5. Mini-Project 1: Non-Blocking Smart Vending Machine FSM 🎰🍫</h2>
+<section id="objective" class="level3">
+<h3 class="anchored" data-anchor-id="objective">🎯 Objective</h3>
+<p>In modern embedded appliances, blocking calls like <code>delay(2000)</code> completely paralyze the processor, preventing it from detecting coin insertions, abort buttons, or safety faults. In this project, you will build a robust <strong>Finite State Machine (FSM)</strong> for the <strong>STM32 Nucleo-C031C6</strong> that manages coin acceptance, product selection, and motor dispensing in a strictly non-blocking architecture.</p>
+</section>
+<section id="hardware-setup-wokwi" class="level3">
+<h3 class="anchored" data-anchor-id="hardware-setup-wokwi">🛠️ Hardware Setup (Wokwi)</h3>
+<p>The circuit connects 3 pushbuttons and the onboard user LED acting as the dispense motor: * <strong>Coin Inserter:</strong> Pushbutton on <code>D2</code> (<code>PA10</code>) with internal pull-up. * <strong>Product Select:</strong> Pushbutton on <code>D3</code> (<code>PB3</code>) with internal pull-up. * <strong>Coin Return / Cancel:</strong> Pushbutton on <code>D4</code> (<code>PB5</code>) with internal pull-up. * <strong>Dispense Motor Actuator:</strong> User LED on <code>D13</code> (<code>PA5</code>).</p>
+</section>
+<section id="pin-wiring-table" class="level3">
+<h3 class="anchored" data-anchor-id="pin-wiring-table">Pin Wiring Table</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 23%">
+<col style="width: 23%">
+<col style="width: 29%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Component</th>
+<th style="text-align: left;">Pin / Terminal</th>
+<th style="text-align: center;">STM32 / Board Pin</th>
+<th style="text-align: left;">Electrical Function</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Coin Button</strong></td>
+<td style="text-align: left;">Terminal 1.L / 2.L</td>
+<td style="text-align: center;"><code>D2</code> (<code>PA10</code>) / <code>GND</code></td>
+<td style="text-align: left;">Coin Detector (<code>INPUT_PULLUP</code>)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Select Button</strong></td>
+<td style="text-align: left;">Terminal 1.L / 2.L</td>
+<td style="text-align: center;"><code>D3</code> (<code>PB3</code>) / <code>GND</code></td>
+<td style="text-align: left;">Selection Button (<code>INPUT_PULLUP</code>)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Return Button</strong></td>
+<td style="text-align: left;">Terminal 1.L / 2.L</td>
+<td style="text-align: center;"><code>D4</code> (<code>PB5</code>) / <code>GND</code></td>
+<td style="text-align: left;">Cancel &amp; Refund Button (<code>INPUT_PULLUP</code>)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Dispense Motor LED</strong></td>
+<td style="text-align: left;">Anode (<code>PA5</code>)</td>
+<td style="text-align: center;"><code>D13</code></td>
+<td style="text-align: left;">Motor Actuator (HIGH = Dispensing)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="problem-statement-logic-flow" class="level3">
+<h3 class="anchored" data-anchor-id="problem-statement-logic-flow">📝 Problem Statement &amp; Logic Flow</h3>
+<ol type="1">
+<li><strong>Initialization (<code>setup</code>):</strong>
+<ul>
+<li>Configure UART at <strong>115200 baud</strong> and set all buttons as <code>INPUT_PULLUP</code>.</li>
+<li>Ensure motor LED is <strong>OFF</strong> and initialize state to <code>STATE_IDLE</code>.</li>
+</ul></li>
+<li><strong>State Transition Rules:</strong>
+<ul>
+<li><strong><code>STATE_IDLE</code>:</strong> Waiting for coins. When <code>D2</code> is pressed, transition to <code>STATE_COIN_ACCEPTED</code> and print menu options.</li>
+<li><strong><code>STATE_COIN_ACCEPTED</code>:</strong>
+<ul>
+<li>If <code>D3</code> (Select) is pressed: Start non-blocking 2-second dispensing timer, turn motor LED <strong>HIGH</strong>, and transition to <code>STATE_DISPENSING</code>.</li>
+<li>If <code>D4</code> (Return) is pressed: Refund coin, return to <code>STATE_IDLE</code>.</li>
+</ul></li>
+<li><strong><code>STATE_DISPENSING</code>:</strong>
+<ul>
+<li>Run motor for <strong>exactly 2000 ms</strong> using non-blocking delta time: <code>millis() - dispenseStartTime &gt;= 2000</code>.</li>
+<li>Once completed, turn motor LED <strong>LOW</strong> and transition back to <code>STATE_IDLE</code>.</li>
+</ul></li>
+</ul></li>
+<li><strong>Execution Guarantee:</strong> The main superloop executes freely without any blocking <code>delay()</code> calls.</li>
+</ol>
+<pre class="text"><code>[STATE TRANSITION] IDLE -&gt; COIN_ACCEPTED
+[PROMPT] Coin inserted! Press SELECT to dispense or RETURN to cancel.
+[STATE TRANSITION] COIN_ACCEPTED -&gt; DISPENSING
+[ACTION] Dispense motor running for 2000 ms...
+[ACTION] Dispense complete! Item dropped into bin.
+[STATE TRANSITION] DISPENSING -&gt; IDLE</code></pre>
+</section>
+<section id="interactive-simulation" class="level3">
+<h3 class="anchored" data-anchor-id="interactive-simulation">Interactive Simulation</h3>
+<div class="simulation-container">
+<iframe src="https://wokwi.com/projects/479963095271968769?embed=1" title="FSM Simulation Workspace" loading="lazy" allowfullscreen="">
+</iframe>
+<div class="sim-info-bar">
+<p><span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span> <span>Click Play, wire Coin on D2, Select on D3, Dispense LED on D13</span></p>
+</div>
+</div>
+</section>
+<section id="implementation-code-high-level-framework-vs.-bare-metal-embedded-c" class="level3">
+<h3 class="anchored" data-anchor-id="implementation-code-high-level-framework-vs.-bare-metal-embedded-c">Implementation Code: High-Level Framework vs.&nbsp;Bare-Metal Embedded C</h3>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="">🔷 High-Level Framework (Running in Simulation)</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">🔶 Equivalent Bare-Metal Embedded C (Direct Register Access)</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Mini-Project 1: Non-Blocking Smart Vending Machine FSM (Nucleo-C031C6)</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#define PIN_COIN   </span><span class="dv">2</span><span class="pp">  </span><span class="co">// Pushbutton: Insert Coin (PA10)</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#define PIN_SELECT </span><span class="dv">3</span><span class="pp">  </span><span class="co">// Pushbutton: Select Snack (PB3)</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#define PIN_RETURN </span><span class="dv">4</span><span class="pp">  </span><span class="co">// Pushbutton: Coin Return (PB5)</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#define PIN_MOTOR  </span><span class="dv">13</span><span class="pp"> </span><span class="co">// Dispense Motor Indicator LED (PA5)</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">enum</span> <span class="op">{</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  STATE_IDLE<span class="op">,</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  STATE_COIN_ACCEPTED<span class="op">,</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  STATE_DISPENSING</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> VendingState<span class="op">;</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>VendingState currentState <span class="op">=</span> STATE_IDLE<span class="op">;</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="dt">uint32_t</span> dispenseStartTime <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="dt">uint32_t</span> lastButtonPress <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setup<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>begin<span class="op">(</span><span class="dv">115200</span><span class="op">);</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>PIN_COIN<span class="op">,</span> INPUT_PULLUP<span class="op">);</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>PIN_SELECT<span class="op">,</span> INPUT_PULLUP<span class="op">);</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>PIN_RETURN<span class="op">,</span> INPUT_PULLUP<span class="op">);</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>PIN_MOTOR<span class="op">,</span> OUTPUT<span class="op">);</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>  digitalWrite<span class="op">(</span>PIN_MOTOR<span class="op">,</span> LOW<span class="op">);</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"========================================"</span><span class="op">);</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"  Smart Vending Machine FSM Initialized "</span><span class="op">);</span></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"  State: STATE_IDLE (Insert coin to buy)"</span><span class="op">);</span></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"========================================"</span><span class="op">);</span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> loop<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>  <span class="dt">uint32_t</span> now <span class="op">=</span> millis<span class="op">();</span></span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>  <span class="cf">switch</span> <span class="op">(</span>currentState<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> STATE_IDLE<span class="op">:</span></span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>      digitalWrite<span class="op">(</span>PIN_MOTOR<span class="op">,</span> LOW<span class="op">);</span></span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> <span class="op">(</span>digitalRead<span class="op">(</span>PIN_COIN<span class="op">)</span> <span class="op">==</span> LOW <span class="op">&amp;&amp;</span> <span class="op">(</span>now <span class="op">-</span> lastButtonPress <span class="op">&gt;</span> <span class="dv">200</span><span class="op">))</span> <span class="op">{</span></span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>        lastButtonPress <span class="op">=</span> now<span class="op">;</span></span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>        currentState <span class="op">=</span> STATE_COIN_ACCEPTED<span class="op">;</span></span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>        Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"</span><span class="sc">\n</span><span class="st">[STATE TRANSITION] IDLE -&gt; COIN_ACCEPTED"</span><span class="op">);</span></span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>        Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"[PROMPT] Coin inserted! Press SELECT to dispense or RETURN to cancel."</span><span class="op">);</span></span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>      <span class="op">}</span></span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>      <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> STATE_COIN_ACCEPTED<span class="op">:</span></span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> <span class="op">(</span>digitalRead<span class="op">(</span>PIN_SELECT<span class="op">)</span> <span class="op">==</span> LOW <span class="op">&amp;&amp;</span> <span class="op">(</span>now <span class="op">-</span> lastButtonPress <span class="op">&gt;</span> <span class="dv">200</span><span class="op">))</span> <span class="op">{</span></span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>        lastButtonPress <span class="op">=</span> now<span class="op">;</span></span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>        dispenseStartTime <span class="op">=</span> now<span class="op">;</span></span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a>        currentState <span class="op">=</span> STATE_DISPENSING<span class="op">;</span></span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a>        digitalWrite<span class="op">(</span>PIN_MOTOR<span class="op">,</span> HIGH<span class="op">);</span></span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a>        Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"</span><span class="sc">\n</span><span class="st">[STATE TRANSITION] COIN_ACCEPTED -&gt; DISPENSING"</span><span class="op">);</span></span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a>        Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"[ACTION] Dispense motor running for 2000 ms..."</span><span class="op">);</span></span>
+<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a>      <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> <span class="op">(</span>digitalRead<span class="op">(</span>PIN_RETURN<span class="op">)</span> <span class="op">==</span> LOW <span class="op">&amp;&amp;</span> <span class="op">(</span>now <span class="op">-</span> lastButtonPress <span class="op">&gt;</span> <span class="dv">200</span><span class="op">))</span> <span class="op">{</span></span>
+<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a>        lastButtonPress <span class="op">=</span> now<span class="op">;</span></span>
+<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a>        currentState <span class="op">=</span> STATE_IDLE<span class="op">;</span></span>
+<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a>        Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"</span><span class="sc">\n</span><span class="st">[STATE TRANSITION] COIN_ACCEPTED -&gt; IDLE"</span><span class="op">);</span></span>
+<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a>        Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"[ACTION] Coin refunded. Returning to idle."</span><span class="op">);</span></span>
+<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a>      <span class="op">}</span></span>
+<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a>      <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> STATE_DISPENSING<span class="op">:</span></span>
+<span id="cb6-65"><a href="#cb6-65" aria-hidden="true" tabindex="-1"></a>      <span class="co">// Non-blocking timer: evaluate elapsed time without freezing processor</span></span>
+<span id="cb6-66"><a href="#cb6-66" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> <span class="op">(</span>now <span class="op">-</span> dispenseStartTime <span class="op">&gt;=</span> <span class="dv">2000</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-67"><a href="#cb6-67" aria-hidden="true" tabindex="-1"></a>        digitalWrite<span class="op">(</span>PIN_MOTOR<span class="op">,</span> LOW<span class="op">);</span></span>
+<span id="cb6-68"><a href="#cb6-68" aria-hidden="true" tabindex="-1"></a>        currentState <span class="op">=</span> STATE_IDLE<span class="op">;</span></span>
+<span id="cb6-69"><a href="#cb6-69" aria-hidden="true" tabindex="-1"></a>        Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"[ACTION] Dispense complete! Item dropped into bin."</span><span class="op">);</span></span>
+<span id="cb6-70"><a href="#cb6-70" aria-hidden="true" tabindex="-1"></a>        Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"[STATE TRANSITION] DISPENSING -&gt; IDLE"</span><span class="op">);</span></span>
+<span id="cb6-71"><a href="#cb6-71" aria-hidden="true" tabindex="-1"></a>        Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"----------------------------------------"</span><span class="op">);</span></span>
+<span id="cb6-72"><a href="#cb6-72" aria-hidden="true" tabindex="-1"></a>      <span class="op">}</span></span>
+<span id="cb6-73"><a href="#cb6-73" aria-hidden="true" tabindex="-1"></a>      <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb6-74"><a href="#cb6-74" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb6-75"><a href="#cb6-75" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Mini-Project 1: Bare-Metal State Machine Architecture (Direct Register)</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Target: STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdint.h&gt;</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#define RCC_BASE        </span><span class="op">(</span><span class="bn">0x40021000</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#define RCC_IOPENR      </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span>RCC_BASE<span class="pp"> </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x34</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOA_BASE      </span><span class="op">(</span><span class="bn">0x50000000</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOA_MODER     </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">GPIOA_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x00</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOA_PUPDR     </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">GPIOA_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x0C</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOA_IDR       </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">GPIOA_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x10</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOA_BSRR      </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">GPIOA_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x18</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">enum</span> <span class="op">{</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    STATE_IDLE<span class="op">,</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>    STATE_COIN_ACCEPTED<span class="op">,</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    STATE_DISPENSING</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> vending_state_t<span class="op">;</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="dt">void</span> <span class="op">(*</span>state_handler_t<span class="op">)(</span><span class="dt">void</span><span class="op">);</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> vending_state_t current_state <span class="op">=</span> STATE_IDLE<span class="op">;</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> <span class="dt">uint32_t</span> timer_ticks <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> handle_idle<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>    GPIOA_BSRR <span class="op">=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">5</span> <span class="op">+</span> <span class="dv">16</span><span class="op">));</span> <span class="co">// LED OFF (Motor stopped)</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check PA10 (Coin Button Active LOW)</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!(</span>GPIOA_IDR <span class="op">&amp;</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">10</span><span class="op">)))</span> <span class="op">{</span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>        current_state <span class="op">=</span> STATE_COIN_ACCEPTED<span class="op">;</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> handle_coin<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>    current_state <span class="op">=</span> STATE_DISPENSING<span class="op">;</span></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>    timer_ticks <span class="op">=</span> <span class="dv">2000</span><span class="op">;</span></span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> handle_dispense<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>    GPIOA_BSRR <span class="op">=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">5</span><span class="op">);</span> <span class="co">// LED ON (Motor active)</span></span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>timer_ticks <span class="op">&gt;</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a>        timer_ticks<span class="op">--;</span></span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a>        current_state <span class="op">=</span> STATE_IDLE<span class="op">;</span></span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a><span class="co">// Function pointer dispatch table (Statically allocated in ROM)</span></span>
+<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a><span class="dt">const</span> state_handler_t state_table<span class="op">[</span><span class="dv">3</span><span class="op">]</span> <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a>    handle_idle<span class="op">,</span></span>
+<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a>    handle_coin<span class="op">,</span></span>
+<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a>    handle_dispense</span>
+<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a>    RCC_IOPENR <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">0</span><span class="op">);</span> <span class="co">// Enable GPIOA clock</span></span>
+<span id="cb7-58"><a href="#cb7-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-59"><a href="#cb7-59" aria-hidden="true" tabindex="-1"></a>    <span class="co">// PA5 (LED) Output: MODER = '01'</span></span>
+<span id="cb7-60"><a href="#cb7-60" aria-hidden="true" tabindex="-1"></a>    GPIOA_MODER <span class="op">&amp;=</span> <span class="op">~(</span><span class="dv">3</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">5</span> <span class="op">*</span> <span class="dv">2</span><span class="op">));</span></span>
+<span id="cb7-61"><a href="#cb7-61" aria-hidden="true" tabindex="-1"></a>    GPIOA_MODER <span class="op">|=</span>  <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">5</span> <span class="op">*</span> <span class="dv">2</span><span class="op">));</span></span>
+<span id="cb7-62"><a href="#cb7-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-63"><a href="#cb7-63" aria-hidden="true" tabindex="-1"></a>    <span class="co">// PA10 Input with Pull-Up</span></span>
+<span id="cb7-64"><a href="#cb7-64" aria-hidden="true" tabindex="-1"></a>    GPIOA_MODER <span class="op">&amp;=</span> <span class="op">~(</span><span class="dv">3</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">10</span> <span class="op">*</span> <span class="dv">2</span><span class="op">));</span></span>
+<span id="cb7-65"><a href="#cb7-65" aria-hidden="true" tabindex="-1"></a>    GPIOA_PUPDR <span class="op">|=</span>  <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">10</span> <span class="op">*</span> <span class="dv">2</span><span class="op">));</span></span>
+<span id="cb7-66"><a href="#cb7-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-67"><a href="#cb7-67" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(</span><span class="dv">1</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-68"><a href="#cb7-68" aria-hidden="true" tabindex="-1"></a>        state_table<span class="op">[</span>current_state<span class="op">]();</span> <span class="co">// Single instruction jump (BX Rm)</span></span>
+<span id="cb7-69"><a href="#cb7-69" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">volatile</span> <span class="dt">int</span> d <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> d <span class="op">&lt;</span> <span class="dv">1000</span><span class="op">;</span> d<span class="op">++);</span> <span class="co">// Approximate tick</span></span>
+<span id="cb7-70"><a href="#cb7-70" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-71"><a href="#cb7-71" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-caution callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>📌 Coming Up
+<span class="screen-reader-only">Caution</span>⚠️ Code Verification &amp; Assistance
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>This module is part of the CS2101 syllabus outline. Detailed lecture notes, integrated interactive simulations, and question banks will be added here.</p>
+<p>All high-level framework and bare-metal implementation codes are verified for the target microcontroller (<strong>STM32 Nucleo-C031C6</strong> / ARM Cortex-M0+). If you encounter any compilation errors, unexpected simulation behavior, or discrepancies with this code, Please report to the Course instructor or the TA via email.</p>
 </div>
 </div>
-<p><a href="./index.html" class="btn btn-outline-secondary mt-4">← Back to Main Page</a></p>
+</section>
+<section id="how-mini-project-1-applies-week-8-concepts" class="level3">
+<h3 class="anchored" data-anchor-id="how-mini-project-1-applies-week-8-concepts">🔍 How Mini-Project 1 Applies Week 8 Concepts</h3>
+<section id="hardware-circuit-level-concept-mapping" class="level4">
+<h4 class="anchored" data-anchor-id="hardware-circuit-level-concept-mapping">1. Hardware &amp; Circuit-Level Concept Mapping</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Circuit Component</th>
+<th style="text-align: left;">Week 8 Theoretical Concept</th>
+<th style="text-align: left;">Technical Function in System</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Pushbuttons (D2, D3, D4)</strong></td>
+<td style="text-align: left;"><strong>Asynchronous External Stimuli</strong></td>
+<td style="text-align: left;">Represent physical external events that trigger state transitions in the state transition diagram.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Dispense LED (D13)</strong></td>
+<td style="text-align: left;"><strong>State-Driven Physical Actuator</strong></td>
+<td style="text-align: left;">Directly controlled by state actions: driven HIGH only during <code>STATE_DISPENSING</code> and forced LOW in all other states.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="firmware-code-to-concept-breakdown" class="level4">
+<h4 class="anchored" data-anchor-id="firmware-code-to-concept-breakdown">2. Firmware Code-to-Concept Breakdown</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Code Statement (Framework / Bare-Metal)</th>
+<th style="text-align: left;">Week 8 Theoretical Concept</th>
+<th style="text-align: left;">Deep-Dive Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>switch (currentState)</code><br><code>state_table[current_state]();</code></td>
+<td style="text-align: left;"><strong>Deterministic State Machine Dispatch</strong></td>
+<td style="text-align: left;">Replaces nested <code>if-else</code> trees with deterministic <span class="math inline">\(O(1)\)</span> dispatch. In bare metal, executes via an array of function pointers stored in Flash.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>if (now - dispenseStartTime &gt;= 2000)</code></td>
+<td style="text-align: left;"><strong>Non-Blocking Delta Timing</strong></td>
+<td style="text-align: left;">Maintains real-time responsiveness by polling elapsed time milestones instead of freezing the CPU pipeline with blocking delays.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+</section>
+<section id="mini-project-2-observer-pattern-multi-sensor-alert-system" class="level2">
+<h2 class="anchored" data-anchor-id="mini-project-2-observer-pattern-multi-sensor-alert-system">6. Mini-Project 2: Observer Pattern Multi-Sensor Alert System 📡🔔</h2>
+<section id="objective-1" class="level3">
+<h3 class="anchored" data-anchor-id="objective-1">🎯 Objective</h3>
+<p>In modular firmware architecture, high-level business logic must be completely decoupled from low-level hardware sensors. In this project, you will implement the <strong>Observer Design Pattern in C/C++</strong> using function pointers on the <strong>STM32 Nucleo-C031C6</strong> to decouple analog sensor reading from independent consumers (a UART logger and a safety overheat alarm).</p>
+</section>
+<section id="hardware-setup-wokwi-1" class="level3">
+<h3 class="anchored" data-anchor-id="hardware-setup-wokwi-1">🛠️ Hardware Setup (Wokwi)</h3>
+<p>The circuit connects an analog potentiometer sensor and an alarm indicator LED: * <strong>Analog Temperature Simulator:</strong> 1x Potentiometer on <code>A0</code> (<code>PA0</code>). * <strong>Overheat Hazard Indicator:</strong> 1x LED with 220Ω resistor on <code>D13</code> (<code>PA5</code>). * <strong>Serial Diagnostic Terminal:</strong> Virtual COM port over USB at <strong>115200 baud</strong>.</p>
+</section>
+<section id="pin-wiring-table-1" class="level3">
+<h3 class="anchored" data-anchor-id="pin-wiring-table-1">Pin Wiring Table</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 23%">
+<col style="width: 23%">
+<col style="width: 29%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Component</th>
+<th style="text-align: left;">Pin / Terminal</th>
+<th style="text-align: center;">STM32 / Board Pin</th>
+<th style="text-align: left;">Electrical Function</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Potentiometer</strong></td>
+<td style="text-align: left;">VCC / GND</td>
+<td style="text-align: center;"><code>3.3V</code> / <code>GND</code></td>
+<td style="text-align: left;">3.3V Analog Power Reference</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Potentiometer</strong></td>
+<td style="text-align: left;">SIG (Wiper)</td>
+<td style="text-align: center;"><code>A0</code> (<code>PA0</code>)</td>
+<td style="text-align: left;">Analog Voltage Input (0–1023 ADC counts)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Alarm LED</strong></td>
+<td style="text-align: left;">Anode (via 220Ω)</td>
+<td style="text-align: center;"><code>D13</code> (<code>PA5</code>)</td>
+<td style="text-align: left;">Overheat Warning Indicator</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Alarm LED</strong></td>
+<td style="text-align: left;">Cathode</td>
+<td style="text-align: center;"><code>GND</code></td>
+<td style="text-align: left;">Ground Reference</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="problem-statement-logic-flow-1" class="level3">
+<h3 class="anchored" data-anchor-id="problem-statement-logic-flow-1">📝 Problem Statement &amp; Logic Flow</h3>
+<ol type="1">
+<li><strong>Define Observer Interface:</strong> Define function pointer type: <code>typedef void (*SensorCallback)(int rawValue);</code>.</li>
+<li><strong>Subscription Registry:</strong> Maintain an array of registered callback pointers with <code>registerObserver()</code>.</li>
+<li><strong>Sensor Sampling &amp; Notification:</strong>
+<ul>
+<li>In <code>loop()</code>, sample analog pin <code>A0</code> every 500 ms.</li>
+<li>Call <code>notifyObservers(reading)</code> to iterate through subscribers and deliver the fresh data.</li>
+</ul></li>
+<li><strong>Independent Observers:</strong>
+<ul>
+<li><strong>Observer 1 (Serial Logger):</strong> Logs raw sensor values to UART terminal: <code>"[LOGGER]: Sensor Value = &lt;val&gt;"</code>.</li>
+<li><strong>Observer 2 (Safety Overheat Alarm):</strong> If value exceeds <strong><code>700</code></strong>, turn <code>D13</code> <strong>HIGH</strong> and alert: <code>"[ALERT]: OVERHEAT THRESHOLD EXCEEDED!"</code>; otherwise, turn <code>D13</code> <strong>LOW</strong>.</li>
+</ul></li>
+</ol>
+<pre class="text"><code>[LOGGER]: Sensor Value = 412
+[LOGGER]: Sensor Value = 754
+[ALERT]: OVERHEAT THRESHOLD EXCEEDED! (PA5 LED turned ON)</code></pre>
+</section>
+<section id="interactive-simulation-1" class="level3">
+<h3 class="anchored" data-anchor-id="interactive-simulation-1">Interactive Simulation</h3>
+<div class="simulation-container">
+<iframe src="https://wokwi.com/projects/479963095271968769?embed=1" title="Observer Pattern Simulation Workspace" loading="lazy" allowfullscreen="">
+</iframe>
+<div class="sim-info-bar">
+<p><span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span> <span>Click Play, wire Potentiometer to A0 and Alarm LED to D13</span></p>
+</div>
+</div>
+</section>
+<section id="implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1" class="level3">
+<h3 class="anchored" data-anchor-id="implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1">Implementation Code: High-Level Framework vs.&nbsp;Bare-Metal Embedded C</h3>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">🔷 High-Level Framework (Running in Simulation)</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">🔶 Equivalent Bare-Metal Embedded C (Direct Register Access)</a></li></ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Mini-Project 2: Observer Pattern Callback System (Nucleo-C031C6)</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SENSOR_PIN </span>A0</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#define ALARM_LED  </span><span class="dv">13</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co">// 1. Define the Observer function pointer signature</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="dt">void</span> <span class="op">(*</span>SensorCallback<span class="op">)(</span><span class="dt">int</span> rawValue<span class="op">);</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#define MAX_OBSERVERS </span><span class="dv">4</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>SensorCallback observers<span class="op">[</span>MAX_OBSERVERS<span class="op">];</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> observerCount <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="co">// 2. Subscription Management</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> registerObserver<span class="op">(</span>SensorCallback cb<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>observerCount <span class="op">&lt;</span> MAX_OBSERVERS<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>    observers<span class="op">[</span>observerCount<span class="op">++]</span> <span class="op">=</span> cb<span class="op">;</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> notifyObservers<span class="op">(</span><span class="dt">int</span> val<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> observerCount<span class="op">;</span> i<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>    observers<span class="op">[</span>i<span class="op">](</span>val<span class="op">);</span> <span class="co">// Invoke subscriber callback</span></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a><span class="co">// 3. Observer A: Serial Telemetry Logger</span></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> serialLogger<span class="op">(</span><span class="dt">int</span> val<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>print<span class="op">(</span><span class="st">"[LOGGER]: Sensor Value = "</span><span class="op">);</span></span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span>val<span class="op">);</span></span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a><span class="co">// 4. Observer B: Safety Overheat Alarm</span></span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> safetyAlarm<span class="op">(</span><span class="dt">int</span> val<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>val <span class="op">&gt;</span> <span class="dv">700</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a>    digitalWrite<span class="op">(</span>ALARM_LED<span class="op">,</span> HIGH<span class="op">);</span></span>
+<span id="cb9-38"><a href="#cb9-38" aria-hidden="true" tabindex="-1"></a>    Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"  ==&gt; [ALERT]: OVERHEAT THRESHOLD EXCEEDED! (LED ON)"</span><span class="op">);</span></span>
+<span id="cb9-39"><a href="#cb9-39" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb9-40"><a href="#cb9-40" aria-hidden="true" tabindex="-1"></a>    digitalWrite<span class="op">(</span>ALARM_LED<span class="op">,</span> LOW<span class="op">);</span></span>
+<span id="cb9-41"><a href="#cb9-41" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb9-42"><a href="#cb9-42" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-43"><a href="#cb9-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-44"><a href="#cb9-44" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setup<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb9-45"><a href="#cb9-45" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>begin<span class="op">(</span><span class="dv">115200</span><span class="op">);</span></span>
+<span id="cb9-46"><a href="#cb9-46" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>ALARM_LED<span class="op">,</span> OUTPUT<span class="op">);</span></span>
+<span id="cb9-47"><a href="#cb9-47" aria-hidden="true" tabindex="-1"></a>  digitalWrite<span class="op">(</span>ALARM_LED<span class="op">,</span> LOW<span class="op">);</span></span>
+<span id="cb9-48"><a href="#cb9-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-49"><a href="#cb9-49" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Register decoupled observers</span></span>
+<span id="cb9-50"><a href="#cb9-50" aria-hidden="true" tabindex="-1"></a>  registerObserver<span class="op">(</span>serialLogger<span class="op">);</span></span>
+<span id="cb9-51"><a href="#cb9-51" aria-hidden="true" tabindex="-1"></a>  registerObserver<span class="op">(</span>safetyAlarm<span class="op">);</span></span>
+<span id="cb9-52"><a href="#cb9-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-53"><a href="#cb9-53" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"--- Observer Pattern Multi-Sensor Alert Initialized ---"</span><span class="op">);</span></span>
+<span id="cb9-54"><a href="#cb9-54" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-55"><a href="#cb9-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-56"><a href="#cb9-56" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> loop<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb9-57"><a href="#cb9-57" aria-hidden="true" tabindex="-1"></a>  <span class="at">static</span> <span class="dt">uint32_t</span> lastSample <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb9-58"><a href="#cb9-58" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>millis<span class="op">()</span> <span class="op">-</span> lastSample <span class="op">&gt;=</span> <span class="dv">500</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-59"><a href="#cb9-59" aria-hidden="true" tabindex="-1"></a>    lastSample <span class="op">=</span> millis<span class="op">();</span></span>
+<span id="cb9-60"><a href="#cb9-60" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> sensorVal <span class="op">=</span> analogRead<span class="op">(</span>SENSOR_PIN<span class="op">);</span></span>
+<span id="cb9-61"><a href="#cb9-61" aria-hidden="true" tabindex="-1"></a>    notifyObservers<span class="op">(</span>sensorVal<span class="op">);</span> <span class="co">// Dispatch to all registered subscribers</span></span>
+<span id="cb9-62"><a href="#cb9-62" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb9-63"><a href="#cb9-63" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Mini-Project 2: Bare-Metal Observer Pattern (Callback Jump Table)</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdint.h&gt;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOA_BASE   </span><span class="op">(</span><span class="bn">0x50000000</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOA_BSRR   </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">GPIOA_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x18</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="dt">void</span> <span class="op">(*</span>sensor_observer_t<span class="op">)(</span><span class="dt">uint16_t</span> adc_val<span class="op">);</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> baremetal_alarm_observer<span class="op">(</span><span class="dt">uint16_t</span> adc_val<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>adc_val <span class="op">&gt;</span> <span class="dv">700</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>        GPIOA_BSRR <span class="op">=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">5</span><span class="op">);</span>        <span class="co">// Set PA5 HIGH (Overheat Alarm)</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>        GPIOA_BSRR <span class="op">=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">5</span> <span class="op">+</span> <span class="dv">16</span><span class="op">));</span> <span class="co">// Set PA5 LOW (Normal)</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="co">// Observer subscriber list</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> sensor_observer_t registry<span class="op">[</span><span class="dv">2</span><span class="op">]</span> <span class="op">=</span> <span class="op">{</span> baremetal_alarm_observer<span class="op">,</span> <span class="dv">0</span> <span class="op">};</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> dispatch_telemetry<span class="op">(</span><span class="dt">uint16_t</span> sample<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> registry<span class="op">[</span>i<span class="op">]</span> <span class="op">!=</span> <span class="dv">0</span><span class="op">;</span> i<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>        registry<span class="op">[</span>i<span class="op">](</span>sample<span class="op">);</span> <span class="co">// Call observer through function pointer</span></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-caution callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Caution</span>⚠️ Code Verification &amp; Assistance
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>All high-level framework and bare-metal implementation codes are verified for the target microcontroller (<strong>STM32 Nucleo-C031C6</strong> / ARM Cortex-M0+). If you encounter any compilation errors, unexpected simulation behavior, or discrepancies with this code, Please report to the Course instructor or the TA via email.</p>
+</div>
+</div>
+</section>
+<section id="how-mini-project-2-applies-week-8-concepts" class="level3">
+<h3 class="anchored" data-anchor-id="how-mini-project-2-applies-week-8-concepts">🔍 How Mini-Project 2 Applies Week 8 Concepts</h3>
+<section id="hardware-circuit-level-concept-mapping-1" class="level4">
+<h4 class="anchored" data-anchor-id="hardware-circuit-level-concept-mapping-1">1. Hardware &amp; Circuit-Level Concept Mapping</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Circuit Component</th>
+<th style="text-align: left;">Week 8 Theoretical Concept</th>
+<th style="text-align: left;">Technical Function in System</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Potentiometer on A0</strong></td>
+<td style="text-align: left;"><strong>Physical Event Producer</strong></td>
+<td style="text-align: left;">Converts continuous mechanical angle to digital voltage samples, acting as the subject being observed.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>LED on D13 (PA5)</strong></td>
+<td style="text-align: left;"><strong>Decoupled Actuator Consumer</strong></td>
+<td style="text-align: left;">Consumes notifications independently without the producer knowing about its existence or pin assignment.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="firmware-code-to-concept-breakdown-1" class="level4">
+<h4 class="anchored" data-anchor-id="firmware-code-to-concept-breakdown-1">2. Firmware Code-to-Concept Breakdown</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Code Statement (Framework / Bare-Metal)</th>
+<th style="text-align: left;">Week 8 Theoretical Concept</th>
+<th style="text-align: left;">Deep-Dive Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>typedef void (*SensorCallback)(int);</code></td>
+<td style="text-align: left;"><strong>Function Pointer Contract</strong></td>
+<td style="text-align: left;">Defines a type-safe interface contract that decouple event sources from event listeners.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>registerObserver(safetyAlarm);</code></td>
+<td style="text-align: left;"><strong>Dynamic Subscription Registry</strong></td>
+<td style="text-align: left;">Adds new features dynamically at runtime without modifying a single line of the sensor sampling driver.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+</section>
+<section id="hands-on-practice-challenge-for-students-to-solve" class="level2">
+<h2 class="anchored" data-anchor-id="hands-on-practice-challenge-for-students-to-solve">7. Hands-On Practice Challenge (For Students to Solve) 🎯</h2>
+<section id="objective-scenario" class="level3">
+<h3 class="anchored" data-anchor-id="objective-scenario">🎯 Objective &amp; Scenario</h3>
+<p>In modern urban traffic infrastructure, emergency emergency vehicles (ambulances, fire engines) require preemptive traffic signal control. In this challenge, you will implement a <strong>Traffic Intersection FSM with Siren Preemption</strong> on the <strong>STM32 Nucleo-C031C6</strong> that sequences standard traffic lights and immediately grants safe right-of-way when an emergency siren is triggered.</p>
+</section>
+<section id="hardware-setup-pin-wiring-table" class="level3">
+<h3 class="anchored" data-anchor-id="hardware-setup-pin-wiring-table">🛠️ Hardware Setup &amp; Pin Wiring Table</h3>
+<p>Connect 3 traffic LEDs, a pedestrian call button, and an emergency siren input:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 23%">
+<col style="width: 23%">
+<col style="width: 29%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Component</th>
+<th style="text-align: left;">Pin / Terminal</th>
+<th style="text-align: center;">Board Connection</th>
+<th style="text-align: left;">Electrical Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Red Traffic LED</strong></td>
+<td style="text-align: left;">Anode (via 220Ω)</td>
+<td style="text-align: center;"><code>D11</code></td>
+<td style="text-align: left;">Stop Phase Indicator</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Yellow Traffic LED</strong></td>
+<td style="text-align: left;">Anode (via 220Ω)</td>
+<td style="text-align: center;"><code>D12</code></td>
+<td style="text-align: left;">Caution Phase Indicator</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Green Traffic LED</strong></td>
+<td style="text-align: left;">Anode (via 220Ω)</td>
+<td style="text-align: center;"><code>D13</code></td>
+<td style="text-align: left;">Go Phase Indicator</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Pedestrian Button</strong></td>
+<td style="text-align: left;">Pin 1.L / 2.L</td>
+<td style="text-align: center;"><code>D2</code> / <code>GND</code></td>
+<td style="text-align: left;">Pedestrian Cross Request (<code>INPUT_PULLUP</code>)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Emergency Siren Input</strong></td>
+<td style="text-align: left;">Pin 1.L / 2.L</td>
+<td style="text-align: center;"><code>D3</code> / <code>GND</code></td>
+<td style="text-align: left;">Active LOW Siren Trigger (<code>INPUT_PULLUP</code>)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Common Ground</strong></td>
+<td style="text-align: left;">Cathodes / GND</td>
+<td style="text-align: center;"><code>GND</code></td>
+<td style="text-align: left;">Ground Reference</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="problem-statement-functional-requirements" class="level3">
+<h3 class="anchored" data-anchor-id="problem-statement-functional-requirements">📋 Problem Statement &amp; Functional Requirements</h3>
+<ol type="1">
+<li><strong>Standard Traffic Cycle:</strong>
+<ul>
+<li><strong><code>STATE_GREEN</code>:</strong> Green LED is <strong>ON</strong> for 4.0 seconds. Red and Yellow are OFF.</li>
+<li><strong><code>STATE_YELLOW</code>:</strong> Yellow LED is <strong>ON</strong> for 1.5 seconds. Green and Red are OFF.</li>
+<li><strong><code>STATE_RED</code>:</strong> Red LED is <strong>ON</strong> for 4.0 seconds. Green and Yellow are OFF.</li>
+</ul></li>
+<li><strong>Pedestrian Crossing Logic:</strong>
+<ul>
+<li>If <code>D2</code> is pressed during Green, abort remaining Green time and smoothly transition to Yellow <span class="math inline">\(\to\)</span> Red.</li>
+</ul></li>
+<li><strong>Emergency Preemption Priority:</strong>
+<ul>
+<li>If <code>D3</code> (Emergency Siren) goes LOW, immediately transition to <strong><code>STATE_EMERGENCY</code></strong>:
+<ul>
+<li>Flash Red and Yellow LEDs alternately at <strong>4 Hz</strong> (125 ms ON / 125 ms OFF).</li>
+<li>Transmit <code>"[EMERGENCY] Preemption active! Civilian traffic halted."</code> over UART.</li>
+<li>When siren deasserts (D3 returns HIGH), safely transition back to <code>STATE_RED</code> before restoring normal cycle.</li>
+</ul></li>
+</ul></li>
+<li><strong>Non-Blocking Constraint:</strong> Entire program must execute using <code>millis()</code> timing comparisons. No <code>delay()</code> permitted!</li>
+</ol>
+</section>
+<section id="starter-code-template" class="level3">
+<h3 class="anchored" data-anchor-id="starter-code-template">💻 Starter Code Template</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Student Practice Challenge: Traffic FSM with Emergency Preemption</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Target: board-st-nucleo-c031c6</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#define PIN_RED       </span><span class="dv">11</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#define PIN_YELLOW    </span><span class="dv">12</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#define PIN_GREEN     </span><span class="dv">13</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#define PIN_PED_BTN   </span><span class="dv">2</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#define PIN_SIREN     </span><span class="dv">3</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="kw">enum</span> <span class="op">{</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  STATE_GREEN<span class="op">,</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>  STATE_YELLOW<span class="op">,</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>  STATE_RED<span class="op">,</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>  STATE_EMERGENCY</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> TrafficState<span class="op">;</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>TrafficState currentState <span class="op">=</span> STATE_GREEN<span class="op">;</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a><span class="dt">uint32_t</span> stateStartTime <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setup<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 1: Initialize Serial at 115200 baud</span></span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 2: Configure LED pins as OUTPUT</span></span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 3: Configure PIN_PED_BTN and PIN_SIREN as INPUT_PULLUP</span></span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 4: Initialize default state</span></span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> loop<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 5: Check emergency siren input (Highest Priority Check!)</span></span>
+<span id="cb11-31"><a href="#cb11-31" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 6: Implement non-blocking FSM transitions using millis() - stateStartTime</span></span>
+<span id="cb11-32"><a href="#cb11-32" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 7: Implement pedestrian abort during STATE_GREEN</span></span>
+<span id="cb11-33"><a href="#cb11-33" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 8: Implement 4 Hz alternate flashing in STATE_EMERGENCY</span></span>
+<span id="cb11-34"><a href="#cb11-34" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="verification-expected-test-cases" class="level3">
+<h3 class="anchored" data-anchor-id="verification-expected-test-cases">🧪 Verification &amp; Expected Test Cases</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 23%">
+<col style="width: 23%">
+<col style="width: 29%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Operating Scenario</th>
+<th style="text-align: left;">Input Stimulus</th>
+<th style="text-align: center;">Active LEDs</th>
+<th style="text-align: left;">Expected Serial Output</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Normal Cycle</strong></td>
+<td style="text-align: left;">None</td>
+<td style="text-align: center;">Green <span class="math inline">\(\to\)</span> Yellow <span class="math inline">\(\to\)</span> Red</td>
+<td style="text-align: left;"><code>[STATE] Normal Cycle Sequence</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Pedestrian Request</strong></td>
+<td style="text-align: left;">Press <code>D2</code> during Green</td>
+<td style="text-align: center;">Yellow turns ON immediately</td>
+<td style="text-align: left;"><code>[PED] Crossing Requested -&gt; Fast Yellow</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Emergency Siren</strong></td>
+<td style="text-align: left;">Press <code>D3</code> at any time</td>
+<td style="text-align: center;">Red + Yellow 4 Hz Flash</td>
+<td style="text-align: left;"><code>[EMERGENCY] Preemption Active!</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Emergency Cleared</strong></td>
+<td style="text-align: left;">Release <code>D3</code></td>
+<td style="text-align: center;">Red ON for 3s safety buffer</td>
+<td style="text-align: left;"><code>[STATE] Emergency Cleared -&gt; Safe Red</code></td>
+</tr>
+</tbody>
+</table>
+<details>
+<summary>
+💡 Need a Hint? Click to Reveal
+</summary>
+<ul>
+<li><p><strong>Emergency Check First:</strong> At the top of <code>loop()</code>, evaluate:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>digitalRead<span class="op">(</span>PIN_SIREN<span class="op">)</span> <span class="op">==</span> LOW<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    currentState <span class="op">=</span> STATE_EMERGENCY<span class="op">;</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p><strong>Alternate Flashing:</strong> Use <code>(millis() / 125) % 2 == 0</code> to flip between Red and Yellow during emergency mode without any delay.</p></li>
+</ul>
+</details>
+<div class="simulation-container">
+<iframe src="https://wokwi.com/projects/479963095271968769?embed=1" title="Traffic Intersection FSM Simulation Workspace" loading="lazy" allowfullscreen="">
+</iframe>
+<div class="sim-info-bar">
+<p><span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span> <span>Click Play to build and test your Traffic Intersection FSM with Siren Preemption</span></p>
+</div>
+</div>
+<div id="comparator-w8" class="code-comparator-widget">
+  <div class="comparator-header">
+    <div class="comparator-title">
+      <span class="icon">🔄</span>
+      <span><strong>Simultaneous Code Explorer:</strong> Arduino Framework ↔ Bare-Metal C</span>
+    </div>
+    <div class="comparator-controls">
+      <label>Load Preset:</label>
+      <select class="preset-select">
+        <option value="adc_analog">ADC Multi-Channel Reading (Potentiometer)</option>
+        <option value="gpio_blink">GPIO Multi-LED Indicator</option>
+        <option value="gpio_input">Pushbutton Event Input</option>
+        <option value="exti_interrupt">EXTI Hardware Interrupt</option>
+        <option value="timer_pwm">Hardware Timer PWM</option>
+      </select>
+      <button type="button" class="btn-compare" onclick="runInteractiveTranslation('comparator-w8')">Analyze / Map Code</button>
+    </div>
+  </div>
+  <div class="comparator-panes">
+    <div class="pane">
+      <div class="pane-header">
+        <span class="badge-arduino">Arduino C++ (Framework)</span>
+        <span class="hint">Type or paste Arduino code here for live Bare-Metal translation</span>
+      </div>
+      <textarea class="code-input" spellcheck="false"></textarea>
+    </div>
+    <div class="pane">
+      <div class="pane-header">
+        <span class="badge-baremetal">Equivalent Bare-Metal C (Direct Registers)</span>
+        <span class="hint">Live Memory-Mapped Operations</span>
+      </div>
+      <pre class="code-output"><code></code></pre>
+    </div>
+  </div>
+</div>
+<hr>
+</section>
+</section>
+<section id="concept-check-practice-questions" class="level2">
+<h2 class="anchored" data-anchor-id="concept-check-practice-questions">8. Concept Check Practice Questions</h2>
+<section id="question-1-finite-state-machine-advantages" class="level3">
+<h3 class="anchored" data-anchor-id="question-1-finite-state-machine-advantages">Question 1: Finite State Machine Advantages</h3>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Click to View Question &amp; Options
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Why is the Finite State Machine (FSM) pattern preferred over nested <code>if-else</code> chains and blocking delays for managing complex embedded system behaviors?</p>
+<p><strong>Options:</strong><br>
+- <strong>A)</strong> FSMs automatically double the CPU clock frequency<br>
+- <strong>B)</strong> FSMs eliminate blocking wait delays, make system behavior predictable and deterministic in each state, and simplify tracing state transitions<br>
+- <strong>C)</strong> FSMs do not require RAM or Flash memory<br>
+- <strong>D)</strong> FSMs convert digital pins into analog outputs</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>✅ Correct Answer: B
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Explanation:</strong><br>
+FSMs enforce structured, deterministic execution. At any given moment, the system is in a known valid state. By replacing blocking delays with state transitions and non-blocking timers, the CPU remains free to monitor critical events continuously.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="question-2-the-observer-pattern-in-embedded-c" class="level3">
+<h3 class="anchored" data-anchor-id="question-2-the-observer-pattern-in-embedded-c">Question 2: The Observer Pattern in Embedded C</h3>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Click to View Question &amp; Options
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>In embedded firmware architecture, what is the primary architectural benefit of using the Observer (Publish-Subscribe) pattern?</p>
+<p><strong>Options:</strong><br>
+- <strong>A)</strong> It allows code to run without an external power supply<br>
+- <strong>B)</strong> It completely decouples the sensor or event-producer module from consumers (displays, loggers, network stacks), allowing modules to be modified or reused independently<br>
+- <strong>C)</strong> It reduces the size of the compiled binary by 90%<br>
+- <strong>D)</strong> It disables microcontroller hardware interrupts</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>✅ Correct Answer: B
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Explanation:</strong><br>
+Without the Observer pattern, a sensor driver must directly call display and logging functions, creating tight coupling. The Observer pattern allows consumers to subscribe via function pointers, meaning changes to the display or logging system require zero modifications to the sensor driver.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<hr>
+<div class="d-flex justify-content-between mt-4">
+<p><a href="./Week-7.html" class="seek-prev-btn">← Back to Week 7: Programming Lab</a> <a href="./Week-9.html" class="seek-next-btn">NEXT: Week 9 — Real-Time Operating Systems →</a></p>
+</div>
 
 
 </section>
+</section>
 
 </main> <!-- /main -->
+<script>
+/**
+ * Interactive Arduino ↔ Bare-Metal STM32 C Code Comparator & Live Translator
+ * Translates Arduino framework calls to equivalent STM32 Nucleo-C031C6 Bare-Metal Register operations.
+ */
+const PRESETS = {
+  gpio_blink: {
+    name: "GPIO Output: LED Blink",
+    arduino: `// Arduino Framework (High-Level)
+#define LED_PIN 13 // PA5 on Nucleo-C031C6
+
+void setup() {
+  pinMode(LED_PIN, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(LED_PIN, HIGH);
+  delay(500);
+  digitalWrite(LED_PIN, LOW);
+  delay(500);
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+
+#define RCC_IOPENR   (*(volatile uint32_t *)(0x40021000UL + 0x34UL))
+#define GPIOA_MODER  (*(volatile uint32_t *)(0x50000000UL + 0x00UL))
+#define GPIOA_BSRR   (*(volatile uint32_t *)(0x50000000UL + 0x18UL))
+
+void gpio_init(void) {
+    // 1. Enable GPIOA Peripheral Bus Clock
+    RCC_IOPENR |= (1UL << 0);
+
+    // 2. Configure PA5 as General Purpose Output ('01' in MODER)
+    GPIOA_MODER &= ~(3UL << (5 * 2));
+    GPIOA_MODER |=  (1UL << (5 * 2));
+}
+
+void delay_cycles(volatile uint32_t count) {
+    while (count--) { __asm volatile("nop"); }
+}
+
+int main(void) {
+    gpio_init();
+    while (1) {
+        // Set PA5 HIGH (bit 5 in BSRR)
+        GPIOA_BSRR = (1UL << 5);
+        delay_cycles(2400000); // ~500 ms at 48 MHz
+
+        // Reset PA5 LOW (bit 5+16 in BSRR)
+        GPIOA_BSRR = (1UL << (5 + 16));
+        delay_cycles(2400000);
+    }
+}`
+  },
+  gpio_input: {
+    name: "GPIO Input: Pushbutton with Internal Pull-Up",
+    arduino: `// Arduino Framework (High-Level)
+#define BUTTON_PIN 2  // PA10
+#define LED_PIN    13 // PA5
+
+void setup() {
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(LED_PIN, OUTPUT);
+}
+
+void loop() {
+  int buttonState = digitalRead(BUTTON_PIN);
+  if (buttonState == LOW) { // Pressed (Active-LOW)
+    digitalWrite(LED_PIN, HIGH);
+  } else {
+    digitalWrite(LED_PIN, LOW);
+  }
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+#include <stdbool.h>
+
+#define RCC_IOPENR   (*(volatile uint32_t *)(0x40021000UL + 0x34UL))
+#define GPIOA_MODER  (*(volatile uint32_t *)(0x50000000UL + 0x00UL))
+#define GPIOA_PUPDR  (*(volatile uint32_t *)(0x50000000UL + 0x0CUL))
+#define GPIOA_IDR    (*(volatile uint32_t *)(0x50000000UL + 0x10UL))
+#define GPIOA_BSRR   (*(volatile uint32_t *)(0x50000000UL + 0x18UL))
+
+void setup_pins(void) {
+    RCC_IOPENR |= (1UL << 0); // Enable GPIOA clock
+
+    // PA10 as Input ('00' in MODER) with Pull-Up ('01' in PUPDR)
+    GPIOA_MODER &= ~(3UL << (10 * 2));
+    GPIOA_PUPDR &= ~(3UL << (10 * 2));
+    GPIOA_PUPDR |=  (1UL << (10 * 2));
+
+    // PA5 as Output ('01' in MODER)
+    GPIOA_MODER &= ~(3UL << (5 * 2));
+    GPIOA_MODER |=  (1UL << (5 * 2));
+}
+
+int main(void) {
+    setup_pins();
+    while (1) {
+        // Read PA10 pin state from Input Data Register (IDR)
+        if (!(GPIOA_IDR & (1UL << 10))) {
+            GPIOA_BSRR = (1UL << 5);        // LED ON (PA5 Set)
+        } else {
+            GPIOA_BSRR = (1UL << (5 + 16)); // LED OFF (PA5 Reset)
+        }
+    }
+}`
+  },
+  exti_interrupt: {
+    name: "EXTI: Hardware Interrupt on Edge Transition",
+    arduino: `// Arduino Framework (High-Level)
+#define BUTTON_PIN 2 // PA10
+
+volatile bool flag = false;
+
+void buttonISR() {
+  flag = true;
+}
+
+void setup() {
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), buttonISR, FALLING);
+}
+
+void loop() {
+  if (flag) {
+    flag = false;
+    // Process interrupt event
+  }
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+#include <stdbool.h>
+
+#define EXTI_BASE       (0x40021800UL)
+#define EXTI_IMR1       (*(volatile uint32_t *)(EXTI_BASE + 0x00UL))
+#define EXTI_FTSR1      (*(volatile uint32_t *)(EXTI_BASE + 0x04UL))
+#define EXTI_RPR1       (*(volatile uint32_t *)(EXTI_BASE + 0x0CUL))
+#define NVIC_ISER       (*(volatile uint32_t *)(0xE000E100UL))
+
+volatile bool flag = false;
+
+void exti_init(void) {
+    // 1. Unmask Line 10 in Interrupt Mask Register (IMR1)
+    EXTI_IMR1 |= (1UL << 10);
+
+    // 2. Enable Falling Edge Trigger for Line 10
+    EXTI_FTSR1 |= (1UL << 10);
+
+    // 3. Enable EXTI line 4-15 IRQ in ARM Cortex-M0+ NVIC
+    NVIC_ISER |= (1UL << 7); // IRQ 7 = EXTI4_15_IRQn
+}
+
+void EXTI4_15_IRQHandler(void) {
+    if (EXTI_RPR1 & (1UL << 10)) {
+        EXTI_RPR1 = (1UL << 10); // Clear pending flag by writing '1'
+        flag = true;             // Atomic flag write
+    }
+}
+
+int main(void) {
+    exti_init();
+    while (1) {
+        if (flag) {
+            flag = false;
+        }
+    }
+}`
+  },
+  uart_comm: {
+    name: "UART: Hardware Serial Communication (115200 Baud)",
+    arduino: `// Arduino Framework (High-Level)
+void setup() {
+  Serial.begin(115200);
+}
+
+void loop() {
+  Serial.println("OK");
+  delay(1000);
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+
+#define USART2_BASE     (0x40004400UL)
+#define USART2_CR1      (*(volatile uint32_t *)(USART2_BASE + 0x00UL))
+#define USART2_BRR      (*(volatile uint32_t *)(USART2_BASE + 0x0CUL))
+#define USART2_ISR      (*(volatile uint32_t *)(USART2_BASE + 0x1CUL))
+#define USART2_TDR      (*(volatile uint32_t *)(USART2_BASE + 0x28UL))
+
+void usart2_init(uint32_t baud, uint32_t pclk) {
+    // 1. Set Baud Rate Register: BRR = Clock / Baud
+    USART2_BRR = pclk / baud; // 48 MHz / 115200 = 416
+
+    // 2. Enable Transmitter (TE) and USART Peripheral (UE)
+    USART2_CR1 |= (1UL << 3) | (1UL << 0);
+}
+
+void usart2_write_char(char c) {
+    // Wait for TXE (Transmit Data Register Empty) flag
+    while (!(USART2_ISR & (1UL << 7)));
+    USART2_TDR = (uint8_t)c;
+}
+
+void usart2_write_str(const char *str) {
+    while (*str) usart2_write_char(*str++);
+}
+
+int main(void) {
+    usart2_init(115200, 48000000UL);
+    while (1) {
+        usart2_write_str("OK\\r\\n");
+        for (volatile uint32_t i = 0; i < 4800000; i++); // ~1 sec delay
+    }
+}`
+  },
+  timer_pwm: {
+    name: "PWM: Hardware Timer Pulse Width Modulation",
+    arduino: `// Arduino Framework (High-Level)
+#define PWM_PIN 9 // D9
+
+void setup() {
+  pinMode(PWM_PIN, OUTPUT);
+}
+
+void loop() {
+  analogWrite(PWM_PIN, 128); // 50% Duty Cycle (128 / 255)
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+
+#define TIM1_BASE       (0x40012C00UL)
+#define TIM1_CR1        (*(volatile uint32_t *)(TIM1_BASE + 0x00UL))
+#define TIM1_CCMR1      (*(volatile uint32_t *)(TIM1_BASE + 0x18UL))
+#define TIM1_CCER       (*(volatile uint32_t *)(TIM1_BASE + 0x20UL))
+#define TIM1_ARR        (*(volatile uint32_t *)(TIM1_BASE + 0x2CUL))
+#define TIM1_CCR1       (*(volatile uint32_t *)(TIM1_BASE + 0x34UL))
+
+void tim1_pwm_init(void) {
+    // 1. Auto-Reload Register: Period = 1000 counts
+    TIM1_ARR = 999;
+
+    // 2. Capture/Compare Register: Duty Cycle = 500 counts (50%)
+    TIM1_CCR1 = 500;
+
+    // 3. Configure Channel 1 as PWM Mode 1 (OC1M = '110')
+    TIM1_CCMR1 |= (6UL << 4);
+
+    // 4. Enable Output Channel 1 (CC1E)
+    TIM1_CCER |= (1UL << 0);
+
+    // 5. Start Timer Counter (CEN)
+    TIM1_CR1 |= (1UL << 0);
+}
+
+int main(void) {
+    tim1_pwm_init();
+    while (1) {
+        // Hardware timer runs autonomously with zero CPU cycles
+    }
+}`
+  },
+  adc_analog: {
+    name: "ADC: Analog Transducer Conversion",
+    arduino: `// Arduino Framework (High-Level)
+#define SENSOR_PIN A0 // PA0
+
+void setup() {
+  Serial.begin(115200);
+}
+
+void loop() {
+  int raw = analogRead(SENSOR_PIN);
+  float voltage = (raw * 3.3f) / 1023.0f;
+  delay(250);
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+
+#define ADC1_BASE       (0x40012400UL)
+#define ADC1_ISR        (*(volatile uint32_t *)(ADC1_BASE + 0x00UL))
+#define ADC1_CR         (*(volatile uint32_t *)(ADC1_BASE + 0x08UL))
+#define ADC1_CHSELR     (*(volatile uint32_t *)(ADC1_BASE + 0x28UL))
+#define ADC1_DR         (*(volatile uint32_t *)(ADC1_BASE + 0x40UL))
+
+void adc_init(void) {
+    // 1. Select ADC Channel 0 (PA0)
+    ADC1_CHSELR = (1UL << 0);
+
+    // 2. Enable ADC Peripheral (ADEN = 1)
+    ADC1_CR |= (1UL << 0);
+    while (!(ADC1_ISR & (1UL << 0))); // Wait for ADRDY
+}
+
+uint16_t adc_read_channel0(void) {
+    // Start conversion (ADSTART = 1)
+    ADC1_CR |= (1UL << 2);
+
+    // Poll End-Of-Conversion (EOC) flag
+    while (!(ADC1_ISR & (1UL << 2)));
+
+    // Return 12-bit conversion result
+    return (uint16_t)ADC1_DR;
+}
+
+int main(void) {
+    adc_init();
+    while (1) {
+        uint16_t sample = adc_read_channel0();
+        // Process analog sample in millivolts: (sample * 3300) / 4095
+    }
+}`
+  }
+};
+
+/**
+ * Intelligent Real-Time Code Translator
+ * Takes arbitrary Arduino C++ code and generates structured STM32 Bare-Metal Register operations.
+ */
+function translateArduinoToBareMetal(code) {
+  if (!code || !code.trim()) {
+    return "// Paste or type standard Arduino code on the left to see\n// real-time equivalent Bare-Metal STM32 C registers here!";
+  }
+
+  let inits = [];
+  let loopBody = [];
+  let defines = new Set();
+  let helperFuncs = [];
+
+  // Always include standard base headers
+  defines.add('#include <stdint.h>');
+  defines.add('#include <stdbool.h>');
+  defines.add('#define RCC_IOPENR   (*(volatile uint32_t *)(0x40021000UL + 0x34UL))');
+
+  let hasGpioOutput = false;
+  let hasGpioInput = false;
+  let hasUart = false;
+  let hasAdc = false;
+  let hasTimer = false;
+  let hasDelay = false;
+
+  const lines = code.split('\n');
+
+  lines.forEach(line => {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('//')) return;
+
+    // 1. PinMode OUTPUT
+    let m = trimmed.match(/pinMode\s*\(\s*(\d+|\w+)\s*,\s*OUTPUT\s*\)/i);
+    if (m) {
+      hasGpioOutput = true;
+      let pin = isNaN(m[1]) ? "5" : m[1];
+      inits.push(`    // Configure Pin ${m[1]} as General Purpose Output`);
+      inits.push(`    RCC_IOPENR |= (1UL << 0); // Enable GPIOA clock`);
+      inits.push(`    GPIOA_MODER &= ~(3UL << (${pin} * 2));`);
+      inits.push(`    GPIOA_MODER |=  (1UL << (${pin} * 2));`);
+    }
+
+    // 2. PinMode INPUT_PULLUP
+    m = trimmed.match(/pinMode\s*\(\s*(\d+|\w+)\s*,\s*INPUT(?:_PULLUP)?\s*\)/i);
+    if (m) {
+      hasGpioInput = true;
+      let pin = isNaN(m[1]) ? "10" : m[1];
+      inits.push(`    // Configure Pin ${m[1]} as Input with Pull-Up`);
+      inits.push(`    RCC_IOPENR |= (1UL << 0); // Enable GPIOA clock`);
+      inits.push(`    GPIOA_MODER &= ~(3UL << (${pin} * 2));`);
+      inits.push(`    GPIOA_PUPDR &= ~(3UL << (${pin} * 2));`);
+      inits.push(`    GPIOA_PUPDR |=  (1UL << (${pin} * 2));`);
+    }
+
+    // 3. digitalWrite HIGH
+    m = trimmed.match(/digitalWrite\s*\(\s*(\d+|\w+)\s*,\s*HIGH\s*\)/i);
+    if (m) {
+      hasGpioOutput = true;
+      let pin = isNaN(m[1]) ? "5" : m[1];
+      loopBody.push(`        // Pin ${m[1]} HIGH via atomic Bit Set register`);
+      loopBody.push(`        GPIOA_BSRR = (1UL << ${pin});`);
+    }
+
+    // 4. digitalWrite LOW
+    m = trimmed.match(/digitalWrite\s*\(\s*(\d+|\w+)\s*,\s*LOW\s*\)/i);
+    if (m) {
+      hasGpioOutput = true;
+      let pin = isNaN(m[1]) ? "5" : m[1];
+      loopBody.push(`        // Pin ${m[1]} LOW via atomic Bit Reset register`);
+      loopBody.push(`        GPIOA_BSRR = (1UL << (${pin} + 16));`);
+    }
+
+    // 5. digitalRead
+    m = trimmed.match(/digitalRead\s*\(\s*(\d+|\w+)\s*\)/i);
+    if (m) {
+      hasGpioInput = true;
+      let pin = isNaN(m[1]) ? "10" : m[1];
+      loopBody.push(`        // Sample Pin ${m[1]} from Input Data Register (IDR)`);
+      loopBody.push(`        bool pinState = ((GPIOA_IDR & (1UL << ${pin})) != 0);`);
+    }
+
+    // 6. Serial.begin
+    m = trimmed.match(/Serial\.begin\s*\(\s*(\d+)\s*\)/i);
+    if (m) {
+      hasUart = true;
+      let baud = m[1];
+      inits.push(`    // Initialize USART2 at ${baud} baud`);
+      inits.push(`    USART2_BRR = 48000000UL / ${baud}UL;`);
+      inits.push(`    USART2_CR1 |= (1UL << 3) | (1UL << 0); // TE + UE`);
+    }
+
+    // 7. Serial.print / println
+    m = trimmed.match(/Serial\.print(?:ln)?\s*\(\s*(.*?)\s*\)/i);
+    if (m) {
+      hasUart = true;
+      let arg = m[1];
+      loopBody.push(`        // Transmit string over USART2`);
+      loopBody.push(`        usart2_print(${arg});`);
+    }
+
+    // 8. analogRead
+    m = trimmed.match(/analogRead\s*\(\s*(\w+)\s*\)/i);
+    if (m) {
+      hasAdc = true;
+      loopBody.push(`        // Trigger ADC1 conversion and wait for End-Of-Conversion (EOC)`);
+      loopBody.push(`        ADC1_CR |= (1UL << 2);`);
+      loopBody.push(`        while (!(ADC1_ISR & (1UL << 2)));`);
+      loopBody.push(`        uint16_t adc_val = (uint16_t)ADC1_DR;`);
+    }
+
+    // 9. analogWrite / PWM
+    m = trimmed.match(/analogWrite\s*\(\s*(\w+)\s*,\s*(\d+|\w+)\s*\)/i);
+    if (m) {
+      hasTimer = true;
+      loopBody.push(`        // Update Timer Compare Register (Duty Cycle)`);
+      loopBody.push(`        TIM1_CCR1 = ${m[2]};`);
+    }
+
+    // 10. delay
+    m = trimmed.match(/delay\s*\(\s*(\d+|\w+)\s*\)/i);
+    if (m) {
+      hasDelay = true;
+      let ms = m[1];
+      loopBody.push(`        delay_ms(${ms});`);
+    }
+  });
+
+  if (hasGpioOutput || hasGpioInput) {
+    defines.add('#define GPIOA_MODER  (*(volatile uint32_t *)(0x50000000UL + 0x00UL))');
+    defines.add('#define GPIOA_PUPDR  (*(volatile uint32_t *)(0x50000000UL + 0x0CUL))');
+    defines.add('#define GPIOA_IDR    (*(volatile uint32_t *)(0x50000000UL + 0x10UL))');
+    defines.add('#define GPIOA_BSRR   (*(volatile uint32_t *)(0x50000000UL + 0x18UL))');
+  }
+
+  if (hasUart) {
+    defines.add('#define USART2_BASE  (0x40004400UL)');
+    defines.add('#define USART2_CR1   (*(volatile uint32_t *)(USART2_BASE + 0x00UL))');
+    defines.add('#define USART2_BRR   (*(volatile uint32_t *)(USART2_BASE + 0x0CUL))');
+    defines.add('#define USART2_ISR   (*(volatile uint32_t *)(USART2_BASE + 0x1CUL))');
+    defines.add('#define USART2_TDR   (*(volatile uint32_t *)(USART2_BASE + 0x28UL))');
+
+    helperFuncs.push(`void usart2_print(const char *s) {
+    while (*s) {
+        while (!(USART2_ISR & (1UL << 7))); // Wait for TXE
+        USART2_TDR = (uint8_t)*s++;
+    }
+}`);
+  }
+
+  if (hasAdc) {
+    defines.add('#define ADC1_BASE    (0x40012400UL)');
+    defines.add('#define ADC1_ISR     (*(volatile uint32_t *)(ADC1_BASE + 0x00UL))');
+    defines.add('#define ADC1_CR      (*(volatile uint32_t *)(ADC1_BASE + 0x08UL))');
+    defines.add('#define ADC1_DR      (*(volatile uint32_t *)(ADC1_BASE + 0x40UL))');
+  }
+
+  if (hasTimer) {
+    defines.add('#define TIM1_BASE    (0x40012C00UL)');
+    defines.add('#define TIM1_CR1     (*(volatile uint32_t *)(TIM1_BASE + 0x00UL))');
+    defines.add('#define TIM1_CCR1    (*(volatile uint32_t *)(TIM1_BASE + 0x34UL))');
+  }
+
+  if (hasDelay) {
+    helperFuncs.push(`void delay_ms(volatile uint32_t ms) {
+    while (ms--) {
+        for (volatile uint32_t i = 0; i < 4800; i++) { __asm volatile("nop"); }
+    }
+}`);
+  }
+
+  let result = [];
+  result.push("// ============================================================================");
+  result.push("// Equivalent Bare-Metal Embedded C (Direct STM32 Nucleo-C031C6 Registers)");
+  result.push("// Generated in real-time from your Arduino code");
+  result.push("// ============================================================================");
+  result.push(Array.from(defines).join('\n'));
+  result.push("");
+
+  if (helperFuncs.length > 0) {
+    result.push(helperFuncs.join('\n\n'));
+    result.push("");
+  }
+
+  result.push("int main(void) {");
+  if (inits.length > 0) {
+    result.push("    // --- Peripherals & Pin Initialization ---");
+    result.push(inits.join('\n'));
+    result.push("");
+  }
+
+  result.push("    // --- Superloop Execution ---");
+  result.push("    while (1) {");
+  if (loopBody.length > 0) {
+    result.push(loopBody.join('\n'));
+  } else {
+    result.push("        // Active runtime processing");
+  }
+  result.push("    }");
+  result.push("}");
+
+  return result.join('\n');
+}
+
+function initCodeComparator(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const select = container.querySelector('.preset-select');
+  const input = container.querySelector('.code-input');
+  const output = container.querySelector('.code-output code');
+
+  if (!select || !input || !output) return;
+
+  function loadPreset() {
+    const val = select.value;
+    if (PRESETS[val]) {
+      input.value = PRESETS[val].arduino;
+      output.textContent = PRESETS[val].baremetal;
+    }
+  }
+
+  function handleLiveInput() {
+    output.textContent = translateArduinoToBareMetal(input.value);
+  }
+
+  select.addEventListener('change', loadPreset);
+  input.addEventListener('input', handleLiveInput);
+  loadPreset();
+}
+
+function runInteractiveTranslation(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const input = container.querySelector('.code-input');
+  const output = container.querySelector('.code-output code');
+  if (input && output) {
+    output.textContent = translateArduinoToBareMetal(input.value);
+  }
+}
+
+function setupAllComparators() {
+  document.querySelectorAll('.code-comparator-widget').forEach((el, idx) => {
+    if (!el.id) el.id = 'comparator-' + idx;
+    initCodeComparator(el.id);
+  });
+}
+
+// Ensure execution whether DOM is loading or already ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupAllComparators);
+} else {
+  setupAllComparators();
+}
+</script>
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
@@ -953,6 +2605,19 @@ ul.task-list li input[type="checkbox"] {
   window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
   </script>
 </div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>CS2101: Embedded C Programming — IIT Madras</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+<p>Made by TA: Krishna Gorai</p>
+</div>
+  </div>
+</footer>
 
 
 

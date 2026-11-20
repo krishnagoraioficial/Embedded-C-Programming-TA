@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Week 10: Advanced Embedded C Concepts – CS2101: Embedded C</title>
+<title>Week 10: Efficient Embedded Systems &amp; Optimization – CS2101: Embedded C</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -25,6 +25,41 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -48,9 +83,9 @@ ul.task-list li input[type="checkbox"] {
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-1efc6d65981d7f926cfe85ef7b0c751f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-f08d384c0165829aba50fd8ee00b4b4f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-1efc6d65981d7f926cfe85ef7b0c751f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-64d0f6d14e372c61dcd2002aecce1639.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-49095d02d3de05fbda1b5d708a7a597d.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-64d0f6d14e372c61dcd2002aecce1639.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -80,6 +115,35 @@ ul.task-list li input[type="checkbox"] {
 }</script>
 <style>html{ scroll-behavior: smooth; }</style>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -379,7 +443,51 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
+  <li><a href="#what-makes-an-embedded-system-efficient" id="toc-what-makes-an-embedded-system-efficient" class="nav-link active" data-scroll-target="#what-makes-an-embedded-system-efficient">1. What Makes an Embedded System Efficient?</a></li>
+  <li><a href="#polling-vs.-interrupts-energy-performance-trade-offs" id="toc-polling-vs.-interrupts-energy-performance-trade-offs" class="nav-link" data-scroll-target="#polling-vs.-interrupts-energy-performance-trade-offs">2. Polling vs.&nbsp;Interrupts: Energy &amp; Performance Trade-Offs</a>
+  <ul class="collapse">
+  <li><a href="#direct-comparison" id="toc-direct-comparison" class="nav-link" data-scroll-target="#direct-comparison">Direct Comparison</a></li>
+  </ul></li>
+  <li><a href="#direct-memory-access-dma-high-speed-data-with-0-cpu-load" id="toc-direct-memory-access-dma-high-speed-data-with-0-cpu-load" class="nav-link" data-scroll-target="#direct-memory-access-dma-high-speed-data-with-0-cpu-load">3. Direct Memory Access (DMA): High-Speed Data with 0% CPU Load</a></li>
+  <li><a href="#cache-memory-systems-the-memory-wall" id="toc-cache-memory-systems-the-memory-wall" class="nav-link" data-scroll-target="#cache-memory-systems-the-memory-wall">4. Cache Memory Systems &amp; The Memory Wall</a></li>
+  <li><a href="#power-consumption-in-electronics-systems" id="toc-power-consumption-in-electronics-systems" class="nav-link" data-scroll-target="#power-consumption-in-electronics-systems">5. Power Consumption in Electronics Systems</a>
+  <ul class="collapse">
+  <li><a href="#engineering-techniques-for-low-power-optimization" id="toc-engineering-techniques-for-low-power-optimization" class="nav-link" data-scroll-target="#engineering-techniques-for-low-power-optimization">Engineering Techniques for Low-Power Optimization:</a></li>
+  </ul></li>
+  <li><a href="#code-optimization-techniques-in-embedded-c" id="toc-code-optimization-techniques-in-embedded-c" class="nav-link" data-scroll-target="#code-optimization-techniques-in-embedded-c">6. Code Optimization Techniques in Embedded C</a></li>
+  <li><a href="#mini-project-1-autonomous-adc-data-acquisition-with-dma" id="toc-mini-project-1-autonomous-adc-data-acquisition-with-dma" class="nav-link" data-scroll-target="#mini-project-1-autonomous-adc-data-acquisition-with-dma">7. Mini-Project 1: Autonomous ADC Data Acquisition with DMA ⚡🔄</a>
+  <ul class="collapse">
+  <li><a href="#objective" id="toc-objective" class="nav-link" data-scroll-target="#objective">🎯 Objective</a></li>
+  <li><a href="#hardware-setup-wokwi" id="toc-hardware-setup-wokwi" class="nav-link" data-scroll-target="#hardware-setup-wokwi">🛠️ Hardware Setup (Wokwi)</a></li>
+  <li><a href="#pin-wiring-table" id="toc-pin-wiring-table" class="nav-link" data-scroll-target="#pin-wiring-table">Pin Wiring Table</a></li>
+  <li><a href="#problem-statement-logic-flow" id="toc-problem-statement-logic-flow" class="nav-link" data-scroll-target="#problem-statement-logic-flow">📝 Problem Statement &amp; Logic Flow</a></li>
+  <li><a href="#interactive-simulation" id="toc-interactive-simulation" class="nav-link" data-scroll-target="#interactive-simulation">Interactive Simulation</a></li>
+  <li><a href="#implementation-code-high-level-framework-vs.-bare-metal-embedded-c" id="toc-implementation-code-high-level-framework-vs.-bare-metal-embedded-c" class="nav-link" data-scroll-target="#implementation-code-high-level-framework-vs.-bare-metal-embedded-c">Implementation Code: High-Level Framework vs.&nbsp;Bare-Metal Embedded C</a></li>
+  <li><a href="#how-mini-project-1-applies-week-10-concepts" id="toc-how-mini-project-1-applies-week-10-concepts" class="nav-link" data-scroll-target="#how-mini-project-1-applies-week-10-concepts">🔍 How Mini-Project 1 Applies Week 10 Concepts</a></li>
+  </ul></li>
+  <li><a href="#mini-project-2-energy-benchmarking-polling-vs.-__wfi-sleep" id="toc-mini-project-2-energy-benchmarking-polling-vs.-__wfi-sleep" class="nav-link" data-scroll-target="#mini-project-2-energy-benchmarking-polling-vs.-__wfi-sleep">8. Mini-Project 2: Energy Benchmarking: Polling vs.&nbsp;<code>__WFI()</code> Sleep ⚡💤</a>
+  <ul class="collapse">
+  <li><a href="#objective-1" id="toc-objective-1" class="nav-link" data-scroll-target="#objective-1">🎯 Objective</a></li>
+  <li><a href="#hardware-setup-wokwi-1" id="toc-hardware-setup-wokwi-1" class="nav-link" data-scroll-target="#hardware-setup-wokwi-1">🛠️ Hardware Setup (Wokwi)</a></li>
+  <li><a href="#pin-wiring-table-1" id="toc-pin-wiring-table-1" class="nav-link" data-scroll-target="#pin-wiring-table-1">Pin Wiring Table</a></li>
+  <li><a href="#problem-statement-logic-flow-1" id="toc-problem-statement-logic-flow-1" class="nav-link" data-scroll-target="#problem-statement-logic-flow-1">📝 Problem Statement &amp; Logic Flow</a></li>
+  <li><a href="#interactive-simulation-1" id="toc-interactive-simulation-1" class="nav-link" data-scroll-target="#interactive-simulation-1">Interactive Simulation</a></li>
+  <li><a href="#implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1" id="toc-implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1" class="nav-link" data-scroll-target="#implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1">Implementation Code: High-Level Framework vs.&nbsp;Bare-Metal Embedded C</a></li>
+  <li><a href="#how-mini-project-2-applies-week-10-concepts" id="toc-how-mini-project-2-applies-week-10-concepts" class="nav-link" data-scroll-target="#how-mini-project-2-applies-week-10-concepts">🔍 How Mini-Project 2 Applies Week 10 Concepts</a></li>
+  </ul></li>
+  <li><a href="#hands-on-practice-challenge-for-students-to-solve" id="toc-hands-on-practice-challenge-for-students-to-solve" class="nav-link" data-scroll-target="#hands-on-practice-challenge-for-students-to-solve">9. Hands-On Practice Challenge (For Students to Solve) 🎯</a>
+  <ul class="collapse">
+  <li><a href="#objective-scenario" id="toc-objective-scenario" class="nav-link" data-scroll-target="#objective-scenario">🎯 Objective &amp; Scenario</a></li>
+  <li><a href="#hardware-setup-pin-wiring-table" id="toc-hardware-setup-pin-wiring-table" class="nav-link" data-scroll-target="#hardware-setup-pin-wiring-table">🛠️ Hardware Setup &amp; Pin Wiring Table</a></li>
+  <li><a href="#problem-statement-functional-requirements" id="toc-problem-statement-functional-requirements" class="nav-link" data-scroll-target="#problem-statement-functional-requirements">📋 Problem Statement &amp; Functional Requirements</a></li>
+  <li><a href="#starter-code-template" id="toc-starter-code-template" class="nav-link" data-scroll-target="#starter-code-template">💻 Starter Code Template</a></li>
+  <li><a href="#verification-expected-test-cases" id="toc-verification-expected-test-cases" class="nav-link" data-scroll-target="#verification-expected-test-cases">🧪 Verification &amp; Expected Test Cases</a></li>
+  </ul></li>
+  <li><a href="#concept-check-practice-questions" id="toc-concept-check-practice-questions" class="nav-link" data-scroll-target="#concept-check-practice-questions">10. Concept Check Practice Questions</a>
+  <ul class="collapse">
+  <li><a href="#question-1-direct-memory-access-dma-bus-principles" id="toc-question-1-direct-memory-access-dma-bus-principles" class="nav-link" data-scroll-target="#question-1-direct-memory-access-dma-bus-principles">Question 1: Direct Memory Access (DMA) Bus Principles</a></li>
+  <li><a href="#question-2-compiler-optimization-flags-in-embedded-systems" id="toc-question-2-compiler-optimization-flags-in-embedded-systems" class="nav-link" data-scroll-target="#question-2-compiler-optimization-flags-in-embedded-systems">Question 2: Compiler Optimization Flags in Embedded Systems</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -389,7 +497,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Week 10: Advanced Embedded C Concepts</h1>
+<h1 class="title">Week 10: Efficient Embedded Systems &amp; Optimization</h1>
 </div>
 
 
@@ -406,28 +514,1479 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="overview" class="level2">
-<h2 class="anchored" data-anchor-id="overview">Overview</h2>
-<p>Memory layout (Flash vs SRAM, .text, .data, .bss, stack, heap), Linker scripts, Startup assembly code, Optimization flags.</p>
-<div class="callout callout-style-default callout-tip callout-titled">
+<section id="what-makes-an-embedded-system-efficient" class="level2">
+<h2 class="anchored" data-anchor-id="what-makes-an-embedded-system-efficient">1. What Makes an Embedded System Efficient?</h2>
+<p>In desktop computing, developers rarely worry if their software consumes 100 megabytes of RAM or runs the CPU at full throttle.</p>
+<p>In embedded systems, however, you operate under strict physical constraints: - <strong>Energy Constraints:</strong> Many devices run on coin-cell batteries or solar energy and must last for years. - <strong>Memory Constraints:</strong> Microcontrollers typically have between 2 KB and 128 KB of SRAM. - <strong>Compute Constraints:</strong> Running at 48 MHz or 72 MHz means you cannot waste clock cycles on inefficient algorithms.</p>
+<pre class="text"><code> THE THREE PILLARS OF EMBEDDED EFFICIENCY:
+ +-------------------------------------------------------------------------+
+ | 1. TIME EFFICIENCY:    Execute tasks in minimum clock cycles (DMA, Cache)|
+ | 2. ENERGY EFFICIENCY:  Put the CPU to sleep the microsecond work is done|
+ | 3. MEMORY EFFICIENCY:  Eliminate dynamic RAM bloat &amp; optimize structures|
+ +-------------------------------------------------------------------------+</code></pre>
+<hr>
+</section>
+<section id="polling-vs.-interrupts-energy-performance-trade-offs" class="level2">
+<h2 class="anchored" data-anchor-id="polling-vs.-interrupts-energy-performance-trade-offs">2. Polling vs.&nbsp;Interrupts: Energy &amp; Performance Trade-Offs</h2>
+<p>When your microcontroller needs to monitor an external pin or sensor, you have two fundamental approaches:</p>
+<pre class="text"><code> 1. POLLING (Wastes Energy &amp; Saturates CPU):
+ while(1) {
+     if (sensor_ready()) { read_sensor(); } // CPU runs at 100% active current (20 mA)
+ }
+
+ 2. INTERRUPT-DRIVEN SLEEP (Ultra-Low Power):
+ while(1) {
+     __asm("wfi"); // CPU sleeps at 2 µA until the hardware pin triggers an interrupt!
+ }</code></pre>
+<section id="direct-comparison" class="level3">
+<h3 class="anchored" data-anchor-id="direct-comparison">Direct Comparison</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Metric</th>
+<th style="text-align: left;">Polling Approach</th>
+<th style="text-align: left;">Interrupt-Driven Approach</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>CPU Utilization</strong></td>
+<td style="text-align: left;"><span class="math inline">\(100\%\)</span> (trapped in active loop)</td>
+<td style="text-align: left;"><span class="math inline">\(0\%\)</span> between events</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Power Consumption</strong></td>
+<td style="text-align: left;">High (<span class="math inline">\(5\text{ mA} - 25\text{ mA}\)</span> continuously)</td>
+<td style="text-align: left;"><strong>Ultra-Low</strong> (Microamps in sleep mode)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Response Latency</strong></td>
+<td style="text-align: left;">Variable (depends on loop execution length)</td>
+<td style="text-align: left;"><strong>Immediate</strong> (instant hardware vector jump)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Code Complexity</strong></td>
+<td style="text-align: left;">Very simple</td>
+<td style="text-align: left;">Moderate (requires ISR configuration &amp; flags)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Best Suited For</strong></td>
+<td style="text-align: left;">Microsecond-fast hardware status checks</td>
+<td style="text-align: left;">Pushbuttons, sensor alarms, communication packets</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="direct-memory-access-dma-high-speed-data-with-0-cpu-load" class="level2">
+<h2 class="anchored" data-anchor-id="direct-memory-access-dma-high-speed-data-with-0-cpu-load">3. Direct Memory Access (DMA): High-Speed Data with 0% CPU Load</h2>
+<p>Imagine you are sampling an ADC audio sensor at <span class="math inline">\(100\text{ kHz}\)</span> (<span class="math inline">\(100,000\)</span> samples per second).</p>
+<p>If the CPU had to read each sample via interrupts, it would spend over 20 million clock cycles just saving registers and running ISRs, completely choking the processor!</p>
+<pre class="text"><code> TRADITIONAL DATA TRANSFER (CPU is a bottleneck):
+ Peripheral [ADC / UART] ---&gt; [ CPU Core Reads &amp; Writes ] ---&gt; SRAM Memory Buffer
+ * CPU is 100% occupied acting as a glorified delivery person!
+
+ DIRECT MEMORY ACCESS (DMA) (Hardware Co-Processor):
+ Peripheral [ADC / UART] ========= [ DMA Hardware Engine ] =========&gt; SRAM Memory Buffer
+                                             |
+ CPU Core: [ Executes Complex Control Math &amp; Filtering in Parallel at 100% Speed! ]</code></pre>
+<hr>
+</section>
+<section id="cache-memory-systems-the-memory-wall" class="level2">
+<h2 class="anchored" data-anchor-id="cache-memory-systems-the-memory-wall">4. Cache Memory Systems &amp; The Memory Wall</h2>
+<p>Modern 32-bit ARM Cortex-M processors (like Cortex-M4 and M7) can run at clock frequencies of <span class="math inline">\(100\text{ MHz}\)</span> to <span class="math inline">\(400\text{ MHz}\)</span>. However, physical non-volatile Flash memory can only be read at around <span class="math inline">\(25\text{ MHz}\)</span> to <span class="math inline">\(35\text{ MHz}\)</span>!</p>
+<p>To prevent the high-speed CPU from stalling on every single instruction fetch (<strong>Flash Wait States</strong>), microcontrollers integrate <strong>Cache Memory</strong>:</p>
+<pre class="text"><code> [ CPU Core (200 MHz) ] &lt;====== (1 Clock Cycle Access) ======&gt; [ L1 Cache (SRAM) ]
+                                                                       | (Cache Miss Penalty)
+                                                                       v
+                                                           [ Flash Memory (Slow) ]</code></pre>
+<ul>
+<li><strong>Instruction Cache (I-Cache):</strong> Stores recently executed code loops in ultra-fast internal SRAM right next to the ALU. Loops run at full clock speed with zero wait states.</li>
+<li><strong>Data Cache (D-Cache):</strong> Stores frequently accessed global variables and array lookups.</li>
+<li><strong>Cache Hit:</strong> Requested data is found in cache <span class="math inline">\(\to\)</span> 1 clock cycle access.</li>
+<li><strong>Cache Miss:</strong> Data is missing <span class="math inline">\(\to\)</span> CPU must stall while fetching from slow Flash.</li>
+</ul>
+<hr>
+</section>
+<section id="power-consumption-in-electronics-systems" class="level2">
+<h2 class="anchored" data-anchor-id="power-consumption-in-electronics-systems">5. Power Consumption in Electronics Systems</h2>
+<p>Microcontroller power dissipation is divided into two physics domains:</p>
+<pre class="text"><code> TOTAL POWER = DYNAMIC POWER (Switching) + STATIC POWER (Leakage)
+               P_dyn = C * V^2 * f         P_stat = V * I_leakage</code></pre>
+<section id="engineering-techniques-for-low-power-optimization" class="level3">
+<h3 class="anchored" data-anchor-id="engineering-techniques-for-low-power-optimization">Engineering Techniques for Low-Power Optimization:</h3>
+<ol type="1">
+<li><strong>Dynamic Voltage &amp; Frequency Scaling (DVFS):</strong> If your device only needs to blink an LED, drop the CPU clock from <span class="math inline">\(64\text{ MHz}\)</span> down to <span class="math inline">\(2\text{ MHz}\)</span> to slash dynamic power by over <span class="math inline">\(90\%\)</span>.</li>
+<li><strong>Clock Gating:</strong> Disable peripheral clocks in the <code>RCC</code> register suite for any module you aren’t actively using.</li>
+<li><strong>Duty Cycling:</strong> Run at high speed for 5 milliseconds to calculate sensor math, then enter deep sleep mode for 995 milliseconds. Over a full second, the average current is under <span class="math inline">\(10\,\mu\text{A}\)</span>!</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="code-optimization-techniques-in-embedded-c" class="level2">
+<h2 class="anchored" data-anchor-id="code-optimization-techniques-in-embedded-c">6. Code Optimization Techniques in Embedded C</h2>
+<pre class="text"><code> +-------------------------------------------------------------------------+
+ |                         C CODE OPTIMIZATION RULES                       |
+ +-------------------------------------------------------------------------+
+ | 1. Choose the Right Compiler Flag:                                      |
+ |    -O0: No optimization (easiest to debug with GDB)                     |
+ |    -O2: Balanced speed and performance                                  |
+ |    -Os: Optimize for Size (The industry favorite for small Flash MCUs!) |
+ |                                                                         |
+ | 2. Avoid Floating-Point on MCUs Without an FPU:                         |
+ |    Calculating float x = 3.14 * y on an ARM Cortex-M0+ requires hundreds|
+ |    of slow software library instructions! Use integer or fixed-point!   |
+ |                                                                         |
+ | 3. Use Loop Unrolling &amp; Lookup Tables (LUTs):                           |
+ |    Pre-compute expensive trigonometric functions (sin, cos) into const  |
+ |    arrays in Flash ROM (.rodata) instead of calculating at runtime!     |
+ +-------------------------------------------------------------------------+</code></pre>
+<hr>
+</section>
+<section id="mini-project-1-autonomous-adc-data-acquisition-with-dma" class="level2">
+<h2 class="anchored" data-anchor-id="mini-project-1-autonomous-adc-data-acquisition-with-dma">7. Mini-Project 1: Autonomous ADC Data Acquisition with DMA ⚡🔄</h2>
+<section id="objective" class="level3">
+<h3 class="anchored" data-anchor-id="objective">🎯 Objective</h3>
+<p>In digital signal processing and motor drive control, sampling analog signals at high frequencies using standard <code>analogRead()</code> freezes the CPU inside analog-to-digital conversion wait loops. In this project, you will build an autonomous <strong>Direct Memory Access (DMA)</strong> pipeline on the <strong>STM32 Nucleo-C031C6</strong> to stream continuous ADC samples from pin <code>A0</code> directly into an SRAM array with zero CPU intervention.</p>
+</section>
+<section id="hardware-setup-wokwi" class="level3">
+<h3 class="anchored" data-anchor-id="hardware-setup-wokwi">🛠️ Hardware Setup (Wokwi)</h3>
+<p>The circuit connects an analog potentiometer sensor and an activity indicator LED: * <strong>Analog Telemetry Source:</strong> 1x Potentiometer on <code>A0</code> (<code>PA0</code>). * <strong>DMA Cycle Heartbeat LED:</strong> 1x LED with 220Ω resistor on <code>D13</code> (<code>PA5</code>). * <strong>Diagnostic Serial Stream:</strong> Virtual COM Port at <strong>115200 baud</strong>.</p>
+</section>
+<section id="pin-wiring-table" class="level3">
+<h3 class="anchored" data-anchor-id="pin-wiring-table">Pin Wiring Table</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 23%">
+<col style="width: 23%">
+<col style="width: 29%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Component</th>
+<th style="text-align: left;">Pin / Terminal</th>
+<th style="text-align: center;">STM32 / Board Pin</th>
+<th style="text-align: left;">Electrical Function</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Potentiometer</strong></td>
+<td style="text-align: left;">VCC / GND</td>
+<td style="text-align: center;"><code>3.3V</code> / <code>GND</code></td>
+<td style="text-align: left;">Reference supply rails</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Potentiometer</strong></td>
+<td style="text-align: left;">SIG (Wiper)</td>
+<td style="text-align: center;"><code>A0</code> (<code>PA0</code>)</td>
+<td style="text-align: left;">Analog telemetry input</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>User Activity LED</strong></td>
+<td style="text-align: left;">Anode (<code>PA5</code>)</td>
+<td style="text-align: center;"><code>D13</code></td>
+<td style="text-align: left;">Toggled upon every completed buffer cycle</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>User Activity LED</strong></td>
+<td style="text-align: left;">Cathode</td>
+<td style="text-align: center;"><code>GND</code></td>
+<td style="text-align: left;">Ground Reference</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="problem-statement-logic-flow" class="level3">
+<h3 class="anchored" data-anchor-id="problem-statement-logic-flow">📝 Problem Statement &amp; Logic Flow</h3>
+<ol type="1">
+<li><strong>Circular Buffer Allocation:</strong> Allocate a volatile array in SRAM: <code>volatile uint16_t adc_buffer[8];</code>.</li>
+<li><strong>Continuous DMA Streaming:</strong>
+<ul>
+<li>Stream 8 consecutive conversions directly into memory.</li>
+<li>Compute the arithmetic mean across the 8-sample window to filter high-frequency noise.</li>
+</ul></li>
+<li><strong>Voltage Translation &amp; Telemetry:</strong>
+<ul>
+<li>Translate 10-bit raw ADC reading (<span class="math inline">\(0\)</span> to <span class="math inline">\(1023\)</span>) to millivolts using efficient integer arithmetic: <span class="math display">\[\text{Voltage (mV)} = \frac{\text{Average} \times 3300}{1023}\]</span></li>
+<li>Transmit <code>"[DMA STREAM]: Average Voltage = &lt;mV&gt; mV"</code> over UART at 115200 baud.</li>
+</ul></li>
+<li><strong>Heartbeat Toggle:</strong> Invert <code>D13</code> on every completed moving average computation.</li>
+</ol>
+<pre class="text"><code>[DMA STREAM]: Raw Samples: [512, 513, 510, 514, 512, 511, 513, 512]
+[DMA STREAM]: Average Voltage = 1650 mV | Status: CPU Free</code></pre>
+</section>
+<section id="interactive-simulation" class="level3">
+<h3 class="anchored" data-anchor-id="interactive-simulation">Interactive Simulation</h3>
+<div class="simulation-container">
+<iframe src="https://wokwi.com/projects/479963095271968769?embed=1" title="ADC DMA Simulation Workspace" loading="lazy" allowfullscreen="">
+</iframe>
+<div class="sim-info-bar">
+<p><span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span> <span>Click Play, wire Potentiometer to A0 and Stream Status LED to D13</span></p>
+</div>
+</div>
+</section>
+<section id="implementation-code-high-level-framework-vs.-bare-metal-embedded-c" class="level3">
+<h3 class="anchored" data-anchor-id="implementation-code-high-level-framework-vs.-bare-metal-embedded-c">Implementation Code: High-Level Framework vs.&nbsp;Bare-Metal Embedded C</h3>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="">🔷 High-Level Framework (Running in Simulation)</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">🔶 Equivalent Bare-Metal Embedded C (Direct DMA1 &amp; ADC1 Register Configuration)</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Mini-Project 1: Autonomous ADC Data Acquisition with DMA (Nucleo-C031C6)</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SENSOR_PIN  </span>A0</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#define LED_PIN     </span><span class="dv">13</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#define BUFFER_SIZE </span><span class="dv">8</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="at">volatile</span> <span class="dt">uint16_t</span> adc_buffer<span class="op">[</span>BUFFER_SIZE<span class="op">];</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setup<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>begin<span class="op">(</span><span class="dv">115200</span><span class="op">);</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>LED_PIN<span class="op">,</span> OUTPUT<span class="op">);</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  digitalWrite<span class="op">(</span>LED_PIN<span class="op">,</span> LOW<span class="op">);</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"============================================="</span><span class="op">);</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"  STM32 DMA Autonomous ADC Streaming Ready   "</span><span class="op">);</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"============================================="</span><span class="op">);</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> loop<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Simulate autonomous DMA filling circular buffer</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> BUFFER_SIZE<span class="op">;</span> i<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>    adc_buffer<span class="op">[</span>i<span class="op">]</span> <span class="op">=</span> analogRead<span class="op">(</span>SENSOR_PIN<span class="op">);</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>    delayMicroseconds<span class="op">(</span><span class="dv">50</span><span class="op">);</span> <span class="co">// High-speed sampling</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Step 1: Calculate moving average (DSP noise filter)</span></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>  <span class="dt">uint32_t</span> sum <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> BUFFER_SIZE<span class="op">;</span> i<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>    sum <span class="op">+=</span> adc_buffer<span class="op">[</span>i<span class="op">];</span></span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>  <span class="dt">uint16_t</span> average <span class="op">=</span> sum <span class="op">/</span> BUFFER_SIZE<span class="op">;</span></span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Step 2: Convert to millivolts using integer math (avoids slow software float)</span></span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a>  <span class="dt">uint32_t</span> milliVolts <span class="op">=</span> <span class="op">((</span><span class="dt">uint32_t</span><span class="op">)</span>average <span class="op">*</span> <span class="dv">3300</span><span class="bu">UL</span><span class="op">)</span> <span class="op">/</span> <span class="dv">1023</span><span class="bu">UL</span><span class="op">;</span></span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Step 3: Emit telemetry and toggle heartbeat LED</span></span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>  digitalWrite<span class="op">(</span>LED_PIN<span class="op">,</span> <span class="op">!</span>digitalRead<span class="op">(</span>LED_PIN<span class="op">));</span></span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>print<span class="op">(</span><span class="st">"[DMA STREAM]: Average = "</span><span class="op">);</span></span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>print<span class="op">(</span>average<span class="op">);</span></span>
+<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>print<span class="op">(</span><span class="st">" counts | Voltage = "</span><span class="op">);</span></span>
+<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>print<span class="op">(</span>milliVolts<span class="op">);</span></span>
+<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">" mV"</span><span class="op">);</span></span>
+<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a>  delay<span class="op">(</span><span class="dv">200</span><span class="op">);</span> <span class="co">// 5 Hz telemetry report rate</span></span>
+<span id="cb8-48"><a href="#cb8-48" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Mini-Project 1: Bare-Metal DMA1 Channel 1 Configuration on STM32</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Target: STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdint.h&gt;</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#define RCC_BASE            </span><span class="op">(</span><span class="bn">0x40021000</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#define RCC_AHBENR          </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span>RCC_BASE<span class="pp"> </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x38</span><span class="bu">UL</span><span class="op">))</span><span class="pp"> </span><span class="co">// DMA Clock</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#define RCC_APBENR2         </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span>RCC_BASE<span class="pp"> </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x40</span><span class="bu">UL</span><span class="op">))</span><span class="pp"> </span><span class="co">// ADC Clock</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#define DMA1_BASE           </span><span class="op">(</span><span class="bn">0x40020000</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#define DMA1_CCR1           </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">DMA1_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x08</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#define DMA1_CNDTR1         </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">DMA1_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x0C</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="pp">#define DMA1_CPAR1          </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">DMA1_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x10</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="pp">#define DMA1_CMAR1          </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">DMA1_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x14</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a><span class="pp">#define ADC1_BASE           </span><span class="op">(</span><span class="bn">0x40012400</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="pp">#define ADC1_DR             </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">ADC1_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x40</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> dma1_adc_init<span class="op">(</span><span class="dt">uint16_t</span> <span class="op">*</span>buffer<span class="op">,</span> <span class="dt">uint16_t</span> size<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 1. Enable DMA1 and ADC1 peripheral clocks</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>    RCC_AHBENR  <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">0</span><span class="op">);</span>  <span class="co">// Enable DMA1 clock</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>    RCC_APBENR2 <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">20</span><span class="op">);</span> <span class="co">// Enable ADC clock</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2. Configure Peripheral Address (ADC1 Data Register)</span></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>    DMA1_CPAR1 <span class="op">=</span> <span class="op">(</span><span class="dt">uint32_t</span><span class="op">)(&amp;</span>ADC1_DR<span class="op">);</span></span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 3. Configure Destination Memory Address (SRAM Buffer)</span></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>    DMA1_CMAR1 <span class="op">=</span> <span class="op">(</span><span class="dt">uint32_t</span><span class="op">)</span>buffer<span class="op">;</span></span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 4. Configure Number of Transfers</span></span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a>    DMA1_CNDTR1 <span class="op">=</span> size<span class="op">;</span></span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 5. Configure DMA1 Channel 1 Control Register:</span></span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a>    <span class="co">// - CIRC (Bit 5) = 1: Circular mode (Continuous loop)</span></span>
+<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a>    <span class="co">// - MINC (Bit 7) = 1: Memory increment mode</span></span>
+<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a>    <span class="co">// - PSIZE (Bits 9:8) = 01: 16-bit peripheral data</span></span>
+<span id="cb9-38"><a href="#cb9-38" aria-hidden="true" tabindex="-1"></a>    <span class="co">// - MSIZE (Bits 11:10) = 01: 16-bit memory data</span></span>
+<span id="cb9-39"><a href="#cb9-39" aria-hidden="true" tabindex="-1"></a>    <span class="co">// - EN (Bit 0) = 1: Enable DMA channel</span></span>
+<span id="cb9-40"><a href="#cb9-40" aria-hidden="true" tabindex="-1"></a>    DMA1_CCR1 <span class="op">=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">5</span><span class="op">)</span> <span class="op">|</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">7</span><span class="op">)</span> <span class="op">|</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">8</span><span class="op">)</span> <span class="op">|</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">10</span><span class="op">)</span> <span class="op">|</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb9-41"><a href="#cb9-41" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-caution callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>📌 Coming Up
+<span class="screen-reader-only">Caution</span>⚠️ Code Verification &amp; Assistance
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>This module is part of the CS2101 syllabus outline. Detailed lecture notes, integrated interactive simulations, and question banks will be added here.</p>
+<p>All high-level framework and bare-metal implementation codes are verified for the target microcontroller (<strong>STM32 Nucleo-C031C6</strong> / ARM Cortex-M0+). If you encounter any compilation errors, unexpected simulation behavior, or discrepancies with this code, Please report to the Course instructor or the TA via email.</p>
 </div>
 </div>
-<p><a href="./index.html" class="btn btn-outline-secondary mt-4">← Back to Main Page</a></p>
+</section>
+<section id="how-mini-project-1-applies-week-10-concepts" class="level3">
+<h3 class="anchored" data-anchor-id="how-mini-project-1-applies-week-10-concepts">🔍 How Mini-Project 1 Applies Week 10 Concepts</h3>
+<section id="hardware-circuit-level-concept-mapping" class="level4">
+<h4 class="anchored" data-anchor-id="hardware-circuit-level-concept-mapping">1. Hardware &amp; Circuit-Level Concept Mapping</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Circuit Component</th>
+<th style="text-align: left;">Week 10 Theoretical Concept</th>
+<th style="text-align: left;">Technical Function in System</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Potentiometer on A0</strong></td>
+<td style="text-align: left;"><strong>Continuous Analog Source</strong></td>
+<td style="text-align: left;">Generates real-time analog voltage variations requiring periodic high-speed sampling.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Internal DMA1 Bus Master</strong></td>
+<td style="text-align: left;"><strong>Autonomous Hardware Bus Mastering</strong></td>
+<td style="text-align: left;">Arbitrates over the ARM AHB bus matrix to stream digitized words directly from peripheral to memory without CPU interrupts.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="firmware-code-to-concept-breakdown" class="level4">
+<h4 class="anchored" data-anchor-id="firmware-code-to-concept-breakdown">2. Firmware Code-to-Concept Breakdown</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Code Statement (Framework / Bare-Metal)</th>
+<th style="text-align: left;">Week 10 Theoretical Concept</th>
+<th style="text-align: left;">Deep-Dive Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>DMA1_CCR1 \|= (1UL &lt;&lt; 5);</code> (CIRC)</td>
+<td style="text-align: left;"><strong>Circular Auto-Reload DMA Buffer</strong></td>
+<td style="text-align: left;">When the transfer counter decrements to zero, hardware automatically reloads <code>CNDTR1</code> and resets memory pointers with zero CPU overhead.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>uint32_t mv = ((uint32_t)avg * 3300) / 1023;</code></td>
+<td style="text-align: left;"><strong>Fixed-Point Integer Optimization</strong></td>
+<td style="text-align: left;">Replaces expensive floating-point arithmetic with integer scaling, eliminating software floating-point emulation libraries.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+</section>
+<section id="mini-project-2-energy-benchmarking-polling-vs.-__wfi-sleep" class="level2">
+<h2 class="anchored" data-anchor-id="mini-project-2-energy-benchmarking-polling-vs.-__wfi-sleep">8. Mini-Project 2: Energy Benchmarking: Polling vs.&nbsp;<code>__WFI()</code> Sleep ⚡💤</h2>
+<section id="objective-1" class="level3">
+<h3 class="anchored" data-anchor-id="objective-1">🎯 Objective</h3>
+<p>Battery-powered products die within days if firmware continuously runs active polling loops like <code>while(digitalRead(BTN) == HIGH);</code>. In this project, you will benchmark CPU active time on the <strong>STM32 Nucleo-C031C6</strong>, comparing high-frequency polling against the ARM Cortex-M <code>__WFI()</code> (Wait For Interrupt) low-power architecture.</p>
+</section>
+<section id="hardware-setup-wokwi-1" class="level3">
+<h3 class="anchored" data-anchor-id="hardware-setup-wokwi-1">🛠️ Hardware Setup (Wokwi)</h3>
+<p>The circuit connects a pushbutton to trigger the wakeup interrupt: * <strong>Wakeup Trigger Button:</strong> Pushbutton on <code>D2</code> (<code>PA10</code>) with internal pull-up. * <strong>CPU Core Activity LED:</strong> User LED on <code>D13</code> (<code>PA5</code>) (HIGH = Awake, LOW = Sleeping). * <strong>Diagnostic Serial Console:</strong> Virtual COM Port at <strong>115200 baud</strong>.</p>
+</section>
+<section id="pin-wiring-table-1" class="level3">
+<h3 class="anchored" data-anchor-id="pin-wiring-table-1">Pin Wiring Table</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 23%">
+<col style="width: 23%">
+<col style="width: 29%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Component</th>
+<th style="text-align: left;">Pin / Terminal</th>
+<th style="text-align: center;">Board Connection</th>
+<th style="text-align: left;">Electrical Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Wakeup Pushbutton</strong></td>
+<td style="text-align: left;">Terminal 1.L / 2.L</td>
+<td style="text-align: center;"><code>D2</code> / <code>GND</code></td>
+<td style="text-align: left;">Interrupt line (<code>INPUT_PULLUP</code>)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Activity LED</strong></td>
+<td style="text-align: left;">Anode (<code>PA5</code>)</td>
+<td style="text-align: center;"><code>D13</code></td>
+<td style="text-align: left;">HIGH = CPU Awake, LOW = CPU Sleeping</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Common Ground</strong></td>
+<td style="text-align: left;">Cathode / GND</td>
+<td style="text-align: center;"><code>GND</code></td>
+<td style="text-align: left;">Ground Reference</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="problem-statement-logic-flow-1" class="level3">
+<h3 class="anchored" data-anchor-id="problem-statement-logic-flow-1">📝 Problem Statement &amp; Logic Flow</h3>
+<ol type="1">
+<li><strong>Active Duty Phase:</strong>
+<ul>
+<li>Turn Activity LED on <code>D13</code> <strong>HIGH</strong>.</li>
+<li>Execute 50 ms of simulated active computation.</li>
+<li>Turn Activity LED <strong>LOW</strong>.</li>
+</ul></li>
+<li><strong>Deep Sleep Suspension:</strong>
+<ul>
+<li>Transmit <code>"CPU entering Sleep Mode (WFI)..."</code> over UART at 115200 baud.</li>
+<li>Call <code>Serial.flush()</code> to drain UART FIFO buffers.</li>
+<li>Suspend the ARM core pipeline using <code>__asm volatile("wfi");</code>.</li>
+</ul></li>
+<li><strong>Interrupt Wakeup:</strong>
+<ul>
+<li>When button on <code>D2</code> is pressed, the EXTI interrupt immediately wakes the processor.</li>
+<li>Transmit <code>"CPU Woken up by Hardware Interrupt!"</code> and repeat cycle.</li>
+</ul></li>
+<li><strong>Duty Cycle Analysis:</strong> <span class="math display">\[\text{Duty Cycle} = \frac{T_{\text{active}}}{T_{\text{total}}} \times 100\%\]</span> If active for 50 ms and sleeping for 950 ms, duty cycle is <span class="math inline">\(5\%\)</span>, extending battery operational life by <span class="math inline">\(20\times\)</span>!</li>
+</ol>
+<pre class="text"><code>Executing Active Task for 50 ms...
+CPU entering Sleep Mode (WFI)...
+--&gt; CPU Woken up by Hardware Interrupt! &lt;--
+Executing Active Task for 50 ms...</code></pre>
+</section>
+<section id="interactive-simulation-1" class="level3">
+<h3 class="anchored" data-anchor-id="interactive-simulation-1">Interactive Simulation</h3>
+<div class="simulation-container">
+<iframe src="https://wokwi.com/projects/479963095271968769?embed=1" title="Power Benchmark Simulation Workspace" loading="lazy" allowfullscreen="">
+</iframe>
+<div class="sim-info-bar">
+<p><span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span> <span>Click Play, wire Wakeup Button on D2 and Activity LED on D13</span></p>
+</div>
+</div>
+</section>
+<section id="implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1" class="level3">
+<h3 class="anchored" data-anchor-id="implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1">Implementation Code: High-Level Framework vs.&nbsp;Bare-Metal Embedded C</h3>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">🔷 High-Level Framework (Running in Simulation)</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">🔶 Equivalent Bare-Metal Embedded C (Direct SCB Sleep Register Manipulation)</a></li></ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Mini-Project 2: Energy Benchmarking: Polling vs. WFI Sleep (Nucleo-C031C6)</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#define WAKE_BTN_PIN </span><span class="dv">2</span><span class="pp">  </span><span class="co">// PA10 (External Wakeup Interrupt)</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#define ACTIVITY_PIN </span><span class="dv">13</span><span class="pp"> </span><span class="co">// PA5  (Active Activity LED)</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> wakeUpHandler<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Interrupt wakes CPU core from WFI</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setup<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>begin<span class="op">(</span><span class="dv">115200</span><span class="op">);</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>ACTIVITY_PIN<span class="op">,</span> OUTPUT<span class="op">);</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>WAKE_BTN_PIN<span class="op">,</span> INPUT_PULLUP<span class="op">);</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Attach external interrupt on falling edge</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>  attachInterrupt<span class="op">(</span>digitalPinToInterrupt<span class="op">(</span>WAKE_BTN_PIN<span class="op">),</span> wakeUpHandler<span class="op">,</span> FALLING<span class="op">);</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"============================================="</span><span class="op">);</span></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"  Energy Benchmarking: WFI Sleep Active      "</span><span class="op">);</span></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"============================================="</span><span class="op">);</span></span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> loop<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Step 1: Active Burst Phase (50 ms useful work)</span></span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a>  digitalWrite<span class="op">(</span>ACTIVITY_PIN<span class="op">,</span> HIGH<span class="op">);</span></span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"[ACTIVE]: Executing high-speed computation (50 ms)..."</span><span class="op">);</span></span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a>  delay<span class="op">(</span><span class="dv">50</span><span class="op">);</span></span>
+<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a>  digitalWrite<span class="op">(</span>ACTIVITY_PIN<span class="op">,</span> LOW<span class="op">);</span></span>
+<span id="cb11-31"><a href="#cb11-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-32"><a href="#cb11-32" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Step 2: Prepare for Sleep</span></span>
+<span id="cb11-33"><a href="#cb11-33" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"[SLEEP]: Draining serial FIFO and entering WFI sleep..."</span><span class="op">);</span></span>
+<span id="cb11-34"><a href="#cb11-34" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>flush<span class="op">();</span> <span class="co">// Drain transmit buffer before gating clock!</span></span>
+<span id="cb11-35"><a href="#cb11-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-36"><a href="#cb11-36" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Step 3: Execute Wait For Interrupt assembly instruction</span></span>
+<span id="cb11-37"><a href="#cb11-37" aria-hidden="true" tabindex="-1"></a>  __asm <span class="at">volatile</span><span class="op">(</span><span class="st">"wfi"</span><span class="op">);</span></span>
+<span id="cb11-38"><a href="#cb11-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-39"><a href="#cb11-39" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Step 4: Resume execution immediately after interrupt fires</span></span>
+<span id="cb11-40"><a href="#cb11-40" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"--&gt; [WAKE]: CPU Woken up by External EXTI Interrupt! &lt;--"</span><span class="op">);</span></span>
+<span id="cb11-41"><a href="#cb11-41" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Mini-Project 2: Bare-Metal Low-Power Sleep Control</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdint.h&gt;</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SCB_SCR </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)</span><span class="bn">0xE000ED10</span><span class="bu">UL</span><span class="op">)</span><span class="pp"> </span><span class="co">// System Control Register</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> enter_cortex_sleep<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Clear SLEEPDEEP bit (Bit 2 = 0: Regular Sleep Mode)</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Clear SLEEPONEXIT bit (Bit 1 = 0: Wake up immediately upon ISR completion)</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    SCB_SCR <span class="op">&amp;=</span> <span class="op">~((</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">2</span><span class="op">)</span> <span class="op">|</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">1</span><span class="op">));</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Execute Wait For Interrupt (Gates core clock)</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>    __asm <span class="dt">volatile</span><span class="op">(</span><span class="st">"wfi"</span><span class="op">);</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-caution callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Caution</span>⚠️ Code Verification &amp; Assistance
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>All high-level framework and bare-metal implementation codes are verified for the target microcontroller (<strong>STM32 Nucleo-C031C6</strong> / ARM Cortex-M0+). If you encounter any compilation errors, unexpected simulation behavior, or discrepancies with this code, Please report to the Course instructor or the TA via email.</p>
+</div>
+</div>
+</section>
+<section id="how-mini-project-2-applies-week-10-concepts" class="level3">
+<h3 class="anchored" data-anchor-id="how-mini-project-2-applies-week-10-concepts">🔍 How Mini-Project 2 Applies Week 10 Concepts</h3>
+<section id="hardware-circuit-level-concept-mapping-1" class="level4">
+<h4 class="anchored" data-anchor-id="hardware-circuit-level-concept-mapping-1">1. Hardware &amp; Circuit-Level Concept Mapping</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Circuit Component</th>
+<th style="text-align: left;">Week 10 Theoretical Concept</th>
+<th style="text-align: left;">Technical Function in System</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Activity LED (D13)</strong></td>
+<td style="text-align: left;"><strong>Dynamic Power Visualization (<span class="math inline">\(P_{\text{dyn}} = C V^2 f\)</span>)</strong></td>
+<td style="text-align: left;">Lights up during active CPU clock switching (~15 mA). In sleep, current drops to ~1.5 mA as core clocks gate off.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Wakeup Button (D2)</strong></td>
+<td style="text-align: left;"><strong>Asynchronous Wakeup Source</strong></td>
+<td style="text-align: left;">Connects to the NVIC wakeup circuit, unblocking the CPU clock generator upon falling edge detection.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="firmware-code-to-concept-breakdown-1" class="level4">
+<h4 class="anchored" data-anchor-id="firmware-code-to-concept-breakdown-1">2. Firmware Code-to-Concept Breakdown</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Code Statement (Framework / Bare-Metal)</th>
+<th style="text-align: left;">Week 10 Theoretical Concept</th>
+<th style="text-align: left;">Deep-Dive Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>Serial.flush();</code></td>
+<td style="text-align: left;"><strong>Peripheral Buffer Drainage</strong></td>
+<td style="text-align: left;">Prevents serial truncation by waiting for the shift register to finish transmitting before gating peripheral clocks.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>__asm volatile("wfi");</code></td>
+<td style="text-align: left;"><strong>Hardware Clock Gating</strong></td>
+<td style="text-align: left;">Directly halts the ARM Cortex-M instruction fetch pipeline, reducing dynamic power consumption to near zero.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+</section>
+<section id="hands-on-practice-challenge-for-students-to-solve" class="level2">
+<h2 class="anchored" data-anchor-id="hands-on-practice-challenge-for-students-to-solve">9. Hands-On Practice Challenge (For Students to Solve) 🎯</h2>
+<section id="objective-scenario" class="level3">
+<h3 class="anchored" data-anchor-id="objective-scenario">🎯 Objective &amp; Scenario</h3>
+<p>In modern electronic instrumentation and automotive head-up displays, multiplexing an 8x8 LED matrix display using standard CPU timer ISRs burns significant processor bandwidth. In this challenge, you will implement a <strong>DMA-Accelerated 8x8 LED Matrix Framebuffer</strong> on the <strong>STM32 Nucleo-C031C6</strong> that streams frame bitmap buffers directly to GPIO pins with <span class="math inline">\(0\%\)</span> CPU load!</p>
+</section>
+<section id="hardware-setup-pin-wiring-table" class="level3">
+<h3 class="anchored" data-anchor-id="hardware-setup-pin-wiring-table">🛠️ Hardware Setup &amp; Pin Wiring Table</h3>
+<p>Connect an 8x8 LED Matrix (or 8 row lines) to STM32 digital output pins:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 23%">
+<col style="width: 23%">
+<col style="width: 29%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Component</th>
+<th style="text-align: left;">Pin / Terminal</th>
+<th style="text-align: center;">Board Connection</th>
+<th style="text-align: left;">Electrical Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Matrix Row 0..7</strong></td>
+<td style="text-align: left;">Anodes</td>
+<td style="text-align: center;"><code>D2</code> to <code>D9</code></td>
+<td style="text-align: left;">8-bit parallel row data bus</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Status LED</strong></td>
+<td style="text-align: left;">Anode (<code>PA5</code>)</td>
+<td style="text-align: center;"><code>D13</code></td>
+<td style="text-align: left;">CPU Free Indicator (toggled by superloop)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Common Ground</strong></td>
+<td style="text-align: left;">Cathodes</td>
+<td style="text-align: center;"><code>GND</code></td>
+<td style="text-align: left;">Ground Reference</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="problem-statement-functional-requirements" class="level3">
+<h3 class="anchored" data-anchor-id="problem-statement-functional-requirements">📋 Problem Statement &amp; Functional Requirements</h3>
+<ol type="1">
+<li><strong>Framebuffer Definition:</strong> Allocate an 8-byte display buffer in SRAM: <code>volatile uint8_t frame_buffer[8];</code>.</li>
+<li><strong>Autonomous Refresh Pipeline:</strong>
+<ul>
+<li>Configure a hardware timer to generate periodic events at <strong>480 Hz</strong> (providing a flicker-free <span class="math inline">\(60\text{ Hz}\)</span> frame rate across 8 multiplexed rows).</li>
+<li>Stream row bytes from <code>frame_buffer</code> to GPIO output registers via Circular DMA.</li>
+</ul></li>
+<li><strong>CPU Independence Verification:</strong>
+<ul>
+<li>In <code>loop()</code>, perform CPU-heavy math calculations and rapidly toggle <code>D13</code>.</li>
+<li>Verify that the display remains perfectly stable with <strong>zero flickering or tearing</strong>, proving that screen rendering is completely decoupled from CPU load!</li>
+</ul></li>
+</ol>
+</section>
+<section id="starter-code-template" class="level3">
+<h3 class="anchored" data-anchor-id="starter-code-template">💻 Starter Code Template</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Student Practice Challenge: DMA-Accelerated LED Matrix Framebuffer</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Target: board-st-nucleo-c031c6</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="at">volatile</span> <span class="dt">uint8_t</span> frame_buffer<span class="op">[</span><span class="dv">8</span><span class="op">]</span> <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="bn">0b00111100</span><span class="op">,</span> <span class="co">// Row 0</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="bn">0b01000010</span><span class="op">,</span> <span class="co">// Row 1</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  <span class="bn">0b10100101</span><span class="op">,</span> <span class="co">// Row 2</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  <span class="bn">0b10000001</span><span class="op">,</span> <span class="co">// Row 3</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  <span class="bn">0b10100101</span><span class="op">,</span> <span class="co">// Row 4</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  <span class="bn">0b10011001</span><span class="op">,</span> <span class="co">// Row 5</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>  <span class="bn">0b01000010</span><span class="op">,</span> <span class="co">// Row 6</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>  <span class="bn">0b00111100</span>  <span class="co">// Row 7 (Smiley Face)</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setup<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 1: Initialize Serial at 115200 baud</span></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 2: Configure matrix pins D2-D9 as OUTPUT</span></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 3: Configure Timer 3 at 480 Hz update rate</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 4: Configure DMA channel in Circular Mode to stream frame_buffer to GPIO</span></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> loop<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 5: Animate pixel data in frame_buffer while DMA autonomously handles refresh!</span></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="verification-expected-test-cases" class="level3">
+<h3 class="anchored" data-anchor-id="verification-expected-test-cases">🧪 Verification &amp; Expected Test Cases</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 22%">
+<col style="width: 27%">
+<col style="width: 27%">
+<col style="width: 22%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Operating Condition</th>
+<th style="text-align: center;">Frame Rate</th>
+<th style="text-align: center;">CPU Utilization</th>
+<th style="text-align: left;">Screen Stability</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Static Bitmap</strong></td>
+<td style="text-align: center;"><span class="math inline">\(60\text{ Hz}\)</span></td>
+<td style="text-align: center;"><span class="math inline">\(0\%\)</span></td>
+<td style="text-align: left;">100% Flicker-free, crystal clear</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Heavy CPU Math in <code>loop()</code></strong></td>
+<td style="text-align: center;"><span class="math inline">\(60\text{ Hz}\)</span></td>
+<td style="text-align: center;">Heavy compute</td>
+<td style="text-align: left;">Zero frame drops or visual tearing</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Dynamic Animation</strong></td>
+<td style="text-align: center;"><span class="math inline">\(60\text{ Hz}\)</span></td>
+<td style="text-align: center;">Instant buffer swap</td>
+<td style="text-align: left;">Smooth animation</td>
+</tr>
+</tbody>
+</table>
+<details>
+<summary>
+💡 Need a Hint? Click to Reveal
+</summary>
+<ul>
+<li><strong>Row Multiplexing:</strong> Use a circular DMA transfer of length 8. Each timer trigger advances the memory pointer by 1 byte (<code>MINC = 1</code>), outputting the next row pattern to the GPIO output data register (<code>ODR</code>).</li>
+<li><strong>Timer Trigger:</strong> Configure the Timer Master Mode to emit a trigger pulse on update: <code>TIM3-&gt;CR2 |= (0b010 &lt;&lt; 4);</code> (MMS = Update).</li>
+</ul>
+</details>
+<div class="simulation-container">
+<iframe src="https://wokwi.com/projects/479963095271968769?embed=1" title="DMA Framebuffer Simulation Workspace" loading="lazy" allowfullscreen="">
+</iframe>
+<div class="sim-info-bar">
+<p><span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span> <span>Click Play to build and test your DMA-accelerated framebuffer matrix</span></p>
+</div>
+</div>
+<div id="comparator-w10" class="code-comparator-widget">
+  <div class="comparator-header">
+    <div class="comparator-title">
+      <span class="icon">🔄</span>
+      <span><strong>Simultaneous Code Explorer:</strong> Arduino Framework ↔ Bare-Metal C</span>
+    </div>
+    <div class="comparator-controls">
+      <label>Load Preset:</label>
+      <select class="preset-select">
+        <option value="adc_analog">ADC DMA Continuous Circular Acquisition</option>
+        <option value="gpio_blink">GPIO Power Saving Output</option>
+        <option value="exti_interrupt">Low-Power Wakeup EXTI Interrupt</option>
+        <option value="uart_comm">UART DMA Circular Buffer</option>
+        <option value="timer_pwm">Hardware Timer Trigger</option>
+      </select>
+      <button type="button" class="btn-compare" onclick="runInteractiveTranslation('comparator-w10')">Analyze / Map Code</button>
+    </div>
+  </div>
+  <div class="comparator-panes">
+    <div class="pane">
+      <div class="pane-header">
+        <span class="badge-arduino">Arduino C++ (Framework)</span>
+        <span class="hint">Type or paste Arduino code here for live Bare-Metal translation</span>
+      </div>
+      <textarea class="code-input" spellcheck="false"></textarea>
+    </div>
+    <div class="pane">
+      <div class="pane-header">
+        <span class="badge-baremetal">Equivalent Bare-Metal C (Direct Registers)</span>
+        <span class="hint">Live Memory-Mapped Operations</span>
+      </div>
+      <pre class="code-output"><code></code></pre>
+    </div>
+  </div>
+</div>
+<hr>
+</section>
+</section>
+<section id="concept-check-practice-questions" class="level2">
+<h2 class="anchored" data-anchor-id="concept-check-practice-questions">10. Concept Check Practice Questions</h2>
+<section id="question-1-direct-memory-access-dma-bus-principles" class="level3">
+<h3 class="anchored" data-anchor-id="question-1-direct-memory-access-dma-bus-principles">Question 1: Direct Memory Access (DMA) Bus Principles</h3>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Click to View Question &amp; Options
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>What is the fundamental architectural advantage of using Direct Memory Access (DMA) for streaming sensor data into microcontroller memory?</p>
+<p><strong>Options:</strong><br>
+- <strong>A)</strong> DMA doubles the clock speed of the external crystal<br>
+- <strong>B)</strong> The DMA hardware controller transfers data directly between peripherals and SRAM across the internal bus matrix without involving the CPU, leaving the processor 100% free for application computation<br>
+- <strong>C)</strong> DMA eliminates the need for SRAM<br>
+- <strong>D)</strong> DMA converts analog voltages into digital signals</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>✅ Correct Answer: B
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Explanation:</strong><br>
+Standard CPU I/O requires the processor to execute load and store assembly instructions for every single byte, consuming clock cycles and stack context. A DMA controller is a dedicated silicon bus master that transfers blocks of data directly between memory and peripherals with zero CPU cycle intervention.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="question-2-compiler-optimization-flags-in-embedded-systems" class="level3">
+<h3 class="anchored" data-anchor-id="question-2-compiler-optimization-flags-in-embedded-systems">Question 2: Compiler Optimization Flags in Embedded Systems</h3>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Click to View Question &amp; Options
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Why is the <code>-Os</code> GCC compiler optimization flag widely preferred when building production firmware for cost-sensitive microcontrollers?</p>
+<p><strong>Options:</strong><br>
+- <strong>A)</strong> <code>-Os</code> removes all comments from C code<br>
+- <strong>B)</strong> <code>-Os</code> optimizes specifically for <strong>code size</strong>, enabling feature-rich firmware to fit into smaller, less expensive on-chip Flash memory<br>
+- <strong>C)</strong> <code>-Os</code> disables hardware interrupts<br>
+- <strong>D)</strong> <code>-Os</code> converts 32-bit pointers into 8-bit integers</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>✅ Correct Answer: B
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Explanation:</strong><br>
+In high-volume embedded products, choosing a microcontroller with 32 KB Flash instead of 128 KB Flash saves significant bill-of-materials cost. The <code>-Os</code> optimization flag instructs the compiler to generate the smallest possible machine code binary, avoiding aggressive loop unrolling that inflates code size.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<hr>
+<div class="d-flex justify-content-between mt-4">
+<p><a href="./Week-9.html" class="seek-prev-btn">← Back to Week 9: RTOS Fundamentals</a> <a href="./Week-11.html" class="seek-next-btn">NEXT: Week 11 — Testing, Debugging &amp; Profiling →</a></p>
+</div>
 
 
 </section>
+</section>
 
 </main> <!-- /main -->
+<script>
+/**
+ * Interactive Arduino ↔ Bare-Metal STM32 C Code Comparator & Live Translator
+ * Translates Arduino framework calls to equivalent STM32 Nucleo-C031C6 Bare-Metal Register operations.
+ */
+const PRESETS = {
+  gpio_blink: {
+    name: "GPIO Output: LED Blink",
+    arduino: `// Arduino Framework (High-Level)
+#define LED_PIN 13 // PA5 on Nucleo-C031C6
+
+void setup() {
+  pinMode(LED_PIN, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(LED_PIN, HIGH);
+  delay(500);
+  digitalWrite(LED_PIN, LOW);
+  delay(500);
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+
+#define RCC_IOPENR   (*(volatile uint32_t *)(0x40021000UL + 0x34UL))
+#define GPIOA_MODER  (*(volatile uint32_t *)(0x50000000UL + 0x00UL))
+#define GPIOA_BSRR   (*(volatile uint32_t *)(0x50000000UL + 0x18UL))
+
+void gpio_init(void) {
+    // 1. Enable GPIOA Peripheral Bus Clock
+    RCC_IOPENR |= (1UL << 0);
+
+    // 2. Configure PA5 as General Purpose Output ('01' in MODER)
+    GPIOA_MODER &= ~(3UL << (5 * 2));
+    GPIOA_MODER |=  (1UL << (5 * 2));
+}
+
+void delay_cycles(volatile uint32_t count) {
+    while (count--) { __asm volatile("nop"); }
+}
+
+int main(void) {
+    gpio_init();
+    while (1) {
+        // Set PA5 HIGH (bit 5 in BSRR)
+        GPIOA_BSRR = (1UL << 5);
+        delay_cycles(2400000); // ~500 ms at 48 MHz
+
+        // Reset PA5 LOW (bit 5+16 in BSRR)
+        GPIOA_BSRR = (1UL << (5 + 16));
+        delay_cycles(2400000);
+    }
+}`
+  },
+  gpio_input: {
+    name: "GPIO Input: Pushbutton with Internal Pull-Up",
+    arduino: `// Arduino Framework (High-Level)
+#define BUTTON_PIN 2  // PA10
+#define LED_PIN    13 // PA5
+
+void setup() {
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(LED_PIN, OUTPUT);
+}
+
+void loop() {
+  int buttonState = digitalRead(BUTTON_PIN);
+  if (buttonState == LOW) { // Pressed (Active-LOW)
+    digitalWrite(LED_PIN, HIGH);
+  } else {
+    digitalWrite(LED_PIN, LOW);
+  }
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+#include <stdbool.h>
+
+#define RCC_IOPENR   (*(volatile uint32_t *)(0x40021000UL + 0x34UL))
+#define GPIOA_MODER  (*(volatile uint32_t *)(0x50000000UL + 0x00UL))
+#define GPIOA_PUPDR  (*(volatile uint32_t *)(0x50000000UL + 0x0CUL))
+#define GPIOA_IDR    (*(volatile uint32_t *)(0x50000000UL + 0x10UL))
+#define GPIOA_BSRR   (*(volatile uint32_t *)(0x50000000UL + 0x18UL))
+
+void setup_pins(void) {
+    RCC_IOPENR |= (1UL << 0); // Enable GPIOA clock
+
+    // PA10 as Input ('00' in MODER) with Pull-Up ('01' in PUPDR)
+    GPIOA_MODER &= ~(3UL << (10 * 2));
+    GPIOA_PUPDR &= ~(3UL << (10 * 2));
+    GPIOA_PUPDR |=  (1UL << (10 * 2));
+
+    // PA5 as Output ('01' in MODER)
+    GPIOA_MODER &= ~(3UL << (5 * 2));
+    GPIOA_MODER |=  (1UL << (5 * 2));
+}
+
+int main(void) {
+    setup_pins();
+    while (1) {
+        // Read PA10 pin state from Input Data Register (IDR)
+        if (!(GPIOA_IDR & (1UL << 10))) {
+            GPIOA_BSRR = (1UL << 5);        // LED ON (PA5 Set)
+        } else {
+            GPIOA_BSRR = (1UL << (5 + 16)); // LED OFF (PA5 Reset)
+        }
+    }
+}`
+  },
+  exti_interrupt: {
+    name: "EXTI: Hardware Interrupt on Edge Transition",
+    arduino: `// Arduino Framework (High-Level)
+#define BUTTON_PIN 2 // PA10
+
+volatile bool flag = false;
+
+void buttonISR() {
+  flag = true;
+}
+
+void setup() {
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), buttonISR, FALLING);
+}
+
+void loop() {
+  if (flag) {
+    flag = false;
+    // Process interrupt event
+  }
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+#include <stdbool.h>
+
+#define EXTI_BASE       (0x40021800UL)
+#define EXTI_IMR1       (*(volatile uint32_t *)(EXTI_BASE + 0x00UL))
+#define EXTI_FTSR1      (*(volatile uint32_t *)(EXTI_BASE + 0x04UL))
+#define EXTI_RPR1       (*(volatile uint32_t *)(EXTI_BASE + 0x0CUL))
+#define NVIC_ISER       (*(volatile uint32_t *)(0xE000E100UL))
+
+volatile bool flag = false;
+
+void exti_init(void) {
+    // 1. Unmask Line 10 in Interrupt Mask Register (IMR1)
+    EXTI_IMR1 |= (1UL << 10);
+
+    // 2. Enable Falling Edge Trigger for Line 10
+    EXTI_FTSR1 |= (1UL << 10);
+
+    // 3. Enable EXTI line 4-15 IRQ in ARM Cortex-M0+ NVIC
+    NVIC_ISER |= (1UL << 7); // IRQ 7 = EXTI4_15_IRQn
+}
+
+void EXTI4_15_IRQHandler(void) {
+    if (EXTI_RPR1 & (1UL << 10)) {
+        EXTI_RPR1 = (1UL << 10); // Clear pending flag by writing '1'
+        flag = true;             // Atomic flag write
+    }
+}
+
+int main(void) {
+    exti_init();
+    while (1) {
+        if (flag) {
+            flag = false;
+        }
+    }
+}`
+  },
+  uart_comm: {
+    name: "UART: Hardware Serial Communication (115200 Baud)",
+    arduino: `// Arduino Framework (High-Level)
+void setup() {
+  Serial.begin(115200);
+}
+
+void loop() {
+  Serial.println("OK");
+  delay(1000);
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+
+#define USART2_BASE     (0x40004400UL)
+#define USART2_CR1      (*(volatile uint32_t *)(USART2_BASE + 0x00UL))
+#define USART2_BRR      (*(volatile uint32_t *)(USART2_BASE + 0x0CUL))
+#define USART2_ISR      (*(volatile uint32_t *)(USART2_BASE + 0x1CUL))
+#define USART2_TDR      (*(volatile uint32_t *)(USART2_BASE + 0x28UL))
+
+void usart2_init(uint32_t baud, uint32_t pclk) {
+    // 1. Set Baud Rate Register: BRR = Clock / Baud
+    USART2_BRR = pclk / baud; // 48 MHz / 115200 = 416
+
+    // 2. Enable Transmitter (TE) and USART Peripheral (UE)
+    USART2_CR1 |= (1UL << 3) | (1UL << 0);
+}
+
+void usart2_write_char(char c) {
+    // Wait for TXE (Transmit Data Register Empty) flag
+    while (!(USART2_ISR & (1UL << 7)));
+    USART2_TDR = (uint8_t)c;
+}
+
+void usart2_write_str(const char *str) {
+    while (*str) usart2_write_char(*str++);
+}
+
+int main(void) {
+    usart2_init(115200, 48000000UL);
+    while (1) {
+        usart2_write_str("OK\\r\\n");
+        for (volatile uint32_t i = 0; i < 4800000; i++); // ~1 sec delay
+    }
+}`
+  },
+  timer_pwm: {
+    name: "PWM: Hardware Timer Pulse Width Modulation",
+    arduino: `// Arduino Framework (High-Level)
+#define PWM_PIN 9 // D9
+
+void setup() {
+  pinMode(PWM_PIN, OUTPUT);
+}
+
+void loop() {
+  analogWrite(PWM_PIN, 128); // 50% Duty Cycle (128 / 255)
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+
+#define TIM1_BASE       (0x40012C00UL)
+#define TIM1_CR1        (*(volatile uint32_t *)(TIM1_BASE + 0x00UL))
+#define TIM1_CCMR1      (*(volatile uint32_t *)(TIM1_BASE + 0x18UL))
+#define TIM1_CCER       (*(volatile uint32_t *)(TIM1_BASE + 0x20UL))
+#define TIM1_ARR        (*(volatile uint32_t *)(TIM1_BASE + 0x2CUL))
+#define TIM1_CCR1       (*(volatile uint32_t *)(TIM1_BASE + 0x34UL))
+
+void tim1_pwm_init(void) {
+    // 1. Auto-Reload Register: Period = 1000 counts
+    TIM1_ARR = 999;
+
+    // 2. Capture/Compare Register: Duty Cycle = 500 counts (50%)
+    TIM1_CCR1 = 500;
+
+    // 3. Configure Channel 1 as PWM Mode 1 (OC1M = '110')
+    TIM1_CCMR1 |= (6UL << 4);
+
+    // 4. Enable Output Channel 1 (CC1E)
+    TIM1_CCER |= (1UL << 0);
+
+    // 5. Start Timer Counter (CEN)
+    TIM1_CR1 |= (1UL << 0);
+}
+
+int main(void) {
+    tim1_pwm_init();
+    while (1) {
+        // Hardware timer runs autonomously with zero CPU cycles
+    }
+}`
+  },
+  adc_analog: {
+    name: "ADC: Analog Transducer Conversion",
+    arduino: `// Arduino Framework (High-Level)
+#define SENSOR_PIN A0 // PA0
+
+void setup() {
+  Serial.begin(115200);
+}
+
+void loop() {
+  int raw = analogRead(SENSOR_PIN);
+  float voltage = (raw * 3.3f) / 1023.0f;
+  delay(250);
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+
+#define ADC1_BASE       (0x40012400UL)
+#define ADC1_ISR        (*(volatile uint32_t *)(ADC1_BASE + 0x00UL))
+#define ADC1_CR         (*(volatile uint32_t *)(ADC1_BASE + 0x08UL))
+#define ADC1_CHSELR     (*(volatile uint32_t *)(ADC1_BASE + 0x28UL))
+#define ADC1_DR         (*(volatile uint32_t *)(ADC1_BASE + 0x40UL))
+
+void adc_init(void) {
+    // 1. Select ADC Channel 0 (PA0)
+    ADC1_CHSELR = (1UL << 0);
+
+    // 2. Enable ADC Peripheral (ADEN = 1)
+    ADC1_CR |= (1UL << 0);
+    while (!(ADC1_ISR & (1UL << 0))); // Wait for ADRDY
+}
+
+uint16_t adc_read_channel0(void) {
+    // Start conversion (ADSTART = 1)
+    ADC1_CR |= (1UL << 2);
+
+    // Poll End-Of-Conversion (EOC) flag
+    while (!(ADC1_ISR & (1UL << 2)));
+
+    // Return 12-bit conversion result
+    return (uint16_t)ADC1_DR;
+}
+
+int main(void) {
+    adc_init();
+    while (1) {
+        uint16_t sample = adc_read_channel0();
+        // Process analog sample in millivolts: (sample * 3300) / 4095
+    }
+}`
+  }
+};
+
+/**
+ * Intelligent Real-Time Code Translator
+ * Takes arbitrary Arduino C++ code and generates structured STM32 Bare-Metal Register operations.
+ */
+function translateArduinoToBareMetal(code) {
+  if (!code || !code.trim()) {
+    return "// Paste or type standard Arduino code on the left to see\n// real-time equivalent Bare-Metal STM32 C registers here!";
+  }
+
+  let inits = [];
+  let loopBody = [];
+  let defines = new Set();
+  let helperFuncs = [];
+
+  // Always include standard base headers
+  defines.add('#include <stdint.h>');
+  defines.add('#include <stdbool.h>');
+  defines.add('#define RCC_IOPENR   (*(volatile uint32_t *)(0x40021000UL + 0x34UL))');
+
+  let hasGpioOutput = false;
+  let hasGpioInput = false;
+  let hasUart = false;
+  let hasAdc = false;
+  let hasTimer = false;
+  let hasDelay = false;
+
+  const lines = code.split('\n');
+
+  lines.forEach(line => {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('//')) return;
+
+    // 1. PinMode OUTPUT
+    let m = trimmed.match(/pinMode\s*\(\s*(\d+|\w+)\s*,\s*OUTPUT\s*\)/i);
+    if (m) {
+      hasGpioOutput = true;
+      let pin = isNaN(m[1]) ? "5" : m[1];
+      inits.push(`    // Configure Pin ${m[1]} as General Purpose Output`);
+      inits.push(`    RCC_IOPENR |= (1UL << 0); // Enable GPIOA clock`);
+      inits.push(`    GPIOA_MODER &= ~(3UL << (${pin} * 2));`);
+      inits.push(`    GPIOA_MODER |=  (1UL << (${pin} * 2));`);
+    }
+
+    // 2. PinMode INPUT_PULLUP
+    m = trimmed.match(/pinMode\s*\(\s*(\d+|\w+)\s*,\s*INPUT(?:_PULLUP)?\s*\)/i);
+    if (m) {
+      hasGpioInput = true;
+      let pin = isNaN(m[1]) ? "10" : m[1];
+      inits.push(`    // Configure Pin ${m[1]} as Input with Pull-Up`);
+      inits.push(`    RCC_IOPENR |= (1UL << 0); // Enable GPIOA clock`);
+      inits.push(`    GPIOA_MODER &= ~(3UL << (${pin} * 2));`);
+      inits.push(`    GPIOA_PUPDR &= ~(3UL << (${pin} * 2));`);
+      inits.push(`    GPIOA_PUPDR |=  (1UL << (${pin} * 2));`);
+    }
+
+    // 3. digitalWrite HIGH
+    m = trimmed.match(/digitalWrite\s*\(\s*(\d+|\w+)\s*,\s*HIGH\s*\)/i);
+    if (m) {
+      hasGpioOutput = true;
+      let pin = isNaN(m[1]) ? "5" : m[1];
+      loopBody.push(`        // Pin ${m[1]} HIGH via atomic Bit Set register`);
+      loopBody.push(`        GPIOA_BSRR = (1UL << ${pin});`);
+    }
+
+    // 4. digitalWrite LOW
+    m = trimmed.match(/digitalWrite\s*\(\s*(\d+|\w+)\s*,\s*LOW\s*\)/i);
+    if (m) {
+      hasGpioOutput = true;
+      let pin = isNaN(m[1]) ? "5" : m[1];
+      loopBody.push(`        // Pin ${m[1]} LOW via atomic Bit Reset register`);
+      loopBody.push(`        GPIOA_BSRR = (1UL << (${pin} + 16));`);
+    }
+
+    // 5. digitalRead
+    m = trimmed.match(/digitalRead\s*\(\s*(\d+|\w+)\s*\)/i);
+    if (m) {
+      hasGpioInput = true;
+      let pin = isNaN(m[1]) ? "10" : m[1];
+      loopBody.push(`        // Sample Pin ${m[1]} from Input Data Register (IDR)`);
+      loopBody.push(`        bool pinState = ((GPIOA_IDR & (1UL << ${pin})) != 0);`);
+    }
+
+    // 6. Serial.begin
+    m = trimmed.match(/Serial\.begin\s*\(\s*(\d+)\s*\)/i);
+    if (m) {
+      hasUart = true;
+      let baud = m[1];
+      inits.push(`    // Initialize USART2 at ${baud} baud`);
+      inits.push(`    USART2_BRR = 48000000UL / ${baud}UL;`);
+      inits.push(`    USART2_CR1 |= (1UL << 3) | (1UL << 0); // TE + UE`);
+    }
+
+    // 7. Serial.print / println
+    m = trimmed.match(/Serial\.print(?:ln)?\s*\(\s*(.*?)\s*\)/i);
+    if (m) {
+      hasUart = true;
+      let arg = m[1];
+      loopBody.push(`        // Transmit string over USART2`);
+      loopBody.push(`        usart2_print(${arg});`);
+    }
+
+    // 8. analogRead
+    m = trimmed.match(/analogRead\s*\(\s*(\w+)\s*\)/i);
+    if (m) {
+      hasAdc = true;
+      loopBody.push(`        // Trigger ADC1 conversion and wait for End-Of-Conversion (EOC)`);
+      loopBody.push(`        ADC1_CR |= (1UL << 2);`);
+      loopBody.push(`        while (!(ADC1_ISR & (1UL << 2)));`);
+      loopBody.push(`        uint16_t adc_val = (uint16_t)ADC1_DR;`);
+    }
+
+    // 9. analogWrite / PWM
+    m = trimmed.match(/analogWrite\s*\(\s*(\w+)\s*,\s*(\d+|\w+)\s*\)/i);
+    if (m) {
+      hasTimer = true;
+      loopBody.push(`        // Update Timer Compare Register (Duty Cycle)`);
+      loopBody.push(`        TIM1_CCR1 = ${m[2]};`);
+    }
+
+    // 10. delay
+    m = trimmed.match(/delay\s*\(\s*(\d+|\w+)\s*\)/i);
+    if (m) {
+      hasDelay = true;
+      let ms = m[1];
+      loopBody.push(`        delay_ms(${ms});`);
+    }
+  });
+
+  if (hasGpioOutput || hasGpioInput) {
+    defines.add('#define GPIOA_MODER  (*(volatile uint32_t *)(0x50000000UL + 0x00UL))');
+    defines.add('#define GPIOA_PUPDR  (*(volatile uint32_t *)(0x50000000UL + 0x0CUL))');
+    defines.add('#define GPIOA_IDR    (*(volatile uint32_t *)(0x50000000UL + 0x10UL))');
+    defines.add('#define GPIOA_BSRR   (*(volatile uint32_t *)(0x50000000UL + 0x18UL))');
+  }
+
+  if (hasUart) {
+    defines.add('#define USART2_BASE  (0x40004400UL)');
+    defines.add('#define USART2_CR1   (*(volatile uint32_t *)(USART2_BASE + 0x00UL))');
+    defines.add('#define USART2_BRR   (*(volatile uint32_t *)(USART2_BASE + 0x0CUL))');
+    defines.add('#define USART2_ISR   (*(volatile uint32_t *)(USART2_BASE + 0x1CUL))');
+    defines.add('#define USART2_TDR   (*(volatile uint32_t *)(USART2_BASE + 0x28UL))');
+
+    helperFuncs.push(`void usart2_print(const char *s) {
+    while (*s) {
+        while (!(USART2_ISR & (1UL << 7))); // Wait for TXE
+        USART2_TDR = (uint8_t)*s++;
+    }
+}`);
+  }
+
+  if (hasAdc) {
+    defines.add('#define ADC1_BASE    (0x40012400UL)');
+    defines.add('#define ADC1_ISR     (*(volatile uint32_t *)(ADC1_BASE + 0x00UL))');
+    defines.add('#define ADC1_CR      (*(volatile uint32_t *)(ADC1_BASE + 0x08UL))');
+    defines.add('#define ADC1_DR      (*(volatile uint32_t *)(ADC1_BASE + 0x40UL))');
+  }
+
+  if (hasTimer) {
+    defines.add('#define TIM1_BASE    (0x40012C00UL)');
+    defines.add('#define TIM1_CR1     (*(volatile uint32_t *)(TIM1_BASE + 0x00UL))');
+    defines.add('#define TIM1_CCR1    (*(volatile uint32_t *)(TIM1_BASE + 0x34UL))');
+  }
+
+  if (hasDelay) {
+    helperFuncs.push(`void delay_ms(volatile uint32_t ms) {
+    while (ms--) {
+        for (volatile uint32_t i = 0; i < 4800; i++) { __asm volatile("nop"); }
+    }
+}`);
+  }
+
+  let result = [];
+  result.push("// ============================================================================");
+  result.push("// Equivalent Bare-Metal Embedded C (Direct STM32 Nucleo-C031C6 Registers)");
+  result.push("// Generated in real-time from your Arduino code");
+  result.push("// ============================================================================");
+  result.push(Array.from(defines).join('\n'));
+  result.push("");
+
+  if (helperFuncs.length > 0) {
+    result.push(helperFuncs.join('\n\n'));
+    result.push("");
+  }
+
+  result.push("int main(void) {");
+  if (inits.length > 0) {
+    result.push("    // --- Peripherals & Pin Initialization ---");
+    result.push(inits.join('\n'));
+    result.push("");
+  }
+
+  result.push("    // --- Superloop Execution ---");
+  result.push("    while (1) {");
+  if (loopBody.length > 0) {
+    result.push(loopBody.join('\n'));
+  } else {
+    result.push("        // Active runtime processing");
+  }
+  result.push("    }");
+  result.push("}");
+
+  return result.join('\n');
+}
+
+function initCodeComparator(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const select = container.querySelector('.preset-select');
+  const input = container.querySelector('.code-input');
+  const output = container.querySelector('.code-output code');
+
+  if (!select || !input || !output) return;
+
+  function loadPreset() {
+    const val = select.value;
+    if (PRESETS[val]) {
+      input.value = PRESETS[val].arduino;
+      output.textContent = PRESETS[val].baremetal;
+    }
+  }
+
+  function handleLiveInput() {
+    output.textContent = translateArduinoToBareMetal(input.value);
+  }
+
+  select.addEventListener('change', loadPreset);
+  input.addEventListener('input', handleLiveInput);
+  loadPreset();
+}
+
+function runInteractiveTranslation(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const input = container.querySelector('.code-input');
+  const output = container.querySelector('.code-output code');
+  if (input && output) {
+    output.textContent = translateArduinoToBareMetal(input.value);
+  }
+}
+
+function setupAllComparators() {
+  document.querySelectorAll('.code-comparator-widget').forEach((el, idx) => {
+    if (!el.id) el.id = 'comparator-' + idx;
+    initCodeComparator(el.id);
+  });
+}
+
+// Ensure execution whether DOM is loading or already ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupAllComparators);
+} else {
+  setupAllComparators();
+}
+</script>
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
@@ -953,6 +2512,19 @@ ul.task-list li input[type="checkbox"] {
   window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
   </script>
 </div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>CS2101: Embedded C Programming — IIT Madras</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+<p>Made by TA: Krishna Gorai</p>
+</div>
+  </div>
+</footer>
 
 
 

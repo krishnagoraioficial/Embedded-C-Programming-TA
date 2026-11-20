@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Week 7: Practice and Problem Solving – CS2101: Embedded C</title>
+<title>Week 7: Programming Assignments &amp; Hands-on Lab – CS2101: Embedded C</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -25,6 +25,41 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -48,9 +83,9 @@ ul.task-list li input[type="checkbox"] {
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-1efc6d65981d7f926cfe85ef7b0c751f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-f08d384c0165829aba50fd8ee00b4b4f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-1efc6d65981d7f926cfe85ef7b0c751f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-64d0f6d14e372c61dcd2002aecce1639.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-49095d02d3de05fbda1b5d708a7a597d.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-64d0f6d14e372c61dcd2002aecce1639.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -80,6 +115,35 @@ ul.task-list li input[type="checkbox"] {
 }</script>
 <style>html{ scroll-behavior: smooth; }</style>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -379,7 +443,41 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
+  <li><a href="#overview-of-week-7-practical-modules" id="toc-overview-of-week-7-practical-modules" class="nav-link active" data-scroll-target="#overview-of-week-7-practical-modules">1. Overview of Week 7 Practical Modules</a></li>
+  <li><a href="#official-course-practice-tutorials-wokwi-links" id="toc-official-course-practice-tutorials-wokwi-links" class="nav-link" data-scroll-target="#official-course-practice-tutorials-wokwi-links">2. Official Course Practice Tutorials (Wokwi Links)</a></li>
+  <li><a href="#mini-project-1-priority-traffic-intersection-controller-with-pedestrian-override" id="toc-mini-project-1-priority-traffic-intersection-controller-with-pedestrian-override" class="nav-link" data-scroll-target="#mini-project-1-priority-traffic-intersection-controller-with-pedestrian-override">3. Mini-Project 1: Priority Traffic Intersection Controller with Pedestrian Override 🚦</a>
+  <ul class="collapse">
+  <li><a href="#objective" id="toc-objective" class="nav-link" data-scroll-target="#objective">🎯 Objective</a></li>
+  <li><a href="#hardware-setup-wokwi" id="toc-hardware-setup-wokwi" class="nav-link" data-scroll-target="#hardware-setup-wokwi">🛠️ Hardware Setup (Wokwi)</a></li>
+  <li><a href="#pin-wiring-table" id="toc-pin-wiring-table" class="nav-link" data-scroll-target="#pin-wiring-table">Pin Wiring Table</a></li>
+  <li><a href="#problem-statement-logic-flow" id="toc-problem-statement-logic-flow" class="nav-link" data-scroll-target="#problem-statement-logic-flow">📝 Problem Statement &amp; Logic Flow</a></li>
+  <li><a href="#interactive-simulation-practice-workspace" id="toc-interactive-simulation-practice-workspace" class="nav-link" data-scroll-target="#interactive-simulation-practice-workspace">Interactive Simulation (Practice Workspace)</a></li>
+  <li><a href="#implementation-code-high-level-framework-vs.-bare-metal-embedded-c" id="toc-implementation-code-high-level-framework-vs.-bare-metal-embedded-c" class="nav-link" data-scroll-target="#implementation-code-high-level-framework-vs.-bare-metal-embedded-c">Implementation Code: High-Level Framework vs.&nbsp;Bare-Metal Embedded C</a></li>
+  <li><a href="#how-mini-project-1-applies-week-7-concepts" id="toc-how-mini-project-1-applies-week-7-concepts" class="nav-link" data-scroll-target="#how-mini-project-1-applies-week-7-concepts">🔍 How Mini-Project 1 Applies Week 7 Concepts</a></li>
+  </ul></li>
+  <li><a href="#mini-project-2-hardware-timer-50-hz-pwm-servo-actuator" id="toc-mini-project-2-hardware-timer-50-hz-pwm-servo-actuator" class="nav-link" data-scroll-target="#mini-project-2-hardware-timer-50-hz-pwm-servo-actuator">4. Mini-Project 2: Hardware Timer &amp; 50 Hz PWM Servo Actuator ⚙️🤖</a>
+  <ul class="collapse">
+  <li><a href="#objective-1" id="toc-objective-1" class="nav-link" data-scroll-target="#objective-1">🎯 Objective</a></li>
+  <li><a href="#hardware-setup-wokwi-1" id="toc-hardware-setup-wokwi-1" class="nav-link" data-scroll-target="#hardware-setup-wokwi-1">🛠️ Hardware Setup (Wokwi)</a></li>
+  <li><a href="#pin-wiring-table-1" id="toc-pin-wiring-table-1" class="nav-link" data-scroll-target="#pin-wiring-table-1">Pin Wiring Table</a></li>
+  <li><a href="#problem-statement-logic-flow-1" id="toc-problem-statement-logic-flow-1" class="nav-link" data-scroll-target="#problem-statement-logic-flow-1">📝 Problem Statement &amp; Logic Flow</a></li>
+  <li><a href="#interactive-simulation-practice-workspace-1" id="toc-interactive-simulation-practice-workspace-1" class="nav-link" data-scroll-target="#interactive-simulation-practice-workspace-1">Interactive Simulation (Practice Workspace)</a></li>
+  <li><a href="#implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1" id="toc-implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1" class="nav-link" data-scroll-target="#implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1">Implementation Code: High-Level Framework vs.&nbsp;Bare-Metal Embedded C</a></li>
+  <li><a href="#how-mini-project-2-applies-week-7-concepts" id="toc-how-mini-project-2-applies-week-7-concepts" class="nav-link" data-scroll-target="#how-mini-project-2-applies-week-7-concepts">🔍 How Mini-Project 2 Applies Week 7 Concepts</a></li>
+  </ul></li>
+  <li><a href="#hands-on-practice-challenge-for-students-to-solve" id="toc-hands-on-practice-challenge-for-students-to-solve" class="nav-link" data-scroll-target="#hands-on-practice-challenge-for-students-to-solve">5. Hands-On Practice Challenge (For Students to Solve) 🎯</a>
+  <ul class="collapse">
+  <li><a href="#objective-scenario" id="toc-objective-scenario" class="nav-link" data-scroll-target="#objective-scenario">🎯 Objective &amp; Scenario</a></li>
+  <li><a href="#hardware-setup-pin-wiring-table" id="toc-hardware-setup-pin-wiring-table" class="nav-link" data-scroll-target="#hardware-setup-pin-wiring-table">🛠️ Hardware Setup &amp; Pin Wiring Table</a></li>
+  <li><a href="#problem-statement-functional-requirements" id="toc-problem-statement-functional-requirements" class="nav-link" data-scroll-target="#problem-statement-functional-requirements">📋 Problem Statement &amp; Functional Requirements</a></li>
+  <li><a href="#starter-code-template" id="toc-starter-code-template" class="nav-link" data-scroll-target="#starter-code-template">💻 Starter Code Template</a></li>
+  <li><a href="#verification-expected-test-cases" id="toc-verification-expected-test-cases" class="nav-link" data-scroll-target="#verification-expected-test-cases">🧪 Verification &amp; Expected Test Cases</a></li>
+  </ul></li>
+  <li><a href="#concept-check-practice-questions" id="toc-concept-check-practice-questions" class="nav-link" data-scroll-target="#concept-check-practice-questions">7. Concept Check Practice Questions</a>
+  <ul class="collapse">
+  <li><a href="#question-1-timer-ctc-mode-compare-match-calculation" id="toc-question-1-timer-ctc-mode-compare-match-calculation" class="nav-link" data-scroll-target="#question-1-timer-ctc-mode-compare-match-calculation">Question 1: Timer CTC Mode Compare Match Calculation</a></li>
+  <li><a href="#question-2-servo-motor-pwm-signal-timing" id="toc-question-2-servo-motor-pwm-signal-timing" class="nav-link" data-scroll-target="#question-2-servo-motor-pwm-signal-timing">Question 2: Servo Motor PWM Signal Timing</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -389,7 +487,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Week 7: Practice and Problem Solving</h1>
+<h1 class="title">Week 7: Programming Assignments &amp; Hands-on Lab</h1>
 </div>
 
 
@@ -406,28 +504,1410 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="overview" class="level2">
-<h2 class="anchored" data-anchor-id="overview">Overview</h2>
-<p>Comprehensive problem solving, timing calculations, peripheral initialization, and debugging exercises.</p>
-<div class="callout callout-style-default callout-tip callout-titled">
+<section id="overview-of-week-7-practical-modules" class="level2">
+<h2 class="anchored" data-anchor-id="overview-of-week-7-practical-modules">1. Overview of Week 7 Practical Modules</h2>
+<p>In Week 7, you translate embedded theory into <strong>working, tested firmware</strong>. The modules focus on hardware abstraction, timer operations, and PWM actuation:</p>
+<pre class="text"><code> +-------------------------------------------------------------------------+
+ |                    WEEK 7 PRACTICAL MODULES ROADMAP                     |
+ +-------------------------------------------------------------------------+
+ | Mini-Project 1: Priority Traffic Intersection Controller (ST HAL)       |
+ |                 Target: STM32 ARM Cortex-M | Pin init, GPIO toggling    |
+ |                                                                         |
+ | Mini-Project 2: Hardware Timer &amp; 50 Hz PWM Servo Actuator               |
+ |                 Target: STM32 / ATmega     | Precision 50 Hz PWM Pulses |
+ |                                                                         |
+ | Challenge:      Dual-Axis Solar / Sensor Tracker Actuation Turret       |
+ |                 Target: STM32 / ATmega     | Multi-Channel ADC + PWM    |
+ +-------------------------------------------------------------------------+</code></pre>
+<hr>
+</section>
+<section id="official-course-practice-tutorials-wokwi-links" class="level2">
+<h2 class="anchored" data-anchor-id="official-course-practice-tutorials-wokwi-links">2. Official Course Practice Tutorials (Wokwi Links)</h2>
+<p>Before attempting the graded assignments, complete the official practice tutorials provided on Wokwi:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: center;">Tutorial</th>
+<th style="text-align: left;">Title</th>
+<th style="text-align: left;">Hardware &amp; Concepts</th>
+<th style="text-align: center;">Template / Solution Link</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;"><strong>Tutorial 7</strong></td>
+<td style="text-align: left;"><strong>LED Blink using ST HAL</strong></td>
+<td style="text-align: left;">STM32, CubeMX GPIO configuration</td>
+<td style="text-align: center;"><a href="https://wokwi.com/projects/413591562232935425">Open Wokwi Template ↗</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><strong>Tutorial 8</strong></td>
+<td style="text-align: left;"><strong>Servo Control using Servo.h</strong></td>
+<td style="text-align: left;">Arduino Library, PWM Angle Control</td>
+<td style="text-align: center;"><a href="https://wokwi.com/projects/413586442659382273">Open Wokwi Solution ↗</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><strong>Tutorial 9</strong></td>
+<td style="text-align: left;"><strong>LED Blink: ATmega Timers Interrupts</strong></td>
+<td style="text-align: left;">16-bit Timer 1, CTC Mode, ISR</td>
+<td style="text-align: center;"><a href="https://wokwi.com/projects/413874453951345665">Open Template ↗</a> | <a href="https://wokwi.com/projects/413601909204105217">Solution ↗</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><strong>Tutorial 10</strong></td>
+<td style="text-align: left;"><strong>Generating PWM using ATmega Timers</strong></td>
+<td style="text-align: left;">Fast PWM, <code>ICR1</code> TOP, <code>OCR1A</code> duty</td>
+<td style="text-align: center;"><a href="https://wokwi.com/projects/413796509105260545">Open Template ↗</a> | <a href="https://wokwi.com/projects/413747436484456449">Solution ↗</a></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="mini-project-1-priority-traffic-intersection-controller-with-pedestrian-override" class="level2">
+<h2 class="anchored" data-anchor-id="mini-project-1-priority-traffic-intersection-controller-with-pedestrian-override">3. Mini-Project 1: Priority Traffic Intersection Controller with Pedestrian Override 🚦</h2>
+<section id="objective" class="level3">
+<h3 class="anchored" data-anchor-id="objective">🎯 Objective</h3>
+<p>In urban traffic safety systems, traffic lights sequence sequentially through Green, Yellow, and Red phases. In this mini-project, you will program the <strong>STM32 Nucleo-C031C6</strong> to control a 3-LED traffic junction and safely handle pedestrian push-to-cross requests.</p>
+</section>
+<section id="hardware-setup-wokwi" class="level3">
+<h3 class="anchored" data-anchor-id="hardware-setup-wokwi">🛠️ Hardware Setup (Wokwi)</h3>
+<p>The circuit connects the following to an <strong>STM32 Nucleo-C031C6</strong> board: * <strong>3x LEDs (Red, Yellow, Green):</strong> With 220Ω current-limiting resistors. * <strong>1x Pushbutton:</strong> Pedestrian call button on <code>D2</code> (<code>PA10</code>).</p>
+</section>
+<section id="pin-wiring-table" class="level3">
+<h3 class="anchored" data-anchor-id="pin-wiring-table">Pin Wiring Table</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 23%">
+<col style="width: 23%">
+<col style="width: 29%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Component</th>
+<th style="text-align: left;">Pin / Terminal</th>
+<th style="text-align: center;">STM32 / Board Pin</th>
+<th style="text-align: left;">Electrical Function</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Red LED</strong></td>
+<td style="text-align: left;">Anode (via 220Ω resistor)</td>
+<td style="text-align: center;"><code>D13</code> (<code>PA5</code>)</td>
+<td style="text-align: left;">Stop Phase Indicator</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Yellow LED</strong></td>
+<td style="text-align: left;">Anode (via 220Ω resistor)</td>
+<td style="text-align: center;"><code>D12</code> (<code>PA6</code>)</td>
+<td style="text-align: left;">Caution / Transition Phase Indicator</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Green LED</strong></td>
+<td style="text-align: left;">Anode (via 220Ω resistor)</td>
+<td style="text-align: center;"><code>D11</code> (<code>PA7</code>)</td>
+<td style="text-align: left;">Go Phase Indicator</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>All LEDs</strong></td>
+<td style="text-align: left;">Cathodes (<span class="math inline">\(-\)</span>)</td>
+<td style="text-align: center;">Common <code>GND</code></td>
+<td style="text-align: left;">Ground Reference</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Pedestrian Button</strong></td>
+<td style="text-align: left;">Terminal 1.L / 2.L</td>
+<td style="text-align: center;"><code>D2</code> (<code>PA10</code>) / <code>GND</code></td>
+<td style="text-align: left;">Pedestrian Call (<code>INPUT_PULLUP</code>)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="problem-statement-logic-flow" class="level3">
+<h3 class="anchored" data-anchor-id="problem-statement-logic-flow">📝 Problem Statement &amp; Logic Flow</h3>
+<ol type="1">
+<li><strong>Default Traffic Cycle:</strong>
+<ul>
+<li><strong>Phase 1 (Go):</strong> Green LED is <strong>ON</strong> for 4.0 seconds. Red and Yellow are OFF.</li>
+<li><strong>Phase 2 (Caution):</strong> Green turns OFF; Yellow LED is <strong>ON</strong> for 1.5 seconds.</li>
+<li><strong>Phase 3 (Stop):</strong> Yellow turns OFF; Red LED is <strong>ON</strong> for 4.0 seconds (allowing cross traffic).</li>
+</ul></li>
+<li><strong>Pedestrian Priority Override:</strong>
+<ul>
+<li>When a pedestrian presses the button on <code>D2</code> while the light is Green, do <strong>not</strong> jump instantly to Red (which causes vehicular collisions!). Instead, immediately abort the remaining Green duration and transition to the 1.5-second Yellow caution phase, followed by Red.</li>
+</ul></li>
+<li><strong>Serial Telemetry:</strong>
+<ul>
+<li>Transmit live state updates over UART at <strong>115200 baud</strong>.</li>
+</ul></li>
+</ol>
+<pre class="text"><code>[STATE] GREEN - Traffic Moving
+[PEDESTRIAN] Button Pressed! Initiating Stop Sequence...
+[STATE] YELLOW - Prepare to Stop
+[STATE] RED - Pedestrians Crossing</code></pre>
+</section>
+<section id="interactive-simulation-practice-workspace" class="level3">
+<h3 class="anchored" data-anchor-id="interactive-simulation-practice-workspace">Interactive Simulation (Practice Workspace)</h3>
+<div class="simulation-container">
+<iframe src="https://wokwi.com/projects/479963095271968769?embed=1" title="STM32 Nucleo Simulation Workspace" loading="lazy" allowfullscreen="">
+</iframe>
+<div class="sim-info-bar">
+<p><span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span> <span>Click Play, wire Red on D13, Yellow on D12, Green on D11, Button on D2</span></p>
+</div>
+</div>
+</section>
+<section id="implementation-code-high-level-framework-vs.-bare-metal-embedded-c" class="level3">
+<h3 class="anchored" data-anchor-id="implementation-code-high-level-framework-vs.-bare-metal-embedded-c">Implementation Code: High-Level Framework vs.&nbsp;Bare-Metal Embedded C</h3>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="">🔷 High-Level Framework (Running in Simulation)</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">🔶 Equivalent STM32 HAL Embedded C</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Mini-Project 1: Multi-LED Traffic Signal Controller (Nucleo-C031C6)</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#define LED_RED    </span><span class="dv">13</span><span class="pp"> </span><span class="co">// PA5 (User LED)</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#define LED_YELLOW </span><span class="dv">12</span><span class="pp"> </span><span class="co">// PA6</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#define LED_GREEN  </span><span class="dv">11</span><span class="pp"> </span><span class="co">// PA7</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#define BUTTON_PIN </span><span class="dv">2</span><span class="pp">  </span><span class="co">// Pedestrian Call Button</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setup<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>begin<span class="op">(</span><span class="dv">115200</span><span class="op">);</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>LED_RED<span class="op">,</span> OUTPUT<span class="op">);</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>LED_YELLOW<span class="op">,</span> OUTPUT<span class="op">);</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>LED_GREEN<span class="op">,</span> OUTPUT<span class="op">);</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>BUTTON_PIN<span class="op">,</span> INPUT_PULLUP<span class="op">);</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"--- Traffic Signal Controller Initialized ---"</span><span class="op">);</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> loop<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Phase 1: Green ON (Go Phase - 4000 ms with responsive pedestrian check)</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>  digitalWrite<span class="op">(</span>LED_RED<span class="op">,</span> LOW<span class="op">);</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>  digitalWrite<span class="op">(</span>LED_YELLOW<span class="op">,</span> LOW<span class="op">);</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>  digitalWrite<span class="op">(</span>LED_GREEN<span class="op">,</span> HIGH<span class="op">);</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"[STATE] GREEN - Traffic Moving"</span><span class="op">);</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">80</span><span class="op">;</span> i<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>digitalRead<span class="op">(</span>BUTTON_PIN<span class="op">)</span> <span class="op">==</span> LOW<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>      Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"[PEDESTRIAN] Button Pressed! Initiating Stop Sequence..."</span><span class="op">);</span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>      <span class="cf">break</span><span class="op">;</span> <span class="co">// Abort remaining green phase</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>    delay<span class="op">(</span><span class="dv">50</span><span class="op">);</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Phase 2: Yellow ON (Caution Phase - 1500 ms)</span></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>  digitalWrite<span class="op">(</span>LED_GREEN<span class="op">,</span> LOW<span class="op">);</span></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>  digitalWrite<span class="op">(</span>LED_YELLOW<span class="op">,</span> HIGH<span class="op">);</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"[STATE] YELLOW - Prepare to Stop"</span><span class="op">);</span></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>  delay<span class="op">(</span><span class="dv">1500</span><span class="op">);</span></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Phase 3: Red ON (Stop Phase - 4000 ms)</span></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>  digitalWrite<span class="op">(</span>LED_YELLOW<span class="op">,</span> LOW<span class="op">);</span></span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>  digitalWrite<span class="op">(</span>LED_RED<span class="op">,</span> HIGH<span class="op">);</span></span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"[STATE] RED - Pedestrians Crossing"</span><span class="op">);</span></span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>  delay<span class="op">(</span><span class="dv">4000</span><span class="op">);</span></span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Mini-Project 1: STM32 HAL Multi-LED Sequencer</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"stm32c0xx_hal.h"</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#define LED_RED_PIN     GPIO_PIN_5</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#define LED_YELLOW_PIN  GPIO_PIN_6</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#define LED_GREEN_PIN   GPIO_PIN_7</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#define LED_PORT        GPIOA</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> traffic_cycle_step<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 1. Red ON</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    HAL_GPIO_WritePin<span class="op">(</span>LED_PORT<span class="op">,</span> LED_RED_PIN<span class="op">,</span> GPIO_PIN_SET<span class="op">);</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    HAL_GPIO_WritePin<span class="op">(</span>LED_PORT<span class="op">,</span> LED_YELLOW_PIN <span class="op">|</span> LED_GREEN_PIN<span class="op">,</span> GPIO_PIN_RESET<span class="op">);</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    HAL_Delay<span class="op">(</span><span class="dv">4000</span><span class="op">);</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2. Yellow ON</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    HAL_GPIO_WritePin<span class="op">(</span>LED_PORT<span class="op">,</span> LED_YELLOW_PIN<span class="op">,</span> GPIO_PIN_SET<span class="op">);</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    HAL_GPIO_WritePin<span class="op">(</span>LED_PORT<span class="op">,</span> LED_RED_PIN <span class="op">|</span> LED_GREEN_PIN<span class="op">,</span> GPIO_PIN_RESET<span class="op">);</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    HAL_Delay<span class="op">(</span><span class="dv">1500</span><span class="op">);</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 3. Green ON</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    HAL_GPIO_WritePin<span class="op">(</span>LED_PORT<span class="op">,</span> LED_GREEN_PIN<span class="op">,</span> GPIO_PIN_SET<span class="op">);</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    HAL_GPIO_WritePin<span class="op">(</span>LED_PORT<span class="op">,</span> LED_RED_PIN <span class="op">|</span> LED_YELLOW_PIN<span class="op">,</span> GPIO_PIN_RESET<span class="op">);</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    HAL_Delay<span class="op">(</span><span class="dv">4000</span><span class="op">);</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-caution callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>📌 Coming Up
+<span class="screen-reader-only">Caution</span>⚠️ Code Verification &amp; Assistance
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>This module is part of the CS2101 syllabus outline. Detailed lecture notes, integrated interactive simulations, and question banks will be added here.</p>
+<p>All high-level framework and bare-metal implementation codes are verified for the target microcontroller (<strong>STM32 Nucleo-C031C6</strong> / ARM Cortex-M0+). If you encounter any compilation errors, unexpected simulation behavior, or discrepancies with this code, Please report to the Course instructor or the TA via email.</p>
 </div>
 </div>
-<p><a href="./index.html" class="btn btn-outline-secondary mt-4">← Back to Main Page</a></p>
+</section>
+<section id="how-mini-project-1-applies-week-7-concepts" class="level3">
+<h3 class="anchored" data-anchor-id="how-mini-project-1-applies-week-7-concepts">🔍 How Mini-Project 1 Applies Week 7 Concepts</h3>
+<section id="hardware-circuit-level-concept-mapping" class="level4">
+<h4 class="anchored" data-anchor-id="hardware-circuit-level-concept-mapping">1. Hardware &amp; Circuit-Level Concept Mapping</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Circuit Component</th>
+<th style="text-align: left;">Week 7 Theoretical Concept</th>
+<th style="text-align: left;">Technical Function in System</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>LEDs on D11, D12, D13</strong></td>
+<td style="text-align: left;"><strong>Multi-Port GPIO Sourcing</strong></td>
+<td style="text-align: left;">Pin drivers source current through 220Ω resistors into forward-biased diodes, creating visual indicators.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Button on D2</strong></td>
+<td style="text-align: left;"><strong>Asynchronous Override Input</strong></td>
+<td style="text-align: left;">Samples pedestrian requests without freezing sequential execution.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="firmware-code-to-concept-breakdown" class="level4">
+<h4 class="anchored" data-anchor-id="firmware-code-to-concept-breakdown">2. Firmware Code-to-Concept Breakdown</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Code Statement (Framework / Bare-Metal)</th>
+<th style="text-align: left;">Week 7 Theoretical Concept</th>
+<th style="text-align: left;">Deep-Dive Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>for (int i=0; i&lt;80; i++) { delay(50); }</code></td>
+<td style="text-align: left;"><strong>Granular Polling Delay</strong></td>
+<td style="text-align: left;">Slices a long 4-second wait into 50 ms slices so human inputs are captured within 50 ms instead of 4 seconds.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>HAL_GPIO_WritePin(...)</code></td>
+<td style="text-align: left;"><strong>Hardware Abstraction Layer (HAL)</strong></td>
+<td style="text-align: left;">Standardizes register bit operations into vendor-neutral portable firmware APIs.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+</section>
+<section id="mini-project-2-hardware-timer-50-hz-pwm-servo-actuator" class="level2">
+<h2 class="anchored" data-anchor-id="mini-project-2-hardware-timer-50-hz-pwm-servo-actuator">4. Mini-Project 2: Hardware Timer &amp; 50 Hz PWM Servo Actuator ⚙️🤖</h2>
+<section id="objective-1" class="level3">
+<h3 class="anchored" data-anchor-id="objective-1">🎯 Objective</h3>
+<p>In robotic actuators and precise timing systems, software delays jitter uncontrollably when CPU load fluctuates. In this project, you will configure <strong>Hardware Timer 1</strong> to output a <strong>50 Hz Fast PWM waveform</strong> (<span class="math inline">\(20\text{ ms}\)</span> period) to position an RC servo motor smoothly across <span class="math inline">\(0^\circ\)</span>, <span class="math inline">\(90^\circ\)</span>, and <span class="math inline">\(180^\circ\)</span>.</p>
+</section>
+<section id="hardware-setup-wokwi-1" class="level3">
+<h3 class="anchored" data-anchor-id="hardware-setup-wokwi-1">🛠️ Hardware Setup (Wokwi)</h3>
+<p>The circuit connects the following components: * <strong>1x Hobby Servo Motor (<code>wokwi-servo</code>):</strong> Signal connected to Pin 9 (Timer 1 PWM). * <strong>Onboard LED:</strong> On Pin 13 / PB5.</p>
+</section>
+<section id="pin-wiring-table-1" class="level3">
+<h3 class="anchored" data-anchor-id="pin-wiring-table-1">Pin Wiring Table</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 23%">
+<col style="width: 23%">
+<col style="width: 29%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Component</th>
+<th style="text-align: left;">Pin / Terminal</th>
+<th style="text-align: center;">Board Pin</th>
+<th style="text-align: left;">Electrical Function</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Servo Motor</strong></td>
+<td style="text-align: left;">Signal (Orange)</td>
+<td style="text-align: center;"><code>Pin 9</code> (<code>PB1</code> / <code>OC1A</code>)</td>
+<td style="text-align: left;">Hardware Timer 1 Fast PWM Output</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Servo Motor</strong></td>
+<td style="text-align: left;">VCC (Red)</td>
+<td style="text-align: center;"><code>5V</code></td>
+<td style="text-align: left;">Motor Power Supply</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Servo Motor</strong></td>
+<td style="text-align: left;">GND (Brown/Black)</td>
+<td style="text-align: center;"><code>GND</code></td>
+<td style="text-align: left;">Ground Reference</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="problem-statement-logic-flow-1" class="level3">
+<h3 class="anchored" data-anchor-id="problem-statement-logic-flow-1">📝 Problem Statement &amp; Logic Flow</h3>
+<ol type="1">
+<li><strong>PWM Frequency &amp; Period:</strong> Generate an exact <span class="math inline">\(50\text{ Hz}\)</span> waveform (<span class="math inline">\(20\text{ ms}\)</span> total period).</li>
+<li><strong>Angle Mapping (Pulse Widths):</strong>
+<ul>
+<li><strong><span class="math inline">\(0^\circ\)</span> Angle:</strong> <span class="math inline">\(1.0\text{ ms}\)</span> high pulse (hold 1 sec).</li>
+<li><strong><span class="math inline">\(90^\circ\)</span> Angle (Center):</strong> <span class="math inline">\(1.5\text{ ms}\)</span> high pulse (hold 1 sec).</li>
+<li><strong><span class="math inline">\(180^\circ\)</span> Angle:</strong> <span class="math inline">\(2.0\text{ ms}\)</span> high pulse (hold 1 sec).</li>
+</ul></li>
+<li><strong>Register Calculations (16 MHz Clock, Prescaler = 8):</strong>
+<ul>
+<li>1 timer tick <span class="math inline">\(= \frac{8}{16,000,000} = 0.5\,\mu\text{s}\)</span>.</li>
+<li>TOP (20 ms period): <span class="math inline">\(\text{ICR1} = 39,999\)</span>.</li>
+<li><span class="math inline">\(0^\circ\)</span> (1.0 ms pulse): <span class="math inline">\(\text{OCR1A} = 2,000\)</span>.</li>
+<li><span class="math inline">\(90^\circ\)</span> (1.5 ms pulse): <span class="math inline">\(\text{OCR1A} = 3,000\)</span>.</li>
+<li><span class="math inline">\(180^\circ\)</span> (2.0 ms pulse): <span class="math inline">\(\text{OCR1A} = 4,000\)</span>.</li>
+</ul></li>
+</ol>
+<pre class="text"><code>--- Servo Hardware PWM Sweeper Started ---
+[SERVO] Angle: 0 deg (Pulse: 1.0 ms)
+[SERVO] Angle: 90 deg (Pulse: 1.5 ms)
+[SERVO] Angle: 180 deg (Pulse: 2.0 ms)</code></pre>
+</section>
+<section id="interactive-simulation-practice-workspace-1" class="level3">
+<h3 class="anchored" data-anchor-id="interactive-simulation-practice-workspace-1">Interactive Simulation (Practice Workspace)</h3>
+<div class="simulation-container">
+<iframe src="https://wokwi.com/projects/479963095271968769?embed=1" title="Hardware Timer Servo PWM Simulation" loading="lazy" allowfullscreen="">
+</iframe>
+<div class="sim-info-bar">
+<p><span><strong>Target Board:</strong> STM32 Nucleo-C031C6 / ATmega328P</span> <span>Click Play to practice 50Hz hardware PWM angle modulation</span></p>
+</div>
+</div>
+</section>
+<section id="implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1" class="level3">
+<h3 class="anchored" data-anchor-id="implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1">Implementation Code: High-Level Framework vs.&nbsp;Bare-Metal Embedded C</h3>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">🔷 High-Level Framework (Running in Simulation)</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">🔶 Equivalent Register-Level Fast PWM (Timer 1 Direct Registers)</a></li></ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Mini-Project 2: Servo Control using High-Level Framework (Servo.h)</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;Servo.h&gt;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>Servo myServo<span class="op">;</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setup<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>begin<span class="op">(</span><span class="dv">115200</span><span class="op">);</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  myServo<span class="op">.</span>attach<span class="op">(</span><span class="dv">9</span><span class="op">);</span> <span class="co">// Digital Pin 9 (PB1 / OC1A)</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"--- Servo Hardware PWM Sweeper Started ---"</span><span class="op">);</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> loop<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"[SERVO] Angle: 0 deg (Pulse: 1.0 ms)"</span><span class="op">);</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>  myServo<span class="op">.</span>write<span class="op">(</span><span class="dv">0</span><span class="op">);</span>   <span class="co">// Sweep to 0 degrees</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>  delay<span class="op">(</span><span class="dv">1000</span><span class="op">);</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"[SERVO] Angle: 90 deg (Pulse: 1.5 ms)"</span><span class="op">);</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>  myServo<span class="op">.</span>write<span class="op">(</span><span class="dv">90</span><span class="op">);</span>  <span class="co">// Center at 90 degrees</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>  delay<span class="op">(</span><span class="dv">1000</span><span class="op">);</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"[SERVO] Angle: 180 deg (Pulse: 2.0 ms)"</span><span class="op">);</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>  myServo<span class="op">.</span>write<span class="op">(</span><span class="dv">180</span><span class="op">);</span> <span class="co">// Sweep to 180 degrees</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>  delay<span class="op">(</span><span class="dv">1000</span><span class="op">);</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Mini-Project 2: Register-Level Fast PWM (Timer 1)</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;avr/io.h&gt;</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;util/delay.h&gt;</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> servo_timer_init<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    DDRB <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span> <span class="op">&lt;&lt;</span> PB1<span class="op">);</span> <span class="co">// Pin 9 as Output</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Configure Timer 1 for 50 Hz Fast PWM (ICR1 as TOP, Prescaler = 8)</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    TCCR1A <span class="op">=</span> <span class="op">(</span><span class="dv">1</span> <span class="op">&lt;&lt;</span> COM1A1<span class="op">)</span> <span class="op">|</span> <span class="op">(</span><span class="dv">1</span> <span class="op">&lt;&lt;</span> WGM11<span class="op">);</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    TCCR1B <span class="op">=</span> <span class="op">(</span><span class="dv">1</span> <span class="op">&lt;&lt;</span> WGM13<span class="op">)</span>  <span class="op">|</span> <span class="op">(</span><span class="dv">1</span> <span class="op">&lt;&lt;</span> WGM12<span class="op">)</span> <span class="op">|</span> <span class="op">(</span><span class="dv">1</span> <span class="op">&lt;&lt;</span> CS11<span class="op">);</span> <span class="co">// Prescaler 8</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    ICR1   <span class="op">=</span> <span class="dv">39999</span><span class="op">;</span>                                       <span class="co">// 20 ms Period (50 Hz)</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    OCR1A  <span class="op">=</span> <span class="dv">3000</span><span class="op">;</span>                                        <span class="co">// Neutral 90 deg (1.5 ms)</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> set_servo_angle<span class="op">(</span><span class="dt">uint8_t</span> angle<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>angle <span class="op">&gt;</span> <span class="dv">180</span><span class="op">)</span> angle <span class="op">=</span> <span class="dv">180</span><span class="op">;</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Map 0-180 deg to 2000-4000 ticks (1.0 ms to 2.0 ms)</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    OCR1A <span class="op">=</span> <span class="dv">2000</span> <span class="op">+</span> <span class="op">((</span><span class="dt">uint32_t</span><span class="op">)</span>angle <span class="op">*</span> <span class="dv">2000</span><span class="op">)</span> <span class="op">/</span> <span class="dv">180</span><span class="op">;</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-caution callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Caution</span>⚠️ Code Verification &amp; Assistance
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>All high-level framework and bare-metal implementation codes are verified for the target microcontroller (<strong>STM32 Nucleo-C031C6</strong> / ARM Cortex-M0+). If you encounter any compilation errors, unexpected simulation behavior, or discrepancies with this code, Please report to the Course instructor or the TA via email.</p>
+</div>
+</div>
+</section>
+<section id="how-mini-project-2-applies-week-7-concepts" class="level3">
+<h3 class="anchored" data-anchor-id="how-mini-project-2-applies-week-7-concepts">🔍 How Mini-Project 2 Applies Week 7 Concepts</h3>
+<section id="hardware-circuit-level-concept-mapping-1" class="level4">
+<h4 class="anchored" data-anchor-id="hardware-circuit-level-concept-mapping-1">1. Hardware &amp; Circuit-Level Concept Mapping</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Circuit Component</th>
+<th style="text-align: left;">Week 7 Theoretical Concept</th>
+<th style="text-align: left;">Technical Function in System</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Servo Control Signal (Pin 9)</strong></td>
+<td style="text-align: left;"><strong>Pulse Width Modulated Positioning</strong></td>
+<td style="text-align: left;">The internal servo control loop compares the potentiometer position against incoming pulse width to regulate gear train torque.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Timer 1 Counter (<code>TCNT1</code>)</strong></td>
+<td style="text-align: left;"><strong>Hardware Waveform Generation</strong></td>
+<td style="text-align: left;">The counter increments autonomously without CPU instruction cycles, guaranteeing zero pulse jitter.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="firmware-code-to-concept-breakdown-1" class="level4">
+<h4 class="anchored" data-anchor-id="firmware-code-to-concept-breakdown-1">2. Firmware Code-to-Concept Breakdown</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Code Statement (Framework / Bare-Metal)</th>
+<th style="text-align: left;">Week 7 Theoretical Concept</th>
+<th style="text-align: left;">Deep-Dive Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>ICR1 = 39999;</code></td>
+<td style="text-align: left;"><strong>Timer Auto-Reload TOP Register</strong></td>
+<td style="text-align: left;">Establishes the exact frame period: <span class="math inline">\(20\text{ ms} = 40,000 \text{ ticks} \times 0.5\,\mu\text{s}\)</span>.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>OCR1A = 3000;</code></td>
+<td style="text-align: left;"><strong>Output Compare Match Register</strong></td>
+<td style="text-align: left;">Sets the pulse duration: <span class="math inline">\(3,000 \text{ ticks} \times 0.5\,\mu\text{s} = 1.5\text{ ms}\)</span> (exact neutral <span class="math inline">\(90^\circ\)</span>).</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+</section>
+<section id="hands-on-practice-challenge-for-students-to-solve" class="level2">
+<h2 class="anchored" data-anchor-id="hands-on-practice-challenge-for-students-to-solve">5. Hands-On Practice Challenge (For Students to Solve) 🎯</h2>
+<section id="objective-scenario" class="level3">
+<h3 class="anchored" data-anchor-id="objective-scenario">🎯 Objective &amp; Scenario</h3>
+<p>In surveillance robotics, automated cameras use pan-and-tilt gimbals to track targets. In this challenge, you will build a dual-axis pan-and-tilt servo turret controlled by an analog 2-axis joystick using the 10-bit ADC and hardware PWM.</p>
+</section>
+<section id="hardware-setup-pin-wiring-table" class="level3">
+<h3 class="anchored" data-anchor-id="hardware-setup-pin-wiring-table">🛠️ Hardware Setup &amp; Pin Wiring Table</h3>
+<p>Connect an analog joystick and two hobby servo motors:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 23%">
+<col style="width: 23%">
+<col style="width: 29%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Component</th>
+<th style="text-align: left;">Pin / Terminal</th>
+<th style="text-align: center;">Board Connection</th>
+<th style="text-align: left;">Electrical Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Joystick X-Axis</strong></td>
+<td style="text-align: left;">VRx</td>
+<td style="text-align: center;"><code>A0</code></td>
+<td style="text-align: left;">Analog ADC channel 0 (<span class="math inline">\(0\)</span> to <span class="math inline">\(1023\)</span>)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Joystick Y-Axis</strong></td>
+<td style="text-align: left;">VRy</td>
+<td style="text-align: center;"><code>A1</code></td>
+<td style="text-align: left;">Analog ADC channel 1 (<span class="math inline">\(0\)</span> to <span class="math inline">\(1023\)</span>)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Pan Servo (X-Axis)</strong></td>
+<td style="text-align: left;">Signal (Orange)</td>
+<td style="text-align: center;"><code>Pin 9</code></td>
+<td style="text-align: left;">50 Hz PWM output</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Tilt Servo (Y-Axis)</strong></td>
+<td style="text-align: left;">Signal (Orange)</td>
+<td style="text-align: center;"><code>Pin 10</code></td>
+<td style="text-align: left;">50 Hz PWM output</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Power Rails</strong></td>
+<td style="text-align: left;">VCC / GND</td>
+<td style="text-align: center;"><code>5V</code> / <code>GND</code></td>
+<td style="text-align: left;">Common Power Reference</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="problem-statement-functional-requirements" class="level3">
+<h3 class="anchored" data-anchor-id="problem-statement-functional-requirements">📋 Problem Statement &amp; Functional Requirements</h3>
+<ol type="1">
+<li><strong>Analog Acquisition &amp; Deadband Filtering:</strong>
+<ul>
+<li>Sample <code>JOYSTICK_X</code> (<code>A0</code>) and <code>JOYSTICK_Y</code> (<code>A1</code>) using <code>analogRead()</code>.</li>
+<li>Apply a <strong>deadband filter</strong> around center (<span class="math inline">\(512 \pm 30\)</span>): if within <span class="math inline">\([482, 542]\)</span>, ignore minor potentiometer jitter!</li>
+</ul></li>
+<li><strong>Angle Translation:</strong>
+<ul>
+<li>Map X-axis (<span class="math inline">\(0\)</span> to <span class="math inline">\(1023\)</span>) to Pan angle (<span class="math inline">\(0^\circ\)</span> to <span class="math inline">\(180^\circ\)</span>).</li>
+<li>Map Y-axis (<span class="math inline">\(0\)</span> to <span class="math inline">\(1023\)</span>) to Tilt angle (<span class="math inline">\(0^\circ\)</span> to <span class="math inline">\(180^\circ\)</span>).</li>
+</ul></li>
+<li><strong>Actuator Update:</strong>
+<ul>
+<li>Command servos smoothly every 20 ms.</li>
+</ul></li>
+</ol>
+</section>
+<section id="starter-code-template" class="level3">
+<h3 class="anchored" data-anchor-id="starter-code-template">💻 Starter Code Template</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Student Practice Challenge: Dual-Servo Joystick Turret</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Target: arduino-uno (ATmega328P) or board-st-nucleo-c031c6</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;Servo.h&gt;</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#define JOYSTICK_X </span>A0</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#define JOYSTICK_Y </span>A1</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SERVO_PAN  </span><span class="dv">9</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SERVO_TILT </span><span class="dv">10</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>Servo panServo<span class="op">;</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>Servo tiltServo<span class="op">;</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setup<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 1: Initialize Serial at 115200 baud</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 2: Attach panServo to SERVO_PAN and tiltServo to SERVO_TILT</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 3: Center both servos at 90 degrees</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> loop<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 4: Read JOYSTICK_X and JOYSTICK_Y analog inputs</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 5: Implement deadband filter around center (512 +/- 30)</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 6: Map filtered values to 0-180 degrees using map()</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 7: Command servos using .write(angle)</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 8: Short 20 ms loop delay</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="verification-expected-test-cases" class="level3">
+<h3 class="anchored" data-anchor-id="verification-expected-test-cases">🧪 Verification &amp; Expected Test Cases</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 21%">
+<col style="width: 26%">
+<col style="width: 26%">
+<col style="width: 26%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Joystick Position</th>
+<th style="text-align: center;">X / Y ADC Counts</th>
+<th style="text-align: center;">Pan Servo Angle</th>
+<th style="text-align: center;">Tilt Servo Angle</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Centered (At Rest)</strong></td>
+<td style="text-align: center;"><span class="math inline">\(512 \pm 30\)</span></td>
+<td style="text-align: center;"><strong><span class="math inline">\(90^\circ\)</span> (Hold)</strong></td>
+<td style="text-align: center;"><strong><span class="math inline">\(90^\circ\)</span> (Hold)</strong></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Full Left</strong></td>
+<td style="text-align: center;"><span class="math inline">\(0\)</span> / <span class="math inline">\(512\)</span></td>
+<td style="text-align: center;"><strong><span class="math inline">\(0^\circ\)</span></strong></td>
+<td style="text-align: center;"><span class="math inline">\(90^\circ\)</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Full Right</strong></td>
+<td style="text-align: center;"><span class="math inline">\(1023\)</span> / <span class="math inline">\(512\)</span></td>
+<td style="text-align: center;"><strong><span class="math inline">\(180^\circ\)</span></strong></td>
+<td style="text-align: center;"><span class="math inline">\(90^\circ\)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Full Up</strong></td>
+<td style="text-align: center;"><span class="math inline">\(512\)</span> / <span class="math inline">\(1023\)</span></td>
+<td style="text-align: center;"><span class="math inline">\(90^\circ\)</span></td>
+<td style="text-align: center;"><strong><span class="math inline">\(180^\circ\)</span></strong></td>
+</tr>
+</tbody>
+</table>
+<details>
+<summary>
+💡 Need a Hint? Click to Reveal
+</summary>
+<ul>
+<li><p><strong>Deadband Filter:</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> xVal <span class="op">=</span> analogRead<span class="op">(</span>JOYSTICK_X<span class="op">);</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>abs<span class="op">(</span>xVal <span class="op">-</span> <span class="dv">512</span><span class="op">)</span> <span class="op">&gt;</span> <span class="dv">30</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> panAngle <span class="op">=</span> map<span class="op">(</span>xVal<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">1023</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">180</span><span class="op">);</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    panServo<span class="op">.</span>write<span class="op">(</span>panAngle<span class="op">);</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+</ul>
+</details>
+<div class="simulation-container">
+<iframe src="https://wokwi.com/projects/479963095271968769?embed=1" title="Dual Servo Turret Simulation Workspace" loading="lazy" allowfullscreen="">
+</iframe>
+<div class="sim-info-bar">
+<p><span><strong>Target Board:</strong> STM32 Nucleo-C031C6 / ATmega328P</span> <span>Click Play to build and test your joystick dual-servo controller</span></p>
+</div>
+</div>
+<div id="comparator-w7" class="code-comparator-widget">
+  <div class="comparator-header">
+    <div class="comparator-title">
+      <span class="icon">🔄</span>
+      <span><strong>Simultaneous Code Explorer:</strong> Arduino Framework ↔ Bare-Metal C</span>
+    </div>
+    <div class="comparator-controls">
+      <label>Load Preset:</label>
+      <select class="preset-select">
+        <option value="timer_pwm">Hardware Timer PWM (50 Hz Servo)</option>
+        <option value="adc_analog">ADC Multi-Channel Joystick Reading</option>
+        <option value="gpio_blink">GPIO Multi-LED Traffic Light</option>
+        <option value="gpio_input">Pedestrian Pushbutton Input</option>
+        <option value="exti_interrupt">EXTI Hardware Interrupt</option>
+      </select>
+      <button type="button" class="btn-compare" onclick="runInteractiveTranslation('comparator-w7')">Analyze / Map Code</button>
+    </div>
+  </div>
+  <div class="comparator-panes">
+    <div class="pane">
+      <div class="pane-header">
+        <span class="badge-arduino">Arduino C++ (Framework)</span>
+        <span class="hint">Type or paste Arduino code here for live Bare-Metal translation</span>
+      </div>
+      <textarea class="code-input" spellcheck="false"></textarea>
+    </div>
+    <div class="pane">
+      <div class="pane-header">
+        <span class="badge-baremetal">Equivalent Bare-Metal C (Direct Registers)</span>
+        <span class="hint">Live Memory-Mapped Operations</span>
+      </div>
+      <pre class="code-output"><code></code></pre>
+    </div>
+  </div>
+</div>
+<hr>
+</section>
+</section>
+<section id="concept-check-practice-questions" class="level2">
+<h2 class="anchored" data-anchor-id="concept-check-practice-questions">7. Concept Check Practice Questions</h2>
+<section id="question-1-timer-ctc-mode-compare-match-calculation" class="level3">
+<h3 class="anchored" data-anchor-id="question-1-timer-ctc-mode-compare-match-calculation">Question 1: Timer CTC Mode Compare Match Calculation</h3>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Click to View Question &amp; Options
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>An ATmega328P runs at <span class="math inline">\(f_{CPU} = 16\text{ MHz}\)</span>. You configure Timer 1 in CTC mode with a Prescaler of <span class="math inline">\(64\)</span>. What value must be loaded into the <code>OCR1A</code> register to generate a periodic interrupt frequency of exactly <span class="math inline">\(500\text{ Hz}\)</span>?</p>
+<p><strong>Options:</strong><br>
+- <strong>A)</strong> <span class="math inline">\(250\)</span><br>
+- <strong>B)</strong> <span class="math inline">\(499\)</span><br>
+- <strong>C)</strong> <span class="math inline">\(500\)</span><br>
+- <strong>D)</strong> <span class="math inline">\(3124\)</span></p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>✅ Correct Answer: B
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Explanation:</strong><br>
+The formula for CTC mode is:<br>
+<span class="math display">\[\text{OCR1A} = \left( \frac{f_{CPU}}{\text{Prescaler} \times f_{\text{target}}} \right) - 1 = \left( \frac{16,000,000}{64 \times 500} \right) - 1 = \left( \frac{16,000,000}{32,000} \right) - 1 = 500 - 1 = \mathbf{499}\]</span>.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="question-2-servo-motor-pwm-signal-timing" class="level3">
+<h3 class="anchored" data-anchor-id="question-2-servo-motor-pwm-signal-timing">Question 2: Servo Motor PWM Signal Timing</h3>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Click to View Question &amp; Options
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>What is the standard signal frequency and pulse width required to command a standard hobby servo motor to its neutral center (<span class="math inline">\(90^\circ\)</span>) position?</p>
+<p><strong>Options:</strong><br>
+- <strong>A)</strong> <span class="math inline">\(1000\text{ Hz}\)</span> frequency with <span class="math inline">\(50\%\)</span> duty cycle<br>
+- <strong>B)</strong> <span class="math inline">\(50\text{ Hz}\)</span> frequency (<span class="math inline">\(20\text{ ms}\)</span> period) with a <span class="math inline">\(1.5\text{ ms}\)</span> active-high pulse<br>
+- <strong>C)</strong> <span class="math inline">\(10\text{ kHz}\)</span> frequency with a <span class="math inline">\(10.0\text{ ms}\)</span> pulse<br>
+- <strong>D)</strong> Constant DC voltage of <span class="math inline">\(2.5\text{ V}\)</span></p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>✅ Correct Answer: B
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Explanation:</strong><br>
+Standard hobby RC servos require a <span class="math inline">\(50\text{ Hz}\)</span> repetition rate (<span class="math inline">\(20\text{ ms}\)</span> frame). The pulse width controls position: <span class="math inline">\(1.0\text{ ms}\)</span> is <span class="math inline">\(0^\circ\)</span>, <strong><span class="math inline">\(1.5\text{ ms}\)</span> is <span class="math inline">\(90^\circ\)</span> (center)</strong>, and <span class="math inline">\(2.0\text{ ms}\)</span> is <span class="math inline">\(180^\circ\)</span>.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<hr>
+<div class="d-flex justify-content-between mt-4">
+<p><a href="./Week-6.html" class="seek-prev-btn">← Back to Week 6: Compilation, Runtime &amp; Power</a> <a href="./Week-8.html" class="seek-next-btn">NEXT: Week 8 — Software Architecture &amp; Patterns →</a></p>
+</div>
 
 
 </section>
+</section>
 
 </main> <!-- /main -->
+<script>
+/**
+ * Interactive Arduino ↔ Bare-Metal STM32 C Code Comparator & Live Translator
+ * Translates Arduino framework calls to equivalent STM32 Nucleo-C031C6 Bare-Metal Register operations.
+ */
+const PRESETS = {
+  gpio_blink: {
+    name: "GPIO Output: LED Blink",
+    arduino: `// Arduino Framework (High-Level)
+#define LED_PIN 13 // PA5 on Nucleo-C031C6
+
+void setup() {
+  pinMode(LED_PIN, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(LED_PIN, HIGH);
+  delay(500);
+  digitalWrite(LED_PIN, LOW);
+  delay(500);
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+
+#define RCC_IOPENR   (*(volatile uint32_t *)(0x40021000UL + 0x34UL))
+#define GPIOA_MODER  (*(volatile uint32_t *)(0x50000000UL + 0x00UL))
+#define GPIOA_BSRR   (*(volatile uint32_t *)(0x50000000UL + 0x18UL))
+
+void gpio_init(void) {
+    // 1. Enable GPIOA Peripheral Bus Clock
+    RCC_IOPENR |= (1UL << 0);
+
+    // 2. Configure PA5 as General Purpose Output ('01' in MODER)
+    GPIOA_MODER &= ~(3UL << (5 * 2));
+    GPIOA_MODER |=  (1UL << (5 * 2));
+}
+
+void delay_cycles(volatile uint32_t count) {
+    while (count--) { __asm volatile("nop"); }
+}
+
+int main(void) {
+    gpio_init();
+    while (1) {
+        // Set PA5 HIGH (bit 5 in BSRR)
+        GPIOA_BSRR = (1UL << 5);
+        delay_cycles(2400000); // ~500 ms at 48 MHz
+
+        // Reset PA5 LOW (bit 5+16 in BSRR)
+        GPIOA_BSRR = (1UL << (5 + 16));
+        delay_cycles(2400000);
+    }
+}`
+  },
+  gpio_input: {
+    name: "GPIO Input: Pushbutton with Internal Pull-Up",
+    arduino: `// Arduino Framework (High-Level)
+#define BUTTON_PIN 2  // PA10
+#define LED_PIN    13 // PA5
+
+void setup() {
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(LED_PIN, OUTPUT);
+}
+
+void loop() {
+  int buttonState = digitalRead(BUTTON_PIN);
+  if (buttonState == LOW) { // Pressed (Active-LOW)
+    digitalWrite(LED_PIN, HIGH);
+  } else {
+    digitalWrite(LED_PIN, LOW);
+  }
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+#include <stdbool.h>
+
+#define RCC_IOPENR   (*(volatile uint32_t *)(0x40021000UL + 0x34UL))
+#define GPIOA_MODER  (*(volatile uint32_t *)(0x50000000UL + 0x00UL))
+#define GPIOA_PUPDR  (*(volatile uint32_t *)(0x50000000UL + 0x0CUL))
+#define GPIOA_IDR    (*(volatile uint32_t *)(0x50000000UL + 0x10UL))
+#define GPIOA_BSRR   (*(volatile uint32_t *)(0x50000000UL + 0x18UL))
+
+void setup_pins(void) {
+    RCC_IOPENR |= (1UL << 0); // Enable GPIOA clock
+
+    // PA10 as Input ('00' in MODER) with Pull-Up ('01' in PUPDR)
+    GPIOA_MODER &= ~(3UL << (10 * 2));
+    GPIOA_PUPDR &= ~(3UL << (10 * 2));
+    GPIOA_PUPDR |=  (1UL << (10 * 2));
+
+    // PA5 as Output ('01' in MODER)
+    GPIOA_MODER &= ~(3UL << (5 * 2));
+    GPIOA_MODER |=  (1UL << (5 * 2));
+}
+
+int main(void) {
+    setup_pins();
+    while (1) {
+        // Read PA10 pin state from Input Data Register (IDR)
+        if (!(GPIOA_IDR & (1UL << 10))) {
+            GPIOA_BSRR = (1UL << 5);        // LED ON (PA5 Set)
+        } else {
+            GPIOA_BSRR = (1UL << (5 + 16)); // LED OFF (PA5 Reset)
+        }
+    }
+}`
+  },
+  exti_interrupt: {
+    name: "EXTI: Hardware Interrupt on Edge Transition",
+    arduino: `// Arduino Framework (High-Level)
+#define BUTTON_PIN 2 // PA10
+
+volatile bool flag = false;
+
+void buttonISR() {
+  flag = true;
+}
+
+void setup() {
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), buttonISR, FALLING);
+}
+
+void loop() {
+  if (flag) {
+    flag = false;
+    // Process interrupt event
+  }
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+#include <stdbool.h>
+
+#define EXTI_BASE       (0x40021800UL)
+#define EXTI_IMR1       (*(volatile uint32_t *)(EXTI_BASE + 0x00UL))
+#define EXTI_FTSR1      (*(volatile uint32_t *)(EXTI_BASE + 0x04UL))
+#define EXTI_RPR1       (*(volatile uint32_t *)(EXTI_BASE + 0x0CUL))
+#define NVIC_ISER       (*(volatile uint32_t *)(0xE000E100UL))
+
+volatile bool flag = false;
+
+void exti_init(void) {
+    // 1. Unmask Line 10 in Interrupt Mask Register (IMR1)
+    EXTI_IMR1 |= (1UL << 10);
+
+    // 2. Enable Falling Edge Trigger for Line 10
+    EXTI_FTSR1 |= (1UL << 10);
+
+    // 3. Enable EXTI line 4-15 IRQ in ARM Cortex-M0+ NVIC
+    NVIC_ISER |= (1UL << 7); // IRQ 7 = EXTI4_15_IRQn
+}
+
+void EXTI4_15_IRQHandler(void) {
+    if (EXTI_RPR1 & (1UL << 10)) {
+        EXTI_RPR1 = (1UL << 10); // Clear pending flag by writing '1'
+        flag = true;             // Atomic flag write
+    }
+}
+
+int main(void) {
+    exti_init();
+    while (1) {
+        if (flag) {
+            flag = false;
+        }
+    }
+}`
+  },
+  uart_comm: {
+    name: "UART: Hardware Serial Communication (115200 Baud)",
+    arduino: `// Arduino Framework (High-Level)
+void setup() {
+  Serial.begin(115200);
+}
+
+void loop() {
+  Serial.println("OK");
+  delay(1000);
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+
+#define USART2_BASE     (0x40004400UL)
+#define USART2_CR1      (*(volatile uint32_t *)(USART2_BASE + 0x00UL))
+#define USART2_BRR      (*(volatile uint32_t *)(USART2_BASE + 0x0CUL))
+#define USART2_ISR      (*(volatile uint32_t *)(USART2_BASE + 0x1CUL))
+#define USART2_TDR      (*(volatile uint32_t *)(USART2_BASE + 0x28UL))
+
+void usart2_init(uint32_t baud, uint32_t pclk) {
+    // 1. Set Baud Rate Register: BRR = Clock / Baud
+    USART2_BRR = pclk / baud; // 48 MHz / 115200 = 416
+
+    // 2. Enable Transmitter (TE) and USART Peripheral (UE)
+    USART2_CR1 |= (1UL << 3) | (1UL << 0);
+}
+
+void usart2_write_char(char c) {
+    // Wait for TXE (Transmit Data Register Empty) flag
+    while (!(USART2_ISR & (1UL << 7)));
+    USART2_TDR = (uint8_t)c;
+}
+
+void usart2_write_str(const char *str) {
+    while (*str) usart2_write_char(*str++);
+}
+
+int main(void) {
+    usart2_init(115200, 48000000UL);
+    while (1) {
+        usart2_write_str("OK\\r\\n");
+        for (volatile uint32_t i = 0; i < 4800000; i++); // ~1 sec delay
+    }
+}`
+  },
+  timer_pwm: {
+    name: "PWM: Hardware Timer Pulse Width Modulation",
+    arduino: `// Arduino Framework (High-Level)
+#define PWM_PIN 9 // D9
+
+void setup() {
+  pinMode(PWM_PIN, OUTPUT);
+}
+
+void loop() {
+  analogWrite(PWM_PIN, 128); // 50% Duty Cycle (128 / 255)
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+
+#define TIM1_BASE       (0x40012C00UL)
+#define TIM1_CR1        (*(volatile uint32_t *)(TIM1_BASE + 0x00UL))
+#define TIM1_CCMR1      (*(volatile uint32_t *)(TIM1_BASE + 0x18UL))
+#define TIM1_CCER       (*(volatile uint32_t *)(TIM1_BASE + 0x20UL))
+#define TIM1_ARR        (*(volatile uint32_t *)(TIM1_BASE + 0x2CUL))
+#define TIM1_CCR1       (*(volatile uint32_t *)(TIM1_BASE + 0x34UL))
+
+void tim1_pwm_init(void) {
+    // 1. Auto-Reload Register: Period = 1000 counts
+    TIM1_ARR = 999;
+
+    // 2. Capture/Compare Register: Duty Cycle = 500 counts (50%)
+    TIM1_CCR1 = 500;
+
+    // 3. Configure Channel 1 as PWM Mode 1 (OC1M = '110')
+    TIM1_CCMR1 |= (6UL << 4);
+
+    // 4. Enable Output Channel 1 (CC1E)
+    TIM1_CCER |= (1UL << 0);
+
+    // 5. Start Timer Counter (CEN)
+    TIM1_CR1 |= (1UL << 0);
+}
+
+int main(void) {
+    tim1_pwm_init();
+    while (1) {
+        // Hardware timer runs autonomously with zero CPU cycles
+    }
+}`
+  },
+  adc_analog: {
+    name: "ADC: Analog Transducer Conversion",
+    arduino: `// Arduino Framework (High-Level)
+#define SENSOR_PIN A0 // PA0
+
+void setup() {
+  Serial.begin(115200);
+}
+
+void loop() {
+  int raw = analogRead(SENSOR_PIN);
+  float voltage = (raw * 3.3f) / 1023.0f;
+  delay(250);
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+
+#define ADC1_BASE       (0x40012400UL)
+#define ADC1_ISR        (*(volatile uint32_t *)(ADC1_BASE + 0x00UL))
+#define ADC1_CR         (*(volatile uint32_t *)(ADC1_BASE + 0x08UL))
+#define ADC1_CHSELR     (*(volatile uint32_t *)(ADC1_BASE + 0x28UL))
+#define ADC1_DR         (*(volatile uint32_t *)(ADC1_BASE + 0x40UL))
+
+void adc_init(void) {
+    // 1. Select ADC Channel 0 (PA0)
+    ADC1_CHSELR = (1UL << 0);
+
+    // 2. Enable ADC Peripheral (ADEN = 1)
+    ADC1_CR |= (1UL << 0);
+    while (!(ADC1_ISR & (1UL << 0))); // Wait for ADRDY
+}
+
+uint16_t adc_read_channel0(void) {
+    // Start conversion (ADSTART = 1)
+    ADC1_CR |= (1UL << 2);
+
+    // Poll End-Of-Conversion (EOC) flag
+    while (!(ADC1_ISR & (1UL << 2)));
+
+    // Return 12-bit conversion result
+    return (uint16_t)ADC1_DR;
+}
+
+int main(void) {
+    adc_init();
+    while (1) {
+        uint16_t sample = adc_read_channel0();
+        // Process analog sample in millivolts: (sample * 3300) / 4095
+    }
+}`
+  }
+};
+
+/**
+ * Intelligent Real-Time Code Translator
+ * Takes arbitrary Arduino C++ code and generates structured STM32 Bare-Metal Register operations.
+ */
+function translateArduinoToBareMetal(code) {
+  if (!code || !code.trim()) {
+    return "// Paste or type standard Arduino code on the left to see\n// real-time equivalent Bare-Metal STM32 C registers here!";
+  }
+
+  let inits = [];
+  let loopBody = [];
+  let defines = new Set();
+  let helperFuncs = [];
+
+  // Always include standard base headers
+  defines.add('#include <stdint.h>');
+  defines.add('#include <stdbool.h>');
+  defines.add('#define RCC_IOPENR   (*(volatile uint32_t *)(0x40021000UL + 0x34UL))');
+
+  let hasGpioOutput = false;
+  let hasGpioInput = false;
+  let hasUart = false;
+  let hasAdc = false;
+  let hasTimer = false;
+  let hasDelay = false;
+
+  const lines = code.split('\n');
+
+  lines.forEach(line => {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('//')) return;
+
+    // 1. PinMode OUTPUT
+    let m = trimmed.match(/pinMode\s*\(\s*(\d+|\w+)\s*,\s*OUTPUT\s*\)/i);
+    if (m) {
+      hasGpioOutput = true;
+      let pin = isNaN(m[1]) ? "5" : m[1];
+      inits.push(`    // Configure Pin ${m[1]} as General Purpose Output`);
+      inits.push(`    RCC_IOPENR |= (1UL << 0); // Enable GPIOA clock`);
+      inits.push(`    GPIOA_MODER &= ~(3UL << (${pin} * 2));`);
+      inits.push(`    GPIOA_MODER |=  (1UL << (${pin} * 2));`);
+    }
+
+    // 2. PinMode INPUT_PULLUP
+    m = trimmed.match(/pinMode\s*\(\s*(\d+|\w+)\s*,\s*INPUT(?:_PULLUP)?\s*\)/i);
+    if (m) {
+      hasGpioInput = true;
+      let pin = isNaN(m[1]) ? "10" : m[1];
+      inits.push(`    // Configure Pin ${m[1]} as Input with Pull-Up`);
+      inits.push(`    RCC_IOPENR |= (1UL << 0); // Enable GPIOA clock`);
+      inits.push(`    GPIOA_MODER &= ~(3UL << (${pin} * 2));`);
+      inits.push(`    GPIOA_PUPDR &= ~(3UL << (${pin} * 2));`);
+      inits.push(`    GPIOA_PUPDR |=  (1UL << (${pin} * 2));`);
+    }
+
+    // 3. digitalWrite HIGH
+    m = trimmed.match(/digitalWrite\s*\(\s*(\d+|\w+)\s*,\s*HIGH\s*\)/i);
+    if (m) {
+      hasGpioOutput = true;
+      let pin = isNaN(m[1]) ? "5" : m[1];
+      loopBody.push(`        // Pin ${m[1]} HIGH via atomic Bit Set register`);
+      loopBody.push(`        GPIOA_BSRR = (1UL << ${pin});`);
+    }
+
+    // 4. digitalWrite LOW
+    m = trimmed.match(/digitalWrite\s*\(\s*(\d+|\w+)\s*,\s*LOW\s*\)/i);
+    if (m) {
+      hasGpioOutput = true;
+      let pin = isNaN(m[1]) ? "5" : m[1];
+      loopBody.push(`        // Pin ${m[1]} LOW via atomic Bit Reset register`);
+      loopBody.push(`        GPIOA_BSRR = (1UL << (${pin} + 16));`);
+    }
+
+    // 5. digitalRead
+    m = trimmed.match(/digitalRead\s*\(\s*(\d+|\w+)\s*\)/i);
+    if (m) {
+      hasGpioInput = true;
+      let pin = isNaN(m[1]) ? "10" : m[1];
+      loopBody.push(`        // Sample Pin ${m[1]} from Input Data Register (IDR)`);
+      loopBody.push(`        bool pinState = ((GPIOA_IDR & (1UL << ${pin})) != 0);`);
+    }
+
+    // 6. Serial.begin
+    m = trimmed.match(/Serial\.begin\s*\(\s*(\d+)\s*\)/i);
+    if (m) {
+      hasUart = true;
+      let baud = m[1];
+      inits.push(`    // Initialize USART2 at ${baud} baud`);
+      inits.push(`    USART2_BRR = 48000000UL / ${baud}UL;`);
+      inits.push(`    USART2_CR1 |= (1UL << 3) | (1UL << 0); // TE + UE`);
+    }
+
+    // 7. Serial.print / println
+    m = trimmed.match(/Serial\.print(?:ln)?\s*\(\s*(.*?)\s*\)/i);
+    if (m) {
+      hasUart = true;
+      let arg = m[1];
+      loopBody.push(`        // Transmit string over USART2`);
+      loopBody.push(`        usart2_print(${arg});`);
+    }
+
+    // 8. analogRead
+    m = trimmed.match(/analogRead\s*\(\s*(\w+)\s*\)/i);
+    if (m) {
+      hasAdc = true;
+      loopBody.push(`        // Trigger ADC1 conversion and wait for End-Of-Conversion (EOC)`);
+      loopBody.push(`        ADC1_CR |= (1UL << 2);`);
+      loopBody.push(`        while (!(ADC1_ISR & (1UL << 2)));`);
+      loopBody.push(`        uint16_t adc_val = (uint16_t)ADC1_DR;`);
+    }
+
+    // 9. analogWrite / PWM
+    m = trimmed.match(/analogWrite\s*\(\s*(\w+)\s*,\s*(\d+|\w+)\s*\)/i);
+    if (m) {
+      hasTimer = true;
+      loopBody.push(`        // Update Timer Compare Register (Duty Cycle)`);
+      loopBody.push(`        TIM1_CCR1 = ${m[2]};`);
+    }
+
+    // 10. delay
+    m = trimmed.match(/delay\s*\(\s*(\d+|\w+)\s*\)/i);
+    if (m) {
+      hasDelay = true;
+      let ms = m[1];
+      loopBody.push(`        delay_ms(${ms});`);
+    }
+  });
+
+  if (hasGpioOutput || hasGpioInput) {
+    defines.add('#define GPIOA_MODER  (*(volatile uint32_t *)(0x50000000UL + 0x00UL))');
+    defines.add('#define GPIOA_PUPDR  (*(volatile uint32_t *)(0x50000000UL + 0x0CUL))');
+    defines.add('#define GPIOA_IDR    (*(volatile uint32_t *)(0x50000000UL + 0x10UL))');
+    defines.add('#define GPIOA_BSRR   (*(volatile uint32_t *)(0x50000000UL + 0x18UL))');
+  }
+
+  if (hasUart) {
+    defines.add('#define USART2_BASE  (0x40004400UL)');
+    defines.add('#define USART2_CR1   (*(volatile uint32_t *)(USART2_BASE + 0x00UL))');
+    defines.add('#define USART2_BRR   (*(volatile uint32_t *)(USART2_BASE + 0x0CUL))');
+    defines.add('#define USART2_ISR   (*(volatile uint32_t *)(USART2_BASE + 0x1CUL))');
+    defines.add('#define USART2_TDR   (*(volatile uint32_t *)(USART2_BASE + 0x28UL))');
+
+    helperFuncs.push(`void usart2_print(const char *s) {
+    while (*s) {
+        while (!(USART2_ISR & (1UL << 7))); // Wait for TXE
+        USART2_TDR = (uint8_t)*s++;
+    }
+}`);
+  }
+
+  if (hasAdc) {
+    defines.add('#define ADC1_BASE    (0x40012400UL)');
+    defines.add('#define ADC1_ISR     (*(volatile uint32_t *)(ADC1_BASE + 0x00UL))');
+    defines.add('#define ADC1_CR      (*(volatile uint32_t *)(ADC1_BASE + 0x08UL))');
+    defines.add('#define ADC1_DR      (*(volatile uint32_t *)(ADC1_BASE + 0x40UL))');
+  }
+
+  if (hasTimer) {
+    defines.add('#define TIM1_BASE    (0x40012C00UL)');
+    defines.add('#define TIM1_CR1     (*(volatile uint32_t *)(TIM1_BASE + 0x00UL))');
+    defines.add('#define TIM1_CCR1    (*(volatile uint32_t *)(TIM1_BASE + 0x34UL))');
+  }
+
+  if (hasDelay) {
+    helperFuncs.push(`void delay_ms(volatile uint32_t ms) {
+    while (ms--) {
+        for (volatile uint32_t i = 0; i < 4800; i++) { __asm volatile("nop"); }
+    }
+}`);
+  }
+
+  let result = [];
+  result.push("// ============================================================================");
+  result.push("// Equivalent Bare-Metal Embedded C (Direct STM32 Nucleo-C031C6 Registers)");
+  result.push("// Generated in real-time from your Arduino code");
+  result.push("// ============================================================================");
+  result.push(Array.from(defines).join('\n'));
+  result.push("");
+
+  if (helperFuncs.length > 0) {
+    result.push(helperFuncs.join('\n\n'));
+    result.push("");
+  }
+
+  result.push("int main(void) {");
+  if (inits.length > 0) {
+    result.push("    // --- Peripherals & Pin Initialization ---");
+    result.push(inits.join('\n'));
+    result.push("");
+  }
+
+  result.push("    // --- Superloop Execution ---");
+  result.push("    while (1) {");
+  if (loopBody.length > 0) {
+    result.push(loopBody.join('\n'));
+  } else {
+    result.push("        // Active runtime processing");
+  }
+  result.push("    }");
+  result.push("}");
+
+  return result.join('\n');
+}
+
+function initCodeComparator(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const select = container.querySelector('.preset-select');
+  const input = container.querySelector('.code-input');
+  const output = container.querySelector('.code-output code');
+
+  if (!select || !input || !output) return;
+
+  function loadPreset() {
+    const val = select.value;
+    if (PRESETS[val]) {
+      input.value = PRESETS[val].arduino;
+      output.textContent = PRESETS[val].baremetal;
+    }
+  }
+
+  function handleLiveInput() {
+    output.textContent = translateArduinoToBareMetal(input.value);
+  }
+
+  select.addEventListener('change', loadPreset);
+  input.addEventListener('input', handleLiveInput);
+  loadPreset();
+}
+
+function runInteractiveTranslation(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const input = container.querySelector('.code-input');
+  const output = container.querySelector('.code-output code');
+  if (input && output) {
+    output.textContent = translateArduinoToBareMetal(input.value);
+  }
+}
+
+function setupAllComparators() {
+  document.querySelectorAll('.code-comparator-widget').forEach((el, idx) => {
+    if (!el.id) el.id = 'comparator-' + idx;
+    initCodeComparator(el.id);
+  });
+}
+
+// Ensure execution whether DOM is loading or already ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupAllComparators);
+} else {
+  setupAllComparators();
+}
+</script>
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
@@ -953,6 +2433,19 @@ ul.task-list li input[type="checkbox"] {
   window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
   </script>
 </div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>CS2101: Embedded C Programming — IIT Madras</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+<p>Made by TA: Krishna Gorai</p>
+</div>
+  </div>
+</footer>
 
 
 

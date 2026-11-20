@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Week 11: Development Tools and Debugging Techniques – CS2101: Embedded C</title>
+<title>Week 11: Testing, Debugging &amp; Performance Profiling – CS2101: Embedded C</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -25,6 +25,41 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -48,9 +83,9 @@ ul.task-list li input[type="checkbox"] {
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-1efc6d65981d7f926cfe85ef7b0c751f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-f08d384c0165829aba50fd8ee00b4b4f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-1efc6d65981d7f926cfe85ef7b0c751f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-64d0f6d14e372c61dcd2002aecce1639.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-49095d02d3de05fbda1b5d708a7a597d.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-64d0f6d14e372c61dcd2002aecce1639.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -80,6 +115,35 @@ ul.task-list li input[type="checkbox"] {
 }</script>
 <style>html{ scroll-behavior: smooth; }</style>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -379,7 +443,47 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
+  <li><a href="#the-challenge-of-embedded-debugging" id="toc-the-challenge-of-embedded-debugging" class="nav-link active" data-scroll-target="#the-challenge-of-embedded-debugging">1. The Challenge of Embedded Debugging</a></li>
+  <li><a href="#hardware-debug-interfaces-jtag-vs.-swd" id="toc-hardware-debug-interfaces-jtag-vs.-swd" class="nav-link" data-scroll-target="#hardware-debug-interfaces-jtag-vs.-swd">2. Hardware Debug Interfaces: JTAG vs.&nbsp;SWD</a>
+  <ul class="collapse">
+  <li><a href="#protocol-comparison" id="toc-protocol-comparison" class="nav-link" data-scroll-target="#protocol-comparison">Protocol Comparison</a></li>
+  </ul></li>
+  <li><a href="#profiling-execution-time-measurement" id="toc-profiling-execution-time-measurement" class="nav-link" data-scroll-target="#profiling-execution-time-measurement">3. Profiling &amp; Execution Time Measurement</a></li>
+  <li><a href="#static-analysis-tools-catching-bugs-before-flashing" id="toc-static-analysis-tools-catching-bugs-before-flashing" class="nav-link" data-scroll-target="#static-analysis-tools-catching-bugs-before-flashing">4. Static Analysis Tools: Catching Bugs Before Flashing</a></li>
+  <li><a href="#unit-testing-for-embedded-systems-hardware-mocking" id="toc-unit-testing-for-embedded-systems-hardware-mocking" class="nav-link" data-scroll-target="#unit-testing-for-embedded-systems-hardware-mocking">5. Unit Testing for Embedded Systems: Hardware Mocking</a></li>
+  <li><a href="#mini-project-1-arm-dwt-cycle-counter-precision-profiler" id="toc-mini-project-1-arm-dwt-cycle-counter-precision-profiler" class="nav-link" data-scroll-target="#mini-project-1-arm-dwt-cycle-counter-precision-profiler">6. Mini-Project 1: ARM DWT Cycle Counter Precision Profiler ⏱️⚡</a>
+  <ul class="collapse">
+  <li><a href="#objective" id="toc-objective" class="nav-link" data-scroll-target="#objective">🎯 Objective</a></li>
+  <li><a href="#hardware-setup-wokwi" id="toc-hardware-setup-wokwi" class="nav-link" data-scroll-target="#hardware-setup-wokwi">🛠️ Hardware Setup (Wokwi)</a></li>
+  <li><a href="#pin-wiring-table" id="toc-pin-wiring-table" class="nav-link" data-scroll-target="#pin-wiring-table">Pin Wiring Table</a></li>
+  <li><a href="#problem-statement-logic-flow" id="toc-problem-statement-logic-flow" class="nav-link" data-scroll-target="#problem-statement-logic-flow">📝 Problem Statement &amp; Logic Flow</a></li>
+  <li><a href="#interactive-simulation" id="toc-interactive-simulation" class="nav-link" data-scroll-target="#interactive-simulation">Interactive Simulation</a></li>
+  <li><a href="#implementation-code-high-level-framework-vs.-bare-metal-embedded-c" id="toc-implementation-code-high-level-framework-vs.-bare-metal-embedded-c" class="nav-link" data-scroll-target="#implementation-code-high-level-framework-vs.-bare-metal-embedded-c">Implementation Code: High-Level Framework vs.&nbsp;Bare-Metal Embedded C</a></li>
+  <li><a href="#how-mini-project-1-applies-week-11-concepts" id="toc-how-mini-project-1-applies-week-11-concepts" class="nav-link" data-scroll-target="#how-mini-project-1-applies-week-11-concepts">🔍 How Mini-Project 1 Applies Week 11 Concepts</a></li>
+  </ul></li>
+  <li><a href="#mini-project-2-embedded-unit-testing-harness-with-passfail-leds" id="toc-mini-project-2-embedded-unit-testing-harness-with-passfail-leds" class="nav-link" data-scroll-target="#mini-project-2-embedded-unit-testing-harness-with-passfail-leds">7. Mini-Project 2: Embedded Unit Testing Harness with Pass/Fail LEDs 🧪✅</a>
+  <ul class="collapse">
+  <li><a href="#objective-1" id="toc-objective-1" class="nav-link" data-scroll-target="#objective-1">🎯 Objective</a></li>
+  <li><a href="#hardware-setup-wokwi-1" id="toc-hardware-setup-wokwi-1" class="nav-link" data-scroll-target="#hardware-setup-wokwi-1">🛠️ Hardware Setup (Wokwi)</a></li>
+  <li><a href="#pin-wiring-table-1" id="toc-pin-wiring-table-1" class="nav-link" data-scroll-target="#pin-wiring-table-1">Pin Wiring Table</a></li>
+  <li><a href="#problem-statement-logic-flow-1" id="toc-problem-statement-logic-flow-1" class="nav-link" data-scroll-target="#problem-statement-logic-flow-1">📝 Problem Statement &amp; Logic Flow</a></li>
+  <li><a href="#interactive-simulation-1" id="toc-interactive-simulation-1" class="nav-link" data-scroll-target="#interactive-simulation-1">Interactive Simulation</a></li>
+  <li><a href="#implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1" id="toc-implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1" class="nav-link" data-scroll-target="#implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1">Implementation Code: High-Level Framework vs.&nbsp;Bare-Metal Embedded C</a></li>
+  <li><a href="#how-mini-project-2-applies-week-11-concepts" id="toc-how-mini-project-2-applies-week-11-concepts" class="nav-link" data-scroll-target="#how-mini-project-2-applies-week-11-concepts">🔍 How Mini-Project 2 Applies Week 11 Concepts</a></li>
+  </ul></li>
+  <li><a href="#hands-on-practice-challenge-for-students-to-solve" id="toc-hands-on-practice-challenge-for-students-to-solve" class="nav-link" data-scroll-target="#hands-on-practice-challenge-for-students-to-solve">8. Hands-On Practice Challenge (For Students to Solve) 🎯</a>
+  <ul class="collapse">
+  <li><a href="#objective-scenario" id="toc-objective-scenario" class="nav-link" data-scroll-target="#objective-scenario">🎯 Objective &amp; Scenario</a></li>
+  <li><a href="#hardware-setup-pin-wiring-table" id="toc-hardware-setup-pin-wiring-table" class="nav-link" data-scroll-target="#hardware-setup-pin-wiring-table">🛠️ Hardware Setup &amp; Pin Wiring Table</a></li>
+  <li><a href="#problem-statement-functional-requirements" id="toc-problem-statement-functional-requirements" class="nav-link" data-scroll-target="#problem-statement-functional-requirements">📋 Problem Statement &amp; Functional Requirements</a></li>
+  <li><a href="#starter-code-template" id="toc-starter-code-template" class="nav-link" data-scroll-target="#starter-code-template">💻 Starter Code Template</a></li>
+  <li><a href="#verification-expected-test-cases" id="toc-verification-expected-test-cases" class="nav-link" data-scroll-target="#verification-expected-test-cases">🧪 Verification &amp; Expected Test Cases</a></li>
+  </ul></li>
+  <li><a href="#concept-check-practice-questions" id="toc-concept-check-practice-questions" class="nav-link" data-scroll-target="#concept-check-practice-questions">9. Concept Check Practice Questions</a>
+  <ul class="collapse">
+  <li><a href="#question-1-in-circuit-debugging-swd-vs.-jtag" id="toc-question-1-in-circuit-debugging-swd-vs.-jtag" class="nav-link" data-scroll-target="#question-1-in-circuit-debugging-swd-vs.-jtag">Question 1: In-Circuit Debugging: SWD vs.&nbsp;JTAG</a></li>
+  <li><a href="#question-2-profiling-with-arm-dwt-cycle-counter" id="toc-question-2-profiling-with-arm-dwt-cycle-counter" class="nav-link" data-scroll-target="#question-2-profiling-with-arm-dwt-cycle-counter">Question 2: Profiling with ARM DWT Cycle Counter</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -389,7 +493,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Week 11: Development Tools and Debugging Techniques</h1>
+<h1 class="title">Week 11: Testing, Debugging &amp; Performance Profiling</h1>
 </div>
 
 
@@ -406,28 +510,1512 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="overview" class="level2">
-<h2 class="anchored" data-anchor-id="overview">Overview</h2>
-<p>In-circuit debuggers, JTAG &amp; SWD interfaces, OpenOCD, GDB debugging techniques, Logic analyzers.</p>
-<div class="callout callout-style-default callout-tip callout-titled">
+<section id="the-challenge-of-embedded-debugging" class="level2">
+<h2 class="anchored" data-anchor-id="the-challenge-of-embedded-debugging">1. The Challenge of Embedded Debugging</h2>
+<p>Debugging embedded firmware is fundamentally different from debugging desktop code: - Your target microcontroller does not have a computer monitor or keyboard attached. - Code interacts with real-time physical voltages, motors, and high-frequency communication signals. - Halting the CPU at the wrong instant can physically damage hardware (e.g., leaving a high-power motor MOSFET energized).</p>
+<pre class="text"><code> 1. PRINTF-STYLE DEBUGGING (THE HEISENBUG DILEMMA):
+ Code: printf("Sensor value: %d\n", val);
+ * Consumes 10-50 ms over a 9600 baud serial UART line!
+ * Alters real-time execution timing, making timing-dependent bugs vanish during debugging
+   (known as a "Heisenbug")!
+ * Stalls Interrupt Service Routines (ISRs) and severely inflates Flash code size.
+
+ 2. MODERN HARDWARE ON-CHIP DEBUGGING (JTAG / SWD):
+ Debug Probe [ST-Link / J-Link] &lt;== SWD (2 Wires) ==&gt; Target Microcontroller [CoreSight]
+ * Non-intrusive, zero-overhead hardware breakpoints and watchpoints.
+ * Single-step through assembly instructions and inspect internal peripheral registers live!</code></pre>
+<hr>
+</section>
+<section id="hardware-debug-interfaces-jtag-vs.-swd" class="level2">
+<h2 class="anchored" data-anchor-id="hardware-debug-interfaces-jtag-vs.-swd">2. Hardware Debug Interfaces: JTAG vs.&nbsp;SWD</h2>
+<p>To program Flash memory, control the processor core, and step through code line-by-line, microcontrollers feature hardware debug ports:</p>
+<pre class="text"><code> JTAG INTERFACE (IEEE 1149.1 - 4/5 Wires)
+ [Debug Probe] --- TDI (Test Data In) ------&gt; [ Chip 1 ] ---&gt; [ Chip 2 ] (Daisy Chain)
+               &lt;-- TDO (Test Data Out) &lt;-----+           &lt;---+
+               --- TCK (Test Clock) --------&gt;
+               --- TMS (Test Mode Select) --&gt;
+               --- nTRST (Optional Reset) --&gt;
+
+ SWD INTERFACE (ARM Serial Wire Debug - 2 Wires)
+ [Debug Probe] &lt;== SWDIO (Bidirectional Serial Data) ==&gt; [ Single ARM MCU ]
+               --- SWCLK (Clock Reference) ------------&gt;</code></pre>
+<section id="protocol-comparison" class="level3">
+<h3 class="anchored" data-anchor-id="protocol-comparison">Protocol Comparison</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Characteristic</th>
+<th style="text-align: left;">JTAG (IEEE 1149.1)</th>
+<th style="text-align: left;">SWD (ARM Serial Wire Debug)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Physical Pin Count</strong></td>
+<td style="text-align: left;">4 to 5 pins (TDI, TDO, TCK, TMS, [TRST])</td>
+<td style="text-align: left;"><strong>2 pins</strong> (SWCLK, SWDIO) + GND</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Data Direction</strong></td>
+<td style="text-align: left;">Dedicated unidirectional lines</td>
+<td style="text-align: left;"><strong>Bidirectional</strong> half-duplex packets on SWDIO</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Multi-Chip Daisy Chaining</strong></td>
+<td style="text-align: left;">Supported (can chain MCU + FPGA on 1 header)</td>
+<td style="text-align: left;">Primarily point-to-point</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Boundary Scan</strong></td>
+<td style="text-align: left;">Supported (tests PCB electrical shorts/opens)</td>
+<td style="text-align: left;">Not supported (focused on CPU debugging)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Pin Overhead on MCU</strong></td>
+<td style="text-align: left;">High (consumes 5 precious GPIO pins)</td>
+<td style="text-align: left;"><strong>Minimal</strong> (frees pins for peripheral sensors)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Standard Ecosystem</strong></td>
+<td style="text-align: left;">Universal (ARM, RISC-V, DSPs, FPGAs)</td>
+<td style="text-align: left;">Specialized exclusively for <strong>ARM Cortex</strong> processors</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="profiling-execution-time-measurement" class="level2">
+<h2 class="anchored" data-anchor-id="profiling-execution-time-measurement">3. Profiling &amp; Execution Time Measurement</h2>
+<p>How do you know if your control loop executes in <span class="math inline">\(150\,\mu\text{s}\)</span> or <span class="math inline">\(1500\,\mu\text{s}\)</span>? In embedded systems, there are two primary methods to measure execution time:</p>
+<pre class="text"><code> METHOD 1: GPIO PIN TOGGLING (Measured on an Oscilloscope or Logic Analyzer)
+ GPIOA-&gt;BSRR = (1 &lt;&lt; 5);      // Drive Test Pin HIGH
+ execute_algorithm();         // Function under test
+ GPIOA-&gt;BSRR = (1 &lt;&lt; (5+16)); // Drive Test Pin LOW
+ * Width of the physical square pulse equals the exact execution time!
+
+ METHOD 2: ARM CORTEX-M DWT CYCLE COUNTER (Measured in Software)
+ DWT-&gt;CYCCNT = 0;             // Reset hardware 32-bit cycle counter
+ execute_algorithm();
+ uint32_t cycles = DWT-&gt;CYCCNT; // Exact number of CPU clock cycles elapsed!</code></pre>
+<hr>
+</section>
+<section id="static-analysis-tools-catching-bugs-before-flashing" class="level2">
+<h2 class="anchored" data-anchor-id="static-analysis-tools-catching-bugs-before-flashing">4. Static Analysis Tools: Catching Bugs Before Flashing</h2>
+<p><strong>Static Analysis</strong> is the process of inspecting C source code <em>without running it</em>, detecting hidden bugs, undefined behaviors, and safety hazards during compilation.</p>
+<pre class="text"><code> +-------------------------------------------------------------------------+
+ |                      LEVELS OF EMBEDDED CODE QUALITY                    |
+ +-------------------------------------------------------------------------+
+ | Level 1: Basic Compiler Warnings (-Wall -Wextra -Werror)                |
+ |          Flags unused variables, implicit type conversions, and typos   |
+ |                                                                         |
+ | Level 2: Static Analysis Linters (Cppcheck, Clang-Tidy)                 |
+ |          Detects null-pointer dereferences, array buffer overflows, and |
+ |          memory leaks before code ever touches silicon!                 |
+ |                                                                         |
+ | Level 3: Coding Standards Compliance (MISRA-C:2012 / 2023)              |
+ |          Enforces strict safety rules for automotive, aerospace, and    |
+ |          medical devices (no dynamic allocation, no recursion).         |
+ +-------------------------------------------------------------------------+</code></pre>
+<hr>
+</section>
+<section id="unit-testing-for-embedded-systems-hardware-mocking" class="level2">
+<h2 class="anchored" data-anchor-id="unit-testing-for-embedded-systems-hardware-mocking">5. Unit Testing for Embedded Systems: Hardware Mocking</h2>
+<p>Testing embedded C code on physical hardware is slow, expensive, and difficult to automate in Continuous Integration (CI) pipelines.</p>
+<p>The industry solution is <strong>Unit Testing on the Host PC with Hardware Mocking</strong>:</p>
+<pre class="text"><code> TRADITIONAL TESTING (Slow &amp; Hardware Dependent):
+ Code compiled for ARM ---&gt; Flashed to MCU via USB ---&gt; Manually probed with a multimeter.
+
+ EMBEDDED UNIT TESTING (Fast, Automated &amp; Scalable):
+ Sensor Algorithm compiled for PC (x86_64) ---&gt; Run with Unity / CMock Test Framework
+ * Hardware registers (I2C, ADC, Timers) are replaced with virtual mock structures in C!</code></pre>
+<hr>
+</section>
+<section id="mini-project-1-arm-dwt-cycle-counter-precision-profiler" class="level2">
+<h2 class="anchored" data-anchor-id="mini-project-1-arm-dwt-cycle-counter-precision-profiler">6. Mini-Project 1: ARM DWT Cycle Counter Precision Profiler ⏱️⚡</h2>
+<section id="objective" class="level3">
+<h3 class="anchored" data-anchor-id="objective">🎯 Objective</h3>
+<p>When writing performance-critical signal processing or control loops, developers must know down to the exact clock cycle how long algorithms take to execute. In this project, you will activate the hardware <strong>Data Watchpoint and Trace (DWT)</strong> unit on the <strong>ARM Cortex-M core</strong> to benchmark the cycle counts of floating-point arithmetic versus integer bit-manipulation on the <strong>STM32 Nucleo-C031C6</strong>.</p>
+</section>
+<section id="hardware-setup-wokwi" class="level3">
+<h3 class="anchored" data-anchor-id="hardware-setup-wokwi">🛠️ Hardware Setup (Wokwi)</h3>
+<ul>
+<li><strong>Target Board:</strong> <code>board-st-nucleo-c031c6</code> (ARM Cortex-M0+)</li>
+<li><strong>Diagnostic Serial Stream:</strong> Direct USB Virtual COM Port at <strong>115200 baud</strong>.</li>
+<li><strong>Benchmark Heartbeat LED:</strong> User LED on <code>D13</code> (<code>PA5</code>).</li>
+</ul>
+</section>
+<section id="pin-wiring-table" class="level3">
+<h3 class="anchored" data-anchor-id="pin-wiring-table">Pin Wiring Table</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 23%">
+<col style="width: 23%">
+<col style="width: 29%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Component</th>
+<th style="text-align: left;">Pin / Terminal</th>
+<th style="text-align: center;">STM32 / Board Pin</th>
+<th style="text-align: left;">Electrical Function</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Serial Terminal</strong></td>
+<td style="text-align: left;">USB VCP</td>
+<td style="text-align: center;">Virtual COM Port</td>
+<td style="text-align: left;">Telemetry Console (115200 baud, 8-N-1)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Benchmark LED</strong></td>
+<td style="text-align: left;">Anode (<code>PA5</code>)</td>
+<td style="text-align: center;"><code>D13</code></td>
+<td style="text-align: left;">Toggled upon every completed test cycle</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Common Ground</strong></td>
+<td style="text-align: left;">Cathode</td>
+<td style="text-align: center;"><code>GND</code></td>
+<td style="text-align: left;">Ground Reference</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="problem-statement-logic-flow" class="level3">
+<h3 class="anchored" data-anchor-id="problem-statement-logic-flow">📝 Problem Statement &amp; Logic Flow</h3>
+<ol type="1">
+<li><strong>DWT Hardware Initialization:</strong>
+<ul>
+<li>Enable the CoreDebug trace control bit: <code>CoreDebug_DEMCR |= (1UL &lt;&lt; 24);</code>.</li>
+<li>Enable the cycle counter in DWT Control register: <code>DWT_CTRL |= (1UL &lt;&lt; 0);</code>.</li>
+</ul></li>
+<li><strong>Benchmark 1 (Floating-Point Division):</strong>
+<ul>
+<li>Reset cycle counter to zero (<code>DWT_CYCCNT = 0</code>).</li>
+<li>Perform division on two 32-bit floating-point variables (<code>volatile float res = 12345.67f / 3.1415f;</code>).</li>
+<li>Capture <code>float_cycles = DWT_CYCCNT;</code>.</li>
+</ul></li>
+<li><strong>Benchmark 2 (Integer Bit-Shift Division):</strong>
+<ul>
+<li>Reset <code>DWT_CYCCNT = 0</code>.</li>
+<li>Perform equivalent integer division by 4 using bit-shifting (<code>volatile uint32_t res = val &gt;&gt; 2;</code>).</li>
+<li>Capture <code>int_cycles = DWT_CYCCNT;</code>.</li>
+</ul></li>
+<li><strong>Speedup Analysis &amp; Telemetry:</strong>
+<ul>
+<li>Transmit exact cycle counts and speedup ratio over UART: <span class="math display">\[\text{Speedup Ratio} = \frac{\text{Float Cycles}}{\text{Integer Cycles}}\]</span></li>
+</ul></li>
+</ol>
+<pre class="text"><code>[PROFILER]: Float Division Execution: 104 cycles
+[PROFILER]: Integer Bit-Shift Execution: 1 cycle
+[PROFILER]: Performance Speedup Factor: 104x faster!</code></pre>
+</section>
+<section id="interactive-simulation" class="level3">
+<h3 class="anchored" data-anchor-id="interactive-simulation">Interactive Simulation</h3>
+<div class="simulation-container">
+<iframe src="https://wokwi.com/projects/479963095271968769?embed=1" title="DWT Profiler Simulation Workspace" loading="lazy" allowfullscreen="">
+</iframe>
+<div class="sim-info-bar">
+<p><span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span> <span>Click Play, open Serial Monitor at 115200 baud to view hardware clock cycle benchmarks</span></p>
+</div>
+</div>
+</section>
+<section id="implementation-code-high-level-framework-vs.-bare-metal-embedded-c" class="level3">
+<h3 class="anchored" data-anchor-id="implementation-code-high-level-framework-vs.-bare-metal-embedded-c">Implementation Code: High-Level Framework vs.&nbsp;Bare-Metal Embedded C</h3>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="">🔷 High-Level Framework (Running in Simulation)</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">🔶 Equivalent Bare-Metal Embedded C (Direct DWT &amp; CoreDebug Register Access)</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Mini-Project 1: ARM Cycle Counter Precision Profiler (Nucleo-C031C6)</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#define CoreDebug_DEMCR </span><span class="op">(*(</span><span class="at">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)</span><span class="bn">0xE000EDFC</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#define DWT_CTRL        </span><span class="op">(*(</span><span class="at">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)</span><span class="bn">0xE0001000</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#define DWT_CYCCNT      </span><span class="op">(*(</span><span class="at">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)</span><span class="bn">0xE0001004</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> initCycleCounter<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  CoreDebug_DEMCR <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">24</span><span class="op">);</span> <span class="co">// Enable TRCENA bit</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  DWT_CTRL        <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">0</span><span class="op">);</span>  <span class="co">// Enable CYCCNTENA bit</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setup<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>begin<span class="op">(</span><span class="dv">115200</span><span class="op">);</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>LED_BUILTIN<span class="op">,</span> OUTPUT<span class="op">);</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>  initCycleCounter<span class="op">();</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"=================================================="</span><span class="op">);</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"   ARM Cortex-M Hardware Cycle Profiler Ready     "</span><span class="op">);</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"=================================================="</span><span class="op">);</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> loop<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Test 1: Software Floating-Point Division</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>  <span class="at">volatile</span> <span class="dt">float</span> f_num <span class="op">=</span> <span class="fl">12345.67</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>  <span class="at">volatile</span> <span class="dt">float</span> f_den <span class="op">=</span> <span class="fl">3.1415</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>  DWT_CYCCNT <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> <span class="co">// Reset counter</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">volatile</span> <span class="dt">float</span> f_res <span class="op">=</span> f_num <span class="op">/</span> f_den<span class="op">;</span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>  <span class="dt">uint32_t</span> float_cycles <span class="op">=</span> DWT_CYCCNT<span class="op">;</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Test 2: Hardware Single-Cycle Integer Bit-Shift Division</span></span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>  <span class="at">volatile</span> <span class="dt">uint32_t</span> i_num <span class="op">=</span> <span class="dv">12345</span><span class="op">;</span></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>  DWT_CYCCNT <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> <span class="co">// Reset counter</span></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>  <span class="at">volatile</span> <span class="dt">uint32_t</span> i_res <span class="op">=</span> i_num <span class="op">&gt;&gt;</span> <span class="dv">2</span><span class="op">;</span></span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>  <span class="dt">uint32_t</span> int_cycles <span class="op">=</span> DWT_CYCCNT<span class="op">;</span></span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Telemetry Output</span></span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>  digitalWrite<span class="op">(</span>LED_BUILTIN<span class="op">,</span> <span class="op">!</span>digitalRead<span class="op">(</span>LED_BUILTIN<span class="op">));</span></span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>print<span class="op">(</span><span class="st">"[PROFILER]: Float Division Execution:    "</span><span class="op">);</span></span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>print<span class="op">(</span>float_cycles<span class="op">);</span></span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">" cycles"</span><span class="op">);</span></span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>print<span class="op">(</span><span class="st">"[PROFILER]: Integer Bit-Shift Execution: "</span><span class="op">);</span></span>
+<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>print<span class="op">(</span>int_cycles<span class="op">);</span></span>
+<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">" cycles"</span><span class="op">);</span></span>
+<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>print<span class="op">(</span><span class="st">"[PROFILER]: Speedup Factor:               "</span><span class="op">);</span></span>
+<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>print<span class="op">(</span>float_cycles <span class="op">/</span> <span class="op">(</span>int_cycles <span class="op">&gt;</span> <span class="dv">0</span> <span class="op">?</span> int_cycles <span class="op">:</span> <span class="dv">1</span><span class="op">));</span></span>
+<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"x faster!</span><span class="sc">\n</span><span class="st">"</span><span class="op">);</span></span>
+<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a>  delay<span class="op">(</span><span class="dv">2000</span><span class="op">);</span></span>
+<span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Mini-Project 1: Bare-Metal ARM DWT Profiler Driver</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Target: STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdint.h&gt;</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#define COREDEBUG_DEMCR </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)</span><span class="bn">0xE000EDFC</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#define DWT_CTRL        </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)</span><span class="bn">0xE0001000</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#define DWT_CYCCNT      </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)</span><span class="bn">0xE0001004</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> dwt_profiler_init<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    COREDEBUG_DEMCR <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">24</span><span class="op">);</span> <span class="co">// Enable Global Trace (TRCENA)</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    DWT_CYCCNT       <span class="op">=</span> <span class="dv">0</span><span class="op">;</span>           <span class="co">// Reset counter</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    DWT_CTRL        <span class="op">|=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">0</span><span class="op">);</span>  <span class="co">// Enable Cycle Counter (CYCCNTENA)</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="dt">uint32_t</span> profile_algorithm<span class="op">(</span><span class="dt">void</span> <span class="op">(*</span>func<span class="op">)(</span><span class="dt">void</span><span class="op">))</span> <span class="op">{</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    DWT_CYCCNT <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    func<span class="op">();</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> DWT_CYCCNT<span class="op">;</span> <span class="co">// Single-cycle precision elapsed instruction cycles</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-caution callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>📌 Coming Up
+<span class="screen-reader-only">Caution</span>⚠️ Code Verification &amp; Assistance
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>This module is part of the CS2101 syllabus outline. Detailed lecture notes, integrated interactive simulations, and question banks will be added here.</p>
+<p>All high-level framework and bare-metal implementation codes are verified for the target microcontroller (<strong>STM32 Nucleo-C031C6</strong> / ARM Cortex-M0+). If you encounter any compilation errors, unexpected simulation behavior, or discrepancies with this code, Please report to the Course instructor or the TA via email.</p>
 </div>
 </div>
-<p><a href="./index.html" class="btn btn-outline-secondary mt-4">← Back to Main Page</a></p>
+</section>
+<section id="how-mini-project-1-applies-week-11-concepts" class="level3">
+<h3 class="anchored" data-anchor-id="how-mini-project-1-applies-week-11-concepts">🔍 How Mini-Project 1 Applies Week 11 Concepts</h3>
+<section id="hardware-circuit-level-concept-mapping" class="level4">
+<h4 class="anchored" data-anchor-id="hardware-circuit-level-concept-mapping">1. Hardware &amp; Circuit-Level Concept Mapping</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Circuit Component</th>
+<th style="text-align: left;">Week 11 Theoretical Concept</th>
+<th style="text-align: left;">Technical Function in System</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>ARM CoreDebug &amp; DWT</strong></td>
+<td style="text-align: left;"><strong>Hardware On-Chip Debug Unit</strong></td>
+<td style="text-align: left;">Dedicated silicon register unit clocked at <span class="math inline">\(f_{\text{CPU}}\)</span> that increments every single CPU clock tick without memory or pipeline stalls.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>User LED (PA5 / D13)</strong></td>
+<td style="text-align: left;"><strong>Visual Profiling Heartbeat</strong></td>
+<td style="text-align: left;">Emits a hardware pulse indicating completion of a profiling run.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="firmware-code-to-concept-breakdown" class="level4">
+<h4 class="anchored" data-anchor-id="firmware-code-to-concept-breakdown">2. Firmware Code-to-Concept Breakdown</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Code Statement (Framework / Bare-Metal)</th>
+<th style="text-align: left;">Week 11 Theoretical Concept</th>
+<th style="text-align: left;">Deep-Dive Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>volatile float f_num;</code></td>
+<td style="text-align: left;"><strong>Compiler Optimization Invalidation</strong></td>
+<td style="text-align: left;">Without <code>volatile</code>, the GCC <code>-O2</code> compiler would compute the float division at compile time, reducing runtime clock cycles to zero.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>DWT_CYCCNT = 0;</code></td>
+<td style="text-align: left;"><strong>Zero-Overhead Hardware Timestamping</strong></td>
+<td style="text-align: left;">Eliminates the Heisenbug problem by replacing millisecond-slow <code>printf()</code> logging with 1-cycle register reads.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+</section>
+<section id="mini-project-2-embedded-unit-testing-harness-with-passfail-leds" class="level2">
+<h2 class="anchored" data-anchor-id="mini-project-2-embedded-unit-testing-harness-with-passfail-leds">7. Mini-Project 2: Embedded Unit Testing Harness with Pass/Fail LEDs 🧪✅</h2>
+<section id="objective-1" class="level3">
+<h3 class="anchored" data-anchor-id="objective-1">🎯 Objective</h3>
+<p>In automotive (ISO 26262) and medical device development, untested code is forbidden from deployment. In this project, you will build an automated self-testing firmware harness for the <strong>STM32 Nucleo-C031C6</strong> that executes automated unit tests on boot, verifying an ADC-to-Voltage translation function using hardware Pass (Green) and Fail (Red) LED indicators.</p>
+</section>
+<section id="hardware-setup-wokwi-1" class="level3">
+<h3 class="anchored" data-anchor-id="hardware-setup-wokwi-1">🛠️ Hardware Setup (Wokwi)</h3>
+<p>The circuit connects two diagnostic status LEDs with 220Ω current-limiting resistors: * <strong>Pass LED (Green):</strong> Connected to pin <code>D12</code> (<code>PA6</code>). * <strong>Fail LED (Red):</strong> Connected to pin <code>D11</code> (<code>PA7</code>). * <strong>Common Ground:</strong> LED cathodes tied to <code>GND</code>.</p>
+</section>
+<section id="pin-wiring-table-1" class="level3">
+<h3 class="anchored" data-anchor-id="pin-wiring-table-1">Pin Wiring Table</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 23%">
+<col style="width: 23%">
+<col style="width: 29%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Component</th>
+<th style="text-align: left;">Pin / Terminal</th>
+<th style="text-align: center;">STM32 / Board Pin</th>
+<th style="text-align: left;">Electrical Function</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Pass LED (Green)</strong></td>
+<td style="text-align: left;">Anode (via 220Ω)</td>
+<td style="text-align: center;"><code>D12</code> (<code>PA6</code>)</td>
+<td style="text-align: left;">Test Suite All-Pass Indicator</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Fail LED (Red)</strong></td>
+<td style="text-align: left;">Anode (via 220Ω)</td>
+<td style="text-align: center;"><code>D11</code> (<code>PA7</code>)</td>
+<td style="text-align: left;">Assertion Failure Indicator</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Both LEDs</strong></td>
+<td style="text-align: left;">Cathodes (<span class="math inline">\(-\)</span>)</td>
+<td style="text-align: center;">Common <code>GND</code></td>
+<td style="text-align: left;">Ground Reference</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="problem-statement-logic-flow-1" class="level3">
+<h3 class="anchored" data-anchor-id="problem-statement-logic-flow-1">📝 Problem Statement &amp; Logic Flow</h3>
+<ol type="1">
+<li><strong>Unit Under Test (UUT):</strong> Implement a robust integer math scaling function: <code>uint32_t adcToMillivolts(uint16_t raw_adc);</code> which scales 12-bit ADC raw values (<span class="math inline">\(0\)</span> to <span class="math inline">\(4095\)</span>) to millivolts (<span class="math inline">\(0\)</span> to <span class="math inline">\(3300\text{ mV}\)</span>). It must clamp out-of-bounds readings (<span class="math inline">\(&gt; 4095\)</span>) defensively.</li>
+<li><strong>Automated Unit Test Suite:</strong>
+<ul>
+<li><strong>Test 1 (Zero Scale):</strong> Verify that input <code>0</code> yields exactly <code>0 mV</code>.</li>
+<li><strong>Test 2 (Full Scale):</strong> Verify that input <code>4095</code> yields exactly <code>3300 mV</code>.</li>
+<li><strong>Test 3 (Mid Scale):</strong> Verify that input <code>2047</code> yields <code>1648 mV</code> to <code>1652 mV</code> (<span class="math inline">\(\pm 2\text{ mV}\)</span> precision band).</li>
+</ul></li>
+<li><strong>Hardware Test Reporting:</strong>
+<ul>
+<li>If all tests pass: turn Green LED on <code>D12</code> <strong>HIGH</strong>, Red LED <strong>LOW</strong>, and print <code>"[ALL TESTS PASSED]: Green LED illuminated."</code>.</li>
+<li>If any test fails: turn Red LED on <code>D11</code> <strong>HIGH</strong>, Green LED <strong>LOW</strong>, and print assertion error details.</li>
+</ul></li>
+</ol>
+<pre class="text"><code>==================================================
+   Running Embedded Self-Test Unit Harness...
+==================================================
+[PASS] Test 1: Zero Scale (0 counts -&gt; 0 mV)
+[PASS] Test 2: Full Scale (4095 counts -&gt; 3300 mV)
+[PASS] Test 3: Mid Scale  (2047 counts -&gt; 1649 mV)
+--------------------------------------------------
+[ALL TESTS PASSED]: Hardware Green LED illuminated!</code></pre>
+</section>
+<section id="interactive-simulation-1" class="level3">
+<h3 class="anchored" data-anchor-id="interactive-simulation-1">Interactive Simulation</h3>
+<div class="simulation-container">
+<iframe src="https://wokwi.com/projects/479963095271968769?embed=1" title="Unit Test Simulation Workspace" loading="lazy" allowfullscreen="">
+</iframe>
+<div class="sim-info-bar">
+<p><span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span> <span>Click Play, wire Pass LED to D12 and Fail LED to D11 to test assertions</span></p>
+</div>
+</div>
+</section>
+<section id="implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1" class="level3">
+<h3 class="anchored" data-anchor-id="implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1">Implementation Code: High-Level Framework vs.&nbsp;Bare-Metal Embedded C</h3>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">🔷 High-Level Framework (Running in Simulation)</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">🔶 Equivalent Bare-Metal Embedded C (MISRA-C Test Harness with Register Output)</a></li></ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Mini-Project 2: Embedded Unit Testing Harness (Nucleo-C031C6)</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#define LED_GREEN </span><span class="dv">12</span><span class="pp"> </span><span class="co">// Pass Indicator (PA6)</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#define LED_RED   </span><span class="dv">11</span><span class="pp"> </span><span class="co">// Fail Indicator (PA7)</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Unit Under Test (UUT): Scales 12-bit ADC (0-4095) to Millivolts (0-3300 mV)</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="dt">uint32_t</span> adcToMillivolts<span class="op">(</span><span class="dt">uint16_t</span> raw_adc<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Defensive clamp against out-of-bounds inputs</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>raw_adc <span class="op">&gt;</span> <span class="dv">4095</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    raw_adc <span class="op">=</span> <span class="dv">4095</span><span class="op">;</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Fixed-point 32-bit integer arithmetic</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="op">((</span><span class="dt">uint32_t</span><span class="op">)</span>raw_adc <span class="op">*</span> <span class="dv">3300</span><span class="bu">UL</span><span class="op">)</span> <span class="op">/</span> <span class="dv">4095</span><span class="bu">UL</span><span class="op">;</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="co">// Unit Test Cases</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> test_zero_scale<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> adcToMillivolts<span class="op">(</span><span class="dv">0</span><span class="op">)</span> <span class="op">==</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> test_full_scale<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> adcToMillivolts<span class="op">(</span><span class="dv">4095</span><span class="op">)</span> <span class="op">==</span> <span class="dv">3300</span><span class="op">;</span></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> test_mid_scale<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>  <span class="dt">uint32_t</span> mv <span class="op">=</span> adcToMillivolts<span class="op">(</span><span class="dv">2047</span><span class="op">);</span></span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="op">(</span>mv <span class="op">&gt;=</span> <span class="dv">1648</span> <span class="op">&amp;&amp;</span> mv <span class="op">&lt;=</span> <span class="dv">1652</span><span class="op">);</span> <span class="co">// Precision tolerance band</span></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setup<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>begin<span class="op">(</span><span class="dv">115200</span><span class="op">);</span></span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>LED_GREEN<span class="op">,</span> OUTPUT<span class="op">);</span></span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>LED_RED<span class="op">,</span> OUTPUT<span class="op">);</span></span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a>  digitalWrite<span class="op">(</span>LED_GREEN<span class="op">,</span> LOW<span class="op">);</span></span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a>  digitalWrite<span class="op">(</span>LED_RED<span class="op">,</span> LOW<span class="op">);</span></span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"=================================================="</span><span class="op">);</span></span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"   Running Embedded Self-Test Unit Harness...     "</span><span class="op">);</span></span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"=================================================="</span><span class="op">);</span></span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a>  <span class="dt">bool</span> all_passed <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>test_zero_scale<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a>    Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"[PASS] Test 1: Zero Scale (0 counts -&gt; 0 mV)"</span><span class="op">);</span></span>
+<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a>    Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"[FAIL] Test 1: Zero Scale Failed!"</span><span class="op">);</span></span>
+<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a>    all_passed <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>test_full_scale<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a>    Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"[PASS] Test 2: Full Scale (4095 counts -&gt; 3300 mV)"</span><span class="op">);</span></span>
+<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a>    Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"[FAIL] Test 2: Full Scale Failed!"</span><span class="op">);</span></span>
+<span id="cb10-56"><a href="#cb10-56" aria-hidden="true" tabindex="-1"></a>    all_passed <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb10-57"><a href="#cb10-57" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb10-58"><a href="#cb10-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-59"><a href="#cb10-59" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>test_mid_scale<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb10-60"><a href="#cb10-60" aria-hidden="true" tabindex="-1"></a>    Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"[PASS] Test 3: Mid Scale  (2047 counts -&gt; 1649 mV)"</span><span class="op">);</span></span>
+<span id="cb10-61"><a href="#cb10-61" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb10-62"><a href="#cb10-62" aria-hidden="true" tabindex="-1"></a>    Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"[FAIL] Test 3: Mid Scale Failed!"</span><span class="op">);</span></span>
+<span id="cb10-63"><a href="#cb10-63" aria-hidden="true" tabindex="-1"></a>    all_passed <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb10-64"><a href="#cb10-64" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb10-65"><a href="#cb10-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-66"><a href="#cb10-66" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"--------------------------------------------------"</span><span class="op">);</span></span>
+<span id="cb10-67"><a href="#cb10-67" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>all_passed<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-68"><a href="#cb10-68" aria-hidden="true" tabindex="-1"></a>    digitalWrite<span class="op">(</span>LED_GREEN<span class="op">,</span> HIGH<span class="op">);</span></span>
+<span id="cb10-69"><a href="#cb10-69" aria-hidden="true" tabindex="-1"></a>    Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"[ALL TESTS PASSED]: Hardware Green LED illuminated!"</span><span class="op">);</span></span>
+<span id="cb10-70"><a href="#cb10-70" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb10-71"><a href="#cb10-71" aria-hidden="true" tabindex="-1"></a>    digitalWrite<span class="op">(</span>LED_RED<span class="op">,</span> HIGH<span class="op">);</span></span>
+<span id="cb10-72"><a href="#cb10-72" aria-hidden="true" tabindex="-1"></a>    Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"[TEST FAILED]: Hardware Red LED illuminated!"</span><span class="op">);</span></span>
+<span id="cb10-73"><a href="#cb10-73" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb10-74"><a href="#cb10-74" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-75"><a href="#cb10-75" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-76"><a href="#cb10-76" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> loop<span class="op">()</span> <span class="op">{}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Mini-Project 2: Bare-Metal MISRA Assertion Framework</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdint.h&gt;</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdbool.h&gt;</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOA_BASE  </span><span class="op">(</span><span class="bn">0x50000000</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOA_BSRR  </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">GPIOA_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x18</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#define ASSERT_EQUAL</span><span class="op">(</span><span class="pp">actual</span><span class="op">,</span><span class="pp"> expected</span><span class="op">)</span><span class="pp"> </span><span class="cf">do</span><span class="pp"> </span><span class="op">{</span><span class="pp"> </span><span class="op">\</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="pp">    </span><span class="cf">if</span><span class="pp"> </span><span class="op">((</span><span class="pp">actual</span><span class="op">)</span><span class="pp"> </span><span class="op">!=</span><span class="pp"> </span><span class="op">(</span><span class="pp">expected</span><span class="op">))</span><span class="pp"> </span><span class="cf">return</span><span class="pp"> </span><span class="kw">false</span><span class="op">;</span><span class="pp"> </span><span class="op">\</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="pp"> </span><span class="cf">while</span><span class="op">(</span><span class="dv">0</span><span class="op">)</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> run_boot_verification<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Assert calibration calculations</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>    ASSERT_EQUAL<span class="op">(((</span><span class="dt">uint32_t</span><span class="op">)</span><span class="dv">0</span> <span class="op">*</span> <span class="dv">3300</span><span class="bu">UL</span><span class="op">)</span> <span class="op">/</span> <span class="dv">4095</span><span class="bu">UL</span><span class="op">,</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>    ASSERT_EQUAL<span class="op">(((</span><span class="dt">uint32_t</span><span class="op">)</span><span class="dv">4095</span> <span class="op">*</span> <span class="dv">3300</span><span class="bu">UL</span><span class="op">)</span> <span class="op">/</span> <span class="dv">4095</span><span class="bu">UL</span><span class="op">,</span> <span class="dv">3300</span><span class="op">);</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">true</span><span class="op">;</span> <span class="co">// All assertions passed</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> indicate_test_result<span class="op">(</span><span class="dt">bool</span> passed<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>passed<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>        GPIOA_BSRR <span class="op">=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">6</span><span class="op">);</span> <span class="co">// Green LED (PA6) ON</span></span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>        GPIOA_BSRR <span class="op">=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">7</span><span class="op">);</span> <span class="co">// Red LED (PA7) ON</span></span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-caution callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Caution</span>⚠️ Code Verification &amp; Assistance
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>All high-level framework and bare-metal implementation codes are verified for the target microcontroller (<strong>STM32 Nucleo-C031C6</strong> / ARM Cortex-M0+). If you encounter any compilation errors, unexpected simulation behavior, or discrepancies with this code, Please report to the Course instructor or the TA via email.</p>
+</div>
+</div>
+</section>
+<section id="how-mini-project-2-applies-week-11-concepts" class="level3">
+<h3 class="anchored" data-anchor-id="how-mini-project-2-applies-week-11-concepts">🔍 How Mini-Project 2 Applies Week 11 Concepts</h3>
+<section id="hardware-circuit-level-concept-mapping-1" class="level4">
+<h4 class="anchored" data-anchor-id="hardware-circuit-level-concept-mapping-1">1. Hardware &amp; Circuit-Level Concept Mapping</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Circuit Component</th>
+<th style="text-align: left;">Week 11 Theoretical Concept</th>
+<th style="text-align: left;">Technical Function in System</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Pass LED (D12)</strong></td>
+<td style="text-align: left;"><strong>Hardware Verification Indicator</strong></td>
+<td style="text-align: left;">Illuminates green only when all unit assertions pass, validating system safety before machine startup.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Fail LED (D11)</strong></td>
+<td style="text-align: left;"><strong>Hardware Fault Interlock</strong></td>
+<td style="text-align: left;">Illuminates red upon any regression or math assertion failure, halting system operation.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="firmware-code-to-concept-breakdown-1" class="level4">
+<h4 class="anchored" data-anchor-id="firmware-code-to-concept-breakdown-1">2. Firmware Code-to-Concept Breakdown</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Code Statement (Framework / Bare-Metal)</th>
+<th style="text-align: left;">Week 11 Theoretical Concept</th>
+<th style="text-align: left;">Deep-Dive Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>adcToMillivolts(2047) &gt;= 1648</code></td>
+<td style="text-align: left;"><strong>Boundary Value Analysis &amp; Tolerancing</strong></td>
+<td style="text-align: left;">Validates algorithm correctness across boundaries (Zero, Mid, Full-Scale) under fixed-point rounding.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>ASSERT_EQUAL(actual, expected)</code></td>
+<td style="text-align: left;"><strong>MISRA-C Defensive Assertion Macro</strong></td>
+<td style="text-align: left;">Guarantees test halts and isolates faults without corrupting hardware stack or execution pointers.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+</section>
+<section id="hands-on-practice-challenge-for-students-to-solve" class="level2">
+<h2 class="anchored" data-anchor-id="hands-on-practice-challenge-for-students-to-solve">8. Hands-On Practice Challenge (For Students to Solve) 🎯</h2>
+<section id="objective-scenario" class="level3">
+<h3 class="anchored" data-anchor-id="objective-scenario">🎯 Objective &amp; Scenario</h3>
+<p>In hard real-time motor control and functional safety systems, software engineers must verify the physical latency between an external electrical trigger and the execution of its Interrupt Service Routine (ISR). In this challenge, you will implement a <strong>Pin-Toggled Interrupt Latency Benchmarking Harness</strong> on the <strong>STM32 Nucleo-C031C6</strong> to measure hardware EXTI dispatch latency on an oscilloscope.</p>
+</section>
+<section id="hardware-setup-pin-wiring-table" class="level3">
+<h3 class="anchored" data-anchor-id="hardware-setup-pin-wiring-table">🛠️ Hardware Setup &amp; Pin Wiring Table</h3>
+<p>Connect a trigger pulse button and an oscilloscope latency probe:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 23%">
+<col style="width: 23%">
+<col style="width: 29%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Component</th>
+<th style="text-align: left;">Pin / Terminal</th>
+<th style="text-align: center;">Board Connection</th>
+<th style="text-align: left;">Electrical Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>External Trigger Button</strong></td>
+<td style="text-align: left;">Terminal 1.L / 2.L</td>
+<td style="text-align: center;"><code>D2</code> (<code>PA10</code>) / <code>GND</code></td>
+<td style="text-align: left;">Edge trigger stimulus (<code>INPUT_PULLUP</code>)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Oscilloscope Latency Probe</strong></td>
+<td style="text-align: left;">Anode (<code>PA5</code>)</td>
+<td style="text-align: center;"><code>D13</code></td>
+<td style="text-align: left;">Direct high-speed latency output probe</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Common Ground</strong></td>
+<td style="text-align: left;">Cathode / GND</td>
+<td style="text-align: center;"><code>GND</code></td>
+<td style="text-align: left;">Oscilloscope ground reference clip</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="problem-statement-functional-requirements" class="level3">
+<h3 class="anchored" data-anchor-id="problem-statement-functional-requirements">📋 Problem Statement &amp; Functional Requirements</h3>
+<ol type="1">
+<li><strong>Interrupt Configuration:</strong>
+<ul>
+<li>Configure <code>D2</code> (<code>PA10</code>) as an external falling-edge interrupt source (EXTI).</li>
+<li>Configure <code>D13</code> (<code>PA5</code>) as a high-speed digital output pin.</li>
+</ul></li>
+<li><strong>Deterministic Latency Measurement:</strong>
+<ul>
+<li>As the <strong>very first assembly instruction</strong> inside the ISR, drive <code>D13</code> <strong>HIGH</strong> using single-cycle register manipulation (<code>GPIOA-&gt;BSRR = (1UL &lt;&lt; 5)</code>).</li>
+<li>As the last instruction before returning, drive <code>D13</code> <strong>LOW</strong> (<code>GPIOA-&gt;BSRR = (1UL &lt;&lt; (5 + 16))</code>).</li>
+</ul></li>
+<li><strong>Oscilloscope Latency Observation:</strong>
+<ul>
+<li>Channel 1 measures falling edge on <code>D2</code> (<span class="math inline">\(3.3\text{V} \to 0\text{V}\)</span>).</li>
+<li>Channel 2 measures rising edge on <code>D13</code> (<span class="math inline">\(0\text{V} \to 3.3\text{V}\)</span>).</li>
+<li>Latency is the exact time delta <span class="math inline">\(\Delta t\)</span> between Channel 1 falling edge and Channel 2 rising edge (typically 12 to 16 CPU cycles on ARM Cortex-M).</li>
+</ul></li>
+</ol>
+</section>
+<section id="starter-code-template" class="level3">
+<h3 class="anchored" data-anchor-id="starter-code-template">💻 Starter Code Template</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Student Practice Challenge: Interrupt Latency Benchmarking</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Target: board-st-nucleo-c031c6</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#define TRIGGER_PIN </span><span class="dv">2</span><span class="pp">  </span><span class="co">// D2 (PA10 EXTI Line)</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#define PROBE_PIN   </span><span class="dv">13</span><span class="pp"> </span><span class="co">// D13 (PA5 High-Speed Probe)</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> latencyISR<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 1: Drive PROBE_PIN HIGH in single clock cycle using direct register write</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 2: Drive PROBE_PIN LOW before returning</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setup<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 3: Initialize Serial at 115200 baud</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 4: Configure PROBE_PIN as OUTPUT</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 5: Configure TRIGGER_PIN as INPUT_PULLUP</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 6: Attach interrupt on FALLING edge</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> loop<span class="op">()</span> <span class="op">{}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="verification-expected-test-cases" class="level3">
+<h3 class="anchored" data-anchor-id="verification-expected-test-cases">🧪 Verification &amp; Expected Test Cases</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 22%">
+<col style="width: 27%">
+<col style="width: 27%">
+<col style="width: 22%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Event Trigger</th>
+<th style="text-align: center;">Scope Channel 1 (D2)</th>
+<th style="text-align: center;">Scope Channel 2 (D13)</th>
+<th style="text-align: left;">Measured Hardware Latency</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Button Idle</strong></td>
+<td style="text-align: center;"><span class="math inline">\(3.3\text{V}\)</span> (HIGH)</td>
+<td style="text-align: center;"><span class="math inline">\(0\text{V}\)</span> (LOW)</td>
+<td style="text-align: left;">System waiting in low-power idle</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Button Pressed</strong></td>
+<td style="text-align: center;">Falling Edge (<span class="math inline">\(3.3\text{V} \to 0\text{V}\)</span>)</td>
+<td style="text-align: center;">Rising Edge (<span class="math inline">\(0\text{V} \to 3.3\text{V}\)</span>)</td>
+<td style="text-align: left;"><span class="math inline">\(\approx 250\text{ ns}\)</span> (<span class="math inline">\(12\text{ cycles} \times \frac{1}{48\text{ MHz}}\)</span>)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>ISR Completion</strong></td>
+<td style="text-align: center;">Ground (<span class="math inline">\(0\text{V}\)</span>)</td>
+<td style="text-align: center;">Falling Edge back to <span class="math inline">\(0\text{V}\)</span></td>
+<td style="text-align: left;">Latency pulse duration measured</td>
+</tr>
+</tbody>
+</table>
+<details>
+<summary>
+💡 Need a Hint? Click to Reveal
+</summary>
+<ul>
+<li><p><strong>Eliminating Function Call Overhead:</strong> Standard <code>digitalWrite()</code> requires ~40 to 60 clock cycles of parameter lookup. Replace with direct STM32 BSRR register writes:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>GPIOA<span class="op">-&gt;</span>BSRR <span class="op">=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">5</span><span class="op">);</span>        <span class="co">// 1 cycle HIGH</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>GPIOA<span class="op">-&gt;</span>BSRR <span class="op">=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">5</span> <span class="op">+</span> <span class="dv">16</span><span class="op">));</span> <span class="co">// 1 cycle LOW</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+</ul>
+</details>
+<div class="simulation-container">
+<iframe src="https://wokwi.com/projects/479963095271968769?embed=1" title="Interrupt Latency Simulation Workspace" loading="lazy" allowfullscreen="">
+</iframe>
+<div class="sim-info-bar">
+<p><span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span> <span>Click Play to build and test your GPIO latency benchmarking harness</span></p>
+</div>
+</div>
+<div id="comparator-w11" class="code-comparator-widget">
+  <div class="comparator-header">
+    <div class="comparator-title">
+      <span class="icon">🔄</span>
+      <span><strong>Simultaneous Code Explorer:</strong> Arduino Framework ↔ Bare-Metal C</span>
+    </div>
+    <div class="comparator-controls">
+      <label>Load Preset:</label>
+      <select class="preset-select">
+        <option value="gpio_blink">GPIO Test Assertion Pass/Fail Indicators</option>
+        <option value="timer_pwm">Cycle Timing &amp; Benchmark Profiling</option>
+        <option value="exti_interrupt">EXTI Latency Measurement Trigger</option>
+        <option value="uart_comm">UART Telemetry Logging</option>
+        <option value="adc_analog">ADC Boundary Assertion Testing</option>
+      </select>
+      <button type="button" class="btn-compare" onclick="runInteractiveTranslation('comparator-w11')">Analyze / Map Code</button>
+    </div>
+  </div>
+  <div class="comparator-panes">
+    <div class="pane">
+      <div class="pane-header">
+        <span class="badge-arduino">Arduino C++ (Framework)</span>
+        <span class="hint">Type or paste Arduino code here for live Bare-Metal translation</span>
+      </div>
+      <textarea class="code-input" spellcheck="false"></textarea>
+    </div>
+    <div class="pane">
+      <div class="pane-header">
+        <span class="badge-baremetal">Equivalent Bare-Metal C (Direct Registers)</span>
+        <span class="hint">Live Memory-Mapped Operations</span>
+      </div>
+      <pre class="code-output"><code></code></pre>
+    </div>
+  </div>
+</div>
+<hr>
+</section>
+</section>
+<section id="concept-check-practice-questions" class="level2">
+<h2 class="anchored" data-anchor-id="concept-check-practice-questions">9. Concept Check Practice Questions</h2>
+<section id="question-1-in-circuit-debugging-swd-vs.-jtag" class="level3">
+<h3 class="anchored" data-anchor-id="question-1-in-circuit-debugging-swd-vs.-jtag">Question 1: In-Circuit Debugging: SWD vs.&nbsp;JTAG</h3>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Click to View Question &amp; Options
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Why is ARM Serial Wire Debug (SWD) the standard debug interface on modern 32-bit Cortex-M microcontrollers rather than traditional 5-wire JTAG?</p>
+<p><strong>Options:</strong><br>
+- <strong>A)</strong> JTAG does not work with C programming<br>
+- <strong>B)</strong> SWD achieves full hardware debugging, flash programming, and CPU control using only 2 physical pins (SWCLK and SWDIO), saving valuable pins on compact chip packages<br>
+- <strong>C)</strong> SWD eliminates the need for a power supply<br>
+- <strong>D)</strong> JTAG can only be used on 8-bit processors</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>✅ Correct Answer: B
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Explanation:</strong><br>
+Standard JTAG requires 4 or 5 dedicated pins (TDI, TDO, TCK, TMS, TRST). On small 20-pin or 32-pin microcontrollers, dedicating 5 pins to debugging severely limits the number of pins available for sensors and actuators. SWD provides the same debugging capabilities over just 2 pins.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="question-2-profiling-with-arm-dwt-cycle-counter" class="level3">
+<h3 class="anchored" data-anchor-id="question-2-profiling-with-arm-dwt-cycle-counter">Question 2: Profiling with ARM DWT Cycle Counter</h3>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Click to View Question &amp; Options
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>What is the primary advantage of using the ARM Cortex-M Data Watchpoint and Trace (DWT) cycle counter (<code>DWT-&gt;CYCCNT</code>) for execution profiling compared to inserting <code>printf()</code> statements?</p>
+<p><strong>Options:</strong><br>
+- <strong>A)</strong> <code>printf()</code> increases the CPU clock speed<br>
+- <strong>B)</strong> <code>DWT-&gt;CYCCNT</code> measures execution time at single-clock-cycle precision with zero software overhead, avoiding the massive timing delays introduced by serial <code>printf()</code> calls<br>
+- <strong>C)</strong> DWT registers are stored in Flash memory<br>
+- <strong>D)</strong> <code>printf()</code> can only display negative numbers</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>✅ Correct Answer: B
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Explanation:</strong><br>
+<code>printf()</code> involves formatting strings and waiting for bytes to shift out over a serial bus, adding milliseconds of delay and completely altering real-time software timing (<strong>the Heisenbug problem</strong>). The DWT cycle counter is a dedicated silicon hardware counter that reads in a single clock cycle with zero overhead.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<hr>
+<div class="d-flex justify-content-between mt-4">
+<p><a href="./Week-10.html" class="seek-prev-btn">← Back to Week 10: Efficiency &amp; Optimization</a> <a href="./Week-12.html" class="seek-next-btn">NEXT: Week 12 — Safety, Security &amp; Ethics →</a></p>
+</div>
 
 
 </section>
+</section>
 
 </main> <!-- /main -->
+<script>
+/**
+ * Interactive Arduino ↔ Bare-Metal STM32 C Code Comparator & Live Translator
+ * Translates Arduino framework calls to equivalent STM32 Nucleo-C031C6 Bare-Metal Register operations.
+ */
+const PRESETS = {
+  gpio_blink: {
+    name: "GPIO Output: LED Blink",
+    arduino: `// Arduino Framework (High-Level)
+#define LED_PIN 13 // PA5 on Nucleo-C031C6
+
+void setup() {
+  pinMode(LED_PIN, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(LED_PIN, HIGH);
+  delay(500);
+  digitalWrite(LED_PIN, LOW);
+  delay(500);
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+
+#define RCC_IOPENR   (*(volatile uint32_t *)(0x40021000UL + 0x34UL))
+#define GPIOA_MODER  (*(volatile uint32_t *)(0x50000000UL + 0x00UL))
+#define GPIOA_BSRR   (*(volatile uint32_t *)(0x50000000UL + 0x18UL))
+
+void gpio_init(void) {
+    // 1. Enable GPIOA Peripheral Bus Clock
+    RCC_IOPENR |= (1UL << 0);
+
+    // 2. Configure PA5 as General Purpose Output ('01' in MODER)
+    GPIOA_MODER &= ~(3UL << (5 * 2));
+    GPIOA_MODER |=  (1UL << (5 * 2));
+}
+
+void delay_cycles(volatile uint32_t count) {
+    while (count--) { __asm volatile("nop"); }
+}
+
+int main(void) {
+    gpio_init();
+    while (1) {
+        // Set PA5 HIGH (bit 5 in BSRR)
+        GPIOA_BSRR = (1UL << 5);
+        delay_cycles(2400000); // ~500 ms at 48 MHz
+
+        // Reset PA5 LOW (bit 5+16 in BSRR)
+        GPIOA_BSRR = (1UL << (5 + 16));
+        delay_cycles(2400000);
+    }
+}`
+  },
+  gpio_input: {
+    name: "GPIO Input: Pushbutton with Internal Pull-Up",
+    arduino: `// Arduino Framework (High-Level)
+#define BUTTON_PIN 2  // PA10
+#define LED_PIN    13 // PA5
+
+void setup() {
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(LED_PIN, OUTPUT);
+}
+
+void loop() {
+  int buttonState = digitalRead(BUTTON_PIN);
+  if (buttonState == LOW) { // Pressed (Active-LOW)
+    digitalWrite(LED_PIN, HIGH);
+  } else {
+    digitalWrite(LED_PIN, LOW);
+  }
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+#include <stdbool.h>
+
+#define RCC_IOPENR   (*(volatile uint32_t *)(0x40021000UL + 0x34UL))
+#define GPIOA_MODER  (*(volatile uint32_t *)(0x50000000UL + 0x00UL))
+#define GPIOA_PUPDR  (*(volatile uint32_t *)(0x50000000UL + 0x0CUL))
+#define GPIOA_IDR    (*(volatile uint32_t *)(0x50000000UL + 0x10UL))
+#define GPIOA_BSRR   (*(volatile uint32_t *)(0x50000000UL + 0x18UL))
+
+void setup_pins(void) {
+    RCC_IOPENR |= (1UL << 0); // Enable GPIOA clock
+
+    // PA10 as Input ('00' in MODER) with Pull-Up ('01' in PUPDR)
+    GPIOA_MODER &= ~(3UL << (10 * 2));
+    GPIOA_PUPDR &= ~(3UL << (10 * 2));
+    GPIOA_PUPDR |=  (1UL << (10 * 2));
+
+    // PA5 as Output ('01' in MODER)
+    GPIOA_MODER &= ~(3UL << (5 * 2));
+    GPIOA_MODER |=  (1UL << (5 * 2));
+}
+
+int main(void) {
+    setup_pins();
+    while (1) {
+        // Read PA10 pin state from Input Data Register (IDR)
+        if (!(GPIOA_IDR & (1UL << 10))) {
+            GPIOA_BSRR = (1UL << 5);        // LED ON (PA5 Set)
+        } else {
+            GPIOA_BSRR = (1UL << (5 + 16)); // LED OFF (PA5 Reset)
+        }
+    }
+}`
+  },
+  exti_interrupt: {
+    name: "EXTI: Hardware Interrupt on Edge Transition",
+    arduino: `// Arduino Framework (High-Level)
+#define BUTTON_PIN 2 // PA10
+
+volatile bool flag = false;
+
+void buttonISR() {
+  flag = true;
+}
+
+void setup() {
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), buttonISR, FALLING);
+}
+
+void loop() {
+  if (flag) {
+    flag = false;
+    // Process interrupt event
+  }
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+#include <stdbool.h>
+
+#define EXTI_BASE       (0x40021800UL)
+#define EXTI_IMR1       (*(volatile uint32_t *)(EXTI_BASE + 0x00UL))
+#define EXTI_FTSR1      (*(volatile uint32_t *)(EXTI_BASE + 0x04UL))
+#define EXTI_RPR1       (*(volatile uint32_t *)(EXTI_BASE + 0x0CUL))
+#define NVIC_ISER       (*(volatile uint32_t *)(0xE000E100UL))
+
+volatile bool flag = false;
+
+void exti_init(void) {
+    // 1. Unmask Line 10 in Interrupt Mask Register (IMR1)
+    EXTI_IMR1 |= (1UL << 10);
+
+    // 2. Enable Falling Edge Trigger for Line 10
+    EXTI_FTSR1 |= (1UL << 10);
+
+    // 3. Enable EXTI line 4-15 IRQ in ARM Cortex-M0+ NVIC
+    NVIC_ISER |= (1UL << 7); // IRQ 7 = EXTI4_15_IRQn
+}
+
+void EXTI4_15_IRQHandler(void) {
+    if (EXTI_RPR1 & (1UL << 10)) {
+        EXTI_RPR1 = (1UL << 10); // Clear pending flag by writing '1'
+        flag = true;             // Atomic flag write
+    }
+}
+
+int main(void) {
+    exti_init();
+    while (1) {
+        if (flag) {
+            flag = false;
+        }
+    }
+}`
+  },
+  uart_comm: {
+    name: "UART: Hardware Serial Communication (115200 Baud)",
+    arduino: `// Arduino Framework (High-Level)
+void setup() {
+  Serial.begin(115200);
+}
+
+void loop() {
+  Serial.println("OK");
+  delay(1000);
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+
+#define USART2_BASE     (0x40004400UL)
+#define USART2_CR1      (*(volatile uint32_t *)(USART2_BASE + 0x00UL))
+#define USART2_BRR      (*(volatile uint32_t *)(USART2_BASE + 0x0CUL))
+#define USART2_ISR      (*(volatile uint32_t *)(USART2_BASE + 0x1CUL))
+#define USART2_TDR      (*(volatile uint32_t *)(USART2_BASE + 0x28UL))
+
+void usart2_init(uint32_t baud, uint32_t pclk) {
+    // 1. Set Baud Rate Register: BRR = Clock / Baud
+    USART2_BRR = pclk / baud; // 48 MHz / 115200 = 416
+
+    // 2. Enable Transmitter (TE) and USART Peripheral (UE)
+    USART2_CR1 |= (1UL << 3) | (1UL << 0);
+}
+
+void usart2_write_char(char c) {
+    // Wait for TXE (Transmit Data Register Empty) flag
+    while (!(USART2_ISR & (1UL << 7)));
+    USART2_TDR = (uint8_t)c;
+}
+
+void usart2_write_str(const char *str) {
+    while (*str) usart2_write_char(*str++);
+}
+
+int main(void) {
+    usart2_init(115200, 48000000UL);
+    while (1) {
+        usart2_write_str("OK\\r\\n");
+        for (volatile uint32_t i = 0; i < 4800000; i++); // ~1 sec delay
+    }
+}`
+  },
+  timer_pwm: {
+    name: "PWM: Hardware Timer Pulse Width Modulation",
+    arduino: `// Arduino Framework (High-Level)
+#define PWM_PIN 9 // D9
+
+void setup() {
+  pinMode(PWM_PIN, OUTPUT);
+}
+
+void loop() {
+  analogWrite(PWM_PIN, 128); // 50% Duty Cycle (128 / 255)
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+
+#define TIM1_BASE       (0x40012C00UL)
+#define TIM1_CR1        (*(volatile uint32_t *)(TIM1_BASE + 0x00UL))
+#define TIM1_CCMR1      (*(volatile uint32_t *)(TIM1_BASE + 0x18UL))
+#define TIM1_CCER       (*(volatile uint32_t *)(TIM1_BASE + 0x20UL))
+#define TIM1_ARR        (*(volatile uint32_t *)(TIM1_BASE + 0x2CUL))
+#define TIM1_CCR1       (*(volatile uint32_t *)(TIM1_BASE + 0x34UL))
+
+void tim1_pwm_init(void) {
+    // 1. Auto-Reload Register: Period = 1000 counts
+    TIM1_ARR = 999;
+
+    // 2. Capture/Compare Register: Duty Cycle = 500 counts (50%)
+    TIM1_CCR1 = 500;
+
+    // 3. Configure Channel 1 as PWM Mode 1 (OC1M = '110')
+    TIM1_CCMR1 |= (6UL << 4);
+
+    // 4. Enable Output Channel 1 (CC1E)
+    TIM1_CCER |= (1UL << 0);
+
+    // 5. Start Timer Counter (CEN)
+    TIM1_CR1 |= (1UL << 0);
+}
+
+int main(void) {
+    tim1_pwm_init();
+    while (1) {
+        // Hardware timer runs autonomously with zero CPU cycles
+    }
+}`
+  },
+  adc_analog: {
+    name: "ADC: Analog Transducer Conversion",
+    arduino: `// Arduino Framework (High-Level)
+#define SENSOR_PIN A0 // PA0
+
+void setup() {
+  Serial.begin(115200);
+}
+
+void loop() {
+  int raw = analogRead(SENSOR_PIN);
+  float voltage = (raw * 3.3f) / 1023.0f;
+  delay(250);
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+
+#define ADC1_BASE       (0x40012400UL)
+#define ADC1_ISR        (*(volatile uint32_t *)(ADC1_BASE + 0x00UL))
+#define ADC1_CR         (*(volatile uint32_t *)(ADC1_BASE + 0x08UL))
+#define ADC1_CHSELR     (*(volatile uint32_t *)(ADC1_BASE + 0x28UL))
+#define ADC1_DR         (*(volatile uint32_t *)(ADC1_BASE + 0x40UL))
+
+void adc_init(void) {
+    // 1. Select ADC Channel 0 (PA0)
+    ADC1_CHSELR = (1UL << 0);
+
+    // 2. Enable ADC Peripheral (ADEN = 1)
+    ADC1_CR |= (1UL << 0);
+    while (!(ADC1_ISR & (1UL << 0))); // Wait for ADRDY
+}
+
+uint16_t adc_read_channel0(void) {
+    // Start conversion (ADSTART = 1)
+    ADC1_CR |= (1UL << 2);
+
+    // Poll End-Of-Conversion (EOC) flag
+    while (!(ADC1_ISR & (1UL << 2)));
+
+    // Return 12-bit conversion result
+    return (uint16_t)ADC1_DR;
+}
+
+int main(void) {
+    adc_init();
+    while (1) {
+        uint16_t sample = adc_read_channel0();
+        // Process analog sample in millivolts: (sample * 3300) / 4095
+    }
+}`
+  }
+};
+
+/**
+ * Intelligent Real-Time Code Translator
+ * Takes arbitrary Arduino C++ code and generates structured STM32 Bare-Metal Register operations.
+ */
+function translateArduinoToBareMetal(code) {
+  if (!code || !code.trim()) {
+    return "// Paste or type standard Arduino code on the left to see\n// real-time equivalent Bare-Metal STM32 C registers here!";
+  }
+
+  let inits = [];
+  let loopBody = [];
+  let defines = new Set();
+  let helperFuncs = [];
+
+  // Always include standard base headers
+  defines.add('#include <stdint.h>');
+  defines.add('#include <stdbool.h>');
+  defines.add('#define RCC_IOPENR   (*(volatile uint32_t *)(0x40021000UL + 0x34UL))');
+
+  let hasGpioOutput = false;
+  let hasGpioInput = false;
+  let hasUart = false;
+  let hasAdc = false;
+  let hasTimer = false;
+  let hasDelay = false;
+
+  const lines = code.split('\n');
+
+  lines.forEach(line => {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('//')) return;
+
+    // 1. PinMode OUTPUT
+    let m = trimmed.match(/pinMode\s*\(\s*(\d+|\w+)\s*,\s*OUTPUT\s*\)/i);
+    if (m) {
+      hasGpioOutput = true;
+      let pin = isNaN(m[1]) ? "5" : m[1];
+      inits.push(`    // Configure Pin ${m[1]} as General Purpose Output`);
+      inits.push(`    RCC_IOPENR |= (1UL << 0); // Enable GPIOA clock`);
+      inits.push(`    GPIOA_MODER &= ~(3UL << (${pin} * 2));`);
+      inits.push(`    GPIOA_MODER |=  (1UL << (${pin} * 2));`);
+    }
+
+    // 2. PinMode INPUT_PULLUP
+    m = trimmed.match(/pinMode\s*\(\s*(\d+|\w+)\s*,\s*INPUT(?:_PULLUP)?\s*\)/i);
+    if (m) {
+      hasGpioInput = true;
+      let pin = isNaN(m[1]) ? "10" : m[1];
+      inits.push(`    // Configure Pin ${m[1]} as Input with Pull-Up`);
+      inits.push(`    RCC_IOPENR |= (1UL << 0); // Enable GPIOA clock`);
+      inits.push(`    GPIOA_MODER &= ~(3UL << (${pin} * 2));`);
+      inits.push(`    GPIOA_PUPDR &= ~(3UL << (${pin} * 2));`);
+      inits.push(`    GPIOA_PUPDR |=  (1UL << (${pin} * 2));`);
+    }
+
+    // 3. digitalWrite HIGH
+    m = trimmed.match(/digitalWrite\s*\(\s*(\d+|\w+)\s*,\s*HIGH\s*\)/i);
+    if (m) {
+      hasGpioOutput = true;
+      let pin = isNaN(m[1]) ? "5" : m[1];
+      loopBody.push(`        // Pin ${m[1]} HIGH via atomic Bit Set register`);
+      loopBody.push(`        GPIOA_BSRR = (1UL << ${pin});`);
+    }
+
+    // 4. digitalWrite LOW
+    m = trimmed.match(/digitalWrite\s*\(\s*(\d+|\w+)\s*,\s*LOW\s*\)/i);
+    if (m) {
+      hasGpioOutput = true;
+      let pin = isNaN(m[1]) ? "5" : m[1];
+      loopBody.push(`        // Pin ${m[1]} LOW via atomic Bit Reset register`);
+      loopBody.push(`        GPIOA_BSRR = (1UL << (${pin} + 16));`);
+    }
+
+    // 5. digitalRead
+    m = trimmed.match(/digitalRead\s*\(\s*(\d+|\w+)\s*\)/i);
+    if (m) {
+      hasGpioInput = true;
+      let pin = isNaN(m[1]) ? "10" : m[1];
+      loopBody.push(`        // Sample Pin ${m[1]} from Input Data Register (IDR)`);
+      loopBody.push(`        bool pinState = ((GPIOA_IDR & (1UL << ${pin})) != 0);`);
+    }
+
+    // 6. Serial.begin
+    m = trimmed.match(/Serial\.begin\s*\(\s*(\d+)\s*\)/i);
+    if (m) {
+      hasUart = true;
+      let baud = m[1];
+      inits.push(`    // Initialize USART2 at ${baud} baud`);
+      inits.push(`    USART2_BRR = 48000000UL / ${baud}UL;`);
+      inits.push(`    USART2_CR1 |= (1UL << 3) | (1UL << 0); // TE + UE`);
+    }
+
+    // 7. Serial.print / println
+    m = trimmed.match(/Serial\.print(?:ln)?\s*\(\s*(.*?)\s*\)/i);
+    if (m) {
+      hasUart = true;
+      let arg = m[1];
+      loopBody.push(`        // Transmit string over USART2`);
+      loopBody.push(`        usart2_print(${arg});`);
+    }
+
+    // 8. analogRead
+    m = trimmed.match(/analogRead\s*\(\s*(\w+)\s*\)/i);
+    if (m) {
+      hasAdc = true;
+      loopBody.push(`        // Trigger ADC1 conversion and wait for End-Of-Conversion (EOC)`);
+      loopBody.push(`        ADC1_CR |= (1UL << 2);`);
+      loopBody.push(`        while (!(ADC1_ISR & (1UL << 2)));`);
+      loopBody.push(`        uint16_t adc_val = (uint16_t)ADC1_DR;`);
+    }
+
+    // 9. analogWrite / PWM
+    m = trimmed.match(/analogWrite\s*\(\s*(\w+)\s*,\s*(\d+|\w+)\s*\)/i);
+    if (m) {
+      hasTimer = true;
+      loopBody.push(`        // Update Timer Compare Register (Duty Cycle)`);
+      loopBody.push(`        TIM1_CCR1 = ${m[2]};`);
+    }
+
+    // 10. delay
+    m = trimmed.match(/delay\s*\(\s*(\d+|\w+)\s*\)/i);
+    if (m) {
+      hasDelay = true;
+      let ms = m[1];
+      loopBody.push(`        delay_ms(${ms});`);
+    }
+  });
+
+  if (hasGpioOutput || hasGpioInput) {
+    defines.add('#define GPIOA_MODER  (*(volatile uint32_t *)(0x50000000UL + 0x00UL))');
+    defines.add('#define GPIOA_PUPDR  (*(volatile uint32_t *)(0x50000000UL + 0x0CUL))');
+    defines.add('#define GPIOA_IDR    (*(volatile uint32_t *)(0x50000000UL + 0x10UL))');
+    defines.add('#define GPIOA_BSRR   (*(volatile uint32_t *)(0x50000000UL + 0x18UL))');
+  }
+
+  if (hasUart) {
+    defines.add('#define USART2_BASE  (0x40004400UL)');
+    defines.add('#define USART2_CR1   (*(volatile uint32_t *)(USART2_BASE + 0x00UL))');
+    defines.add('#define USART2_BRR   (*(volatile uint32_t *)(USART2_BASE + 0x0CUL))');
+    defines.add('#define USART2_ISR   (*(volatile uint32_t *)(USART2_BASE + 0x1CUL))');
+    defines.add('#define USART2_TDR   (*(volatile uint32_t *)(USART2_BASE + 0x28UL))');
+
+    helperFuncs.push(`void usart2_print(const char *s) {
+    while (*s) {
+        while (!(USART2_ISR & (1UL << 7))); // Wait for TXE
+        USART2_TDR = (uint8_t)*s++;
+    }
+}`);
+  }
+
+  if (hasAdc) {
+    defines.add('#define ADC1_BASE    (0x40012400UL)');
+    defines.add('#define ADC1_ISR     (*(volatile uint32_t *)(ADC1_BASE + 0x00UL))');
+    defines.add('#define ADC1_CR      (*(volatile uint32_t *)(ADC1_BASE + 0x08UL))');
+    defines.add('#define ADC1_DR      (*(volatile uint32_t *)(ADC1_BASE + 0x40UL))');
+  }
+
+  if (hasTimer) {
+    defines.add('#define TIM1_BASE    (0x40012C00UL)');
+    defines.add('#define TIM1_CR1     (*(volatile uint32_t *)(TIM1_BASE + 0x00UL))');
+    defines.add('#define TIM1_CCR1    (*(volatile uint32_t *)(TIM1_BASE + 0x34UL))');
+  }
+
+  if (hasDelay) {
+    helperFuncs.push(`void delay_ms(volatile uint32_t ms) {
+    while (ms--) {
+        for (volatile uint32_t i = 0; i < 4800; i++) { __asm volatile("nop"); }
+    }
+}`);
+  }
+
+  let result = [];
+  result.push("// ============================================================================");
+  result.push("// Equivalent Bare-Metal Embedded C (Direct STM32 Nucleo-C031C6 Registers)");
+  result.push("// Generated in real-time from your Arduino code");
+  result.push("// ============================================================================");
+  result.push(Array.from(defines).join('\n'));
+  result.push("");
+
+  if (helperFuncs.length > 0) {
+    result.push(helperFuncs.join('\n\n'));
+    result.push("");
+  }
+
+  result.push("int main(void) {");
+  if (inits.length > 0) {
+    result.push("    // --- Peripherals & Pin Initialization ---");
+    result.push(inits.join('\n'));
+    result.push("");
+  }
+
+  result.push("    // --- Superloop Execution ---");
+  result.push("    while (1) {");
+  if (loopBody.length > 0) {
+    result.push(loopBody.join('\n'));
+  } else {
+    result.push("        // Active runtime processing");
+  }
+  result.push("    }");
+  result.push("}");
+
+  return result.join('\n');
+}
+
+function initCodeComparator(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const select = container.querySelector('.preset-select');
+  const input = container.querySelector('.code-input');
+  const output = container.querySelector('.code-output code');
+
+  if (!select || !input || !output) return;
+
+  function loadPreset() {
+    const val = select.value;
+    if (PRESETS[val]) {
+      input.value = PRESETS[val].arduino;
+      output.textContent = PRESETS[val].baremetal;
+    }
+  }
+
+  function handleLiveInput() {
+    output.textContent = translateArduinoToBareMetal(input.value);
+  }
+
+  select.addEventListener('change', loadPreset);
+  input.addEventListener('input', handleLiveInput);
+  loadPreset();
+}
+
+function runInteractiveTranslation(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const input = container.querySelector('.code-input');
+  const output = container.querySelector('.code-output code');
+  if (input && output) {
+    output.textContent = translateArduinoToBareMetal(input.value);
+  }
+}
+
+function setupAllComparators() {
+  document.querySelectorAll('.code-comparator-widget').forEach((el, idx) => {
+    if (!el.id) el.id = 'comparator-' + idx;
+    initCodeComparator(el.id);
+  });
+}
+
+// Ensure execution whether DOM is loading or already ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupAllComparators);
+} else {
+  setupAllComparators();
+}
+</script>
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
@@ -953,6 +2541,19 @@ ul.task-list li input[type="checkbox"] {
   window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
   </script>
 </div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>CS2101: Embedded C Programming — IIT Madras</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+<p>Made by TA: Krishna Gorai</p>
+</div>
+  </div>
+</footer>
 
 
 

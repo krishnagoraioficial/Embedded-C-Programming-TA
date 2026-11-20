@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Week 9: Introduction to Real-Time Operating Systems (RTOS) – CS2101: Embedded C</title>
+<title>Week 9: Real-Time Operating Systems (RTOS) – CS2101: Embedded C</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -25,6 +25,41 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -48,9 +83,9 @@ ul.task-list li input[type="checkbox"] {
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-1efc6d65981d7f926cfe85ef7b0c751f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-f08d384c0165829aba50fd8ee00b4b4f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-1efc6d65981d7f926cfe85ef7b0c751f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-64d0f6d14e372c61dcd2002aecce1639.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-49095d02d3de05fbda1b5d708a7a597d.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-64d0f6d14e372c61dcd2002aecce1639.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -80,6 +115,35 @@ ul.task-list li input[type="checkbox"] {
 }</script>
 <style>html{ scroll-behavior: smooth; }</style>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -379,7 +443,54 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
+  <li><a href="#what-is-an-rtos-and-why-do-we-need-it" id="toc-what-is-an-rtos-and-why-do-we-need-it" class="nav-link active" data-scroll-target="#what-is-an-rtos-and-why-do-we-need-it">1. What is an RTOS and Why Do We Need It?</a>
+  <ul class="collapse">
+  <li><a href="#general-purpose-os-desktop-vs.-rtos-embedded" id="toc-general-purpose-os-desktop-vs.-rtos-embedded" class="nav-link" data-scroll-target="#general-purpose-os-desktop-vs.-rtos-embedded">General-Purpose OS (Desktop) vs.&nbsp;RTOS (Embedded)</a></li>
+  </ul></li>
+  <li><a href="#tasks-and-task-states-in-freertos" id="toc-tasks-and-task-states-in-freertos" class="nav-link" data-scroll-target="#tasks-and-task-states-in-freertos">2. Tasks and Task States in FreeRTOS</a>
+  <ul class="collapse">
+  <li><a href="#the-4-task-states" id="toc-the-4-task-states" class="nav-link" data-scroll-target="#the-4-task-states">The 4 Task States</a></li>
+  </ul></li>
+  <li><a href="#communication-synchronization-queues-semaphores-mutexes" id="toc-communication-synchronization-queues-semaphores-mutexes" class="nav-link" data-scroll-target="#communication-synchronization-queues-semaphores-mutexes">3. Communication &amp; Synchronization: Queues, Semaphores &amp; Mutexes</a>
+  <ul class="collapse">
+  <li><a href="#queues-thread-safe-fifo-buffer" id="toc-queues-thread-safe-fifo-buffer" class="nav-link" data-scroll-target="#queues-thread-safe-fifo-buffer">3.1 Queues (Thread-Safe FIFO Buffer)</a></li>
+  <li><a href="#semaphores-event-signaling" id="toc-semaphores-event-signaling" class="nav-link" data-scroll-target="#semaphores-event-signaling">3.2 Semaphores (Event Signaling)</a></li>
+  <li><a href="#mutexes-priority-inheritance" id="toc-mutexes-priority-inheritance" class="nav-link" data-scroll-target="#mutexes-priority-inheritance">3.3 Mutexes &amp; Priority Inheritance</a></li>
+  </ul></li>
+  <li><a href="#mini-project-1-dual-task-freertos-sensor-pipeline" id="toc-mini-project-1-dual-task-freertos-sensor-pipeline" class="nav-link" data-scroll-target="#mini-project-1-dual-task-freertos-sensor-pipeline">4. Mini-Project 1: Dual-Task FreeRTOS Sensor Pipeline 🔄📦</a>
+  <ul class="collapse">
+  <li><a href="#objective" id="toc-objective" class="nav-link" data-scroll-target="#objective">🎯 Objective</a></li>
+  <li><a href="#hardware-setup-wokwi" id="toc-hardware-setup-wokwi" class="nav-link" data-scroll-target="#hardware-setup-wokwi">🛠️ Hardware Setup (Wokwi)</a></li>
+  <li><a href="#pin-wiring-table" id="toc-pin-wiring-table" class="nav-link" data-scroll-target="#pin-wiring-table">Pin Wiring Table</a></li>
+  <li><a href="#problem-statement-logic-flow" id="toc-problem-statement-logic-flow" class="nav-link" data-scroll-target="#problem-statement-logic-flow">📝 Problem Statement &amp; Logic Flow</a></li>
+  <li><a href="#interactive-simulation" id="toc-interactive-simulation" class="nav-link" data-scroll-target="#interactive-simulation">Interactive Simulation</a></li>
+  <li><a href="#implementation-code-high-level-framework-vs.-bare-metal-embedded-c" id="toc-implementation-code-high-level-framework-vs.-bare-metal-embedded-c" class="nav-link" data-scroll-target="#implementation-code-high-level-framework-vs.-bare-metal-embedded-c">Implementation Code: High-Level Framework vs.&nbsp;Bare-Metal Embedded C</a></li>
+  <li><a href="#how-mini-project-1-applies-week-9-concepts" id="toc-how-mini-project-1-applies-week-9-concepts" class="nav-link" data-scroll-target="#how-mini-project-1-applies-week-9-concepts">🔍 How Mini-Project 1 Applies Week 9 Concepts</a></li>
+  </ul></li>
+  <li><a href="#mini-project-2-mutex-protected-shared-serial-output" id="toc-mini-project-2-mutex-protected-shared-serial-output" class="nav-link" data-scroll-target="#mini-project-2-mutex-protected-shared-serial-output">5. Mini-Project 2: Mutex-Protected Shared Serial Output 🔒🛡️</a>
+  <ul class="collapse">
+  <li><a href="#objective-1" id="toc-objective-1" class="nav-link" data-scroll-target="#objective-1">🎯 Objective</a></li>
+  <li><a href="#hardware-setup-wokwi-1" id="toc-hardware-setup-wokwi-1" class="nav-link" data-scroll-target="#hardware-setup-wokwi-1">🛠️ Hardware Setup (Wokwi)</a></li>
+  <li><a href="#pin-wiring-table-1" id="toc-pin-wiring-table-1" class="nav-link" data-scroll-target="#pin-wiring-table-1">Pin Wiring Table</a></li>
+  <li><a href="#problem-statement-logic-flow-1" id="toc-problem-statement-logic-flow-1" class="nav-link" data-scroll-target="#problem-statement-logic-flow-1">📝 Problem Statement &amp; Logic Flow</a></li>
+  <li><a href="#interactive-simulation-1" id="toc-interactive-simulation-1" class="nav-link" data-scroll-target="#interactive-simulation-1">Interactive Simulation</a></li>
+  <li><a href="#implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1" id="toc-implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1" class="nav-link" data-scroll-target="#implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1">Implementation Code: High-Level Framework vs.&nbsp;Bare-Metal Embedded C</a></li>
+  <li><a href="#how-mini-project-2-applies-week-9-concepts" id="toc-how-mini-project-2-applies-week-9-concepts" class="nav-link" data-scroll-target="#how-mini-project-2-applies-week-9-concepts">🔍 How Mini-Project 2 Applies Week 9 Concepts</a></li>
+  <li><a href="#under-the-hood-bare-metal-architecture-reference" id="toc-under-the-hood-bare-metal-architecture-reference" class="nav-link" data-scroll-target="#under-the-hood-bare-metal-architecture-reference">⚙️ Under-the-Hood: Bare-Metal Architecture Reference</a></li>
+  </ul></li>
+  <li><a href="#hands-on-practice-challenge-for-students-to-solve" id="toc-hands-on-practice-challenge-for-students-to-solve" class="nav-link" data-scroll-target="#hands-on-practice-challenge-for-students-to-solve">6. Hands-On Practice Challenge (For Students to Solve) 🎯</a>
+  <ul class="collapse">
+  <li><a href="#objective-scenario" id="toc-objective-scenario" class="nav-link" data-scroll-target="#objective-scenario">🎯 Objective &amp; Scenario</a></li>
+  <li><a href="#hardware-setup-pin-wiring-table" id="toc-hardware-setup-pin-wiring-table" class="nav-link" data-scroll-target="#hardware-setup-pin-wiring-table">🛠️ Hardware Setup &amp; Pin Wiring Table</a></li>
+  <li><a href="#problem-statement-functional-requirements" id="toc-problem-statement-functional-requirements" class="nav-link" data-scroll-target="#problem-statement-functional-requirements">📋 Problem Statement &amp; Functional Requirements</a></li>
+  <li><a href="#starter-code-template" id="toc-starter-code-template" class="nav-link" data-scroll-target="#starter-code-template">💻 Starter Code Template</a></li>
+  <li><a href="#verification-expected-test-cases" id="toc-verification-expected-test-cases" class="nav-link" data-scroll-target="#verification-expected-test-cases">🧪 Verification &amp; Expected Test Cases</a></li>
+  </ul></li>
+  <li><a href="#concept-check-practice-questions" id="toc-concept-check-practice-questions" class="nav-link" data-scroll-target="#concept-check-practice-questions">7. Concept Check Practice Questions</a>
+  <ul class="collapse">
+  <li><a href="#question-1-freertos-task-state-transitions" id="toc-question-1-freertos-task-state-transitions" class="nav-link" data-scroll-target="#question-1-freertos-task-state-transitions">Question 1: FreeRTOS Task State Transitions</a></li>
+  <li><a href="#question-2-resolving-priority-inversion" id="toc-question-2-resolving-priority-inversion" class="nav-link" data-scroll-target="#question-2-resolving-priority-inversion">Question 2: Resolving Priority Inversion</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -389,7 +500,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Week 9: Introduction to Real-Time Operating Systems (RTOS)</h1>
+<h1 class="title">Week 9: Real-Time Operating Systems (RTOS)</h1>
 </div>
 
 
@@ -406,28 +517,1522 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="overview" class="level2">
-<h2 class="anchored" data-anchor-id="overview">Overview</h2>
-<p>FreeRTOS core concepts, Task scheduling, Context switching, Queues, Semaphores, Mutexes, Priority Inversion.</p>
-<div class="callout callout-style-default callout-tip callout-titled">
+<section id="what-is-an-rtos-and-why-do-we-need-it" class="level2">
+<h2 class="anchored" data-anchor-id="what-is-an-rtos-and-why-do-we-need-it">1. What is an RTOS and Why Do We Need It?</h2>
+<p>When you build complex embedded projects—like a drone that must calculate flight stabilization math at 500 Hz while receiving GPS coordinates and recording video—a traditional bare-metal superloop quickly breaks down:</p>
+<pre class="text"><code> THE BARE-METAL SUPERLOOP BREAKDOWN:
+ while(1) {
+     read_flight_imu();      // MUST RUN EVERY 2 MILLISECONDS (Hard Deadline!)
+     read_gps_sentence();    // Takes 15 ms (BLOCKS CPU -&gt; DRONE CRASHES!)
+     write_sd_card_log();    // Takes 40 ms (BLOCKS CPU -&gt; DRONE CRASHES!)
+ }
+ * In a bare-metal loop, one slow function causes all other time-critical tasks to fail!
+
+ THE PREEMPTIVE RTOS SOLUTION:
+ High-Priority Task:   [ Flight IMU (2ms) ] ----&gt; [ Flight IMU (2ms) ] ----&gt; [ Flight IMU (2ms) ]
+                                                        ^
+ Medium-Priority Task: --------------------&gt; [ GPS Parser (Preempted by IMU) ] --------&gt;
+                                                        ^
+ Low-Priority Task:    ------------------------------------------------&gt; [ SD Card Logger ]
+ * A Real-Time Operating System automatically pauses lower-priority tasks the instant
+   a time-critical task needs to run!</code></pre>
+<section id="general-purpose-os-desktop-vs.-rtos-embedded" class="level3">
+<h3 class="anchored" data-anchor-id="general-purpose-os-desktop-vs.-rtos-embedded">General-Purpose OS (Desktop) vs.&nbsp;RTOS (Embedded)</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Characteristic</th>
+<th style="text-align: left;">General-Purpose OS (Windows, Linux, macOS)</th>
+<th style="text-align: left;">Real-Time Operating System (FreeRTOS, Zephyr)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Main Design Goal</strong></td>
+<td style="text-align: left;">High average throughput and fairness to all apps</td>
+<td style="text-align: left;"><strong>Strict determinism &amp; guaranteed worst-case deadlines</strong></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Response Latency</strong></td>
+<td style="text-align: left;">Unpredictable (milliseconds to seconds)</td>
+<td style="text-align: left;"><strong>Predictable down to microseconds/nanoseconds</strong></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Memory Footprint</strong></td>
+<td style="text-align: left;">Gigabytes of RAM and storage</td>
+<td style="text-align: left;"><strong>6 KB to 15 KB Flash, &lt; 2 KB SRAM</strong></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Missing a Deadline</strong></td>
+<td style="text-align: left;">Annoyance (video drops a frame, mouse stutters)</td>
+<td style="text-align: left;"><strong>Catastrophic</strong> (airbag fails to deploy, drone falls)</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="tasks-and-task-states-in-freertos" class="level2">
+<h2 class="anchored" data-anchor-id="tasks-and-task-states-in-freertos">2. Tasks and Task States in FreeRTOS</h2>
+<p>In FreeRTOS, your program is split into independent threads of execution called <strong>Tasks</strong>. Each task thinks it has the entire CPU to itself and runs inside an infinite loop:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> vBlinkTask<span class="op">(</span><span class="dt">void</span> <span class="op">*</span>pvParameters<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(;;)</span> <span class="op">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>        toggle_led<span class="op">();</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Yields CPU to other tasks for 500 ms (Consumes 0% CPU while delayed!)</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>        vTaskDelay<span class="op">(</span>pdMS_TO_TICKS<span class="op">(</span><span class="dv">500</span><span class="op">));</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="the-4-task-states" class="level3">
+<h3 class="anchored" data-anchor-id="the-4-task-states">The 4 Task States</h3>
+<pre class="text"><code>                        vTaskSuspend()
+           +--------------------------------------+
+           |                                      |
+           v                                      |
+    +--------------+    vTaskResume()      +--------------+
+    |  SUSPENDED   | --------------------&gt; |    READY     | &lt;------+
+    +--------------+                       +--------------+        |
+                                                  |                |
+                                     Scheduler    |   Preempted    |
+                                     Dispatches   |   by Higher    |
+                                                  v   Priority     |
+    +--------------+    Event Occurs /     +--------------+        |
+    |   BLOCKED    | &lt;-------------------- |   RUNNING    | -------+
+    +--------------+    Delay Timeout      +--------------+
+           ^                                      |
+           +--------------------------------------+
+                     vTaskDelay() / Waiting for Queue</code></pre>
+<ol type="1">
+<li><strong>Running:</strong> Currently executing on the CPU core. (On a single-core microcontroller, only one task can run at a time).</li>
+<li><strong>Ready:</strong> Ready to execute, but waiting because an equal or higher priority task is currently using the CPU.</li>
+<li><strong>Blocked:</strong> Waiting for a time delay (<code>vTaskDelay</code>) or waiting for data from a Queue or Semaphore. <strong>A blocked task consumes zero CPU clock cycles!</strong></li>
+<li><strong>Suspended:</strong> Manually paused; will not run until explicitly resumed.</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="communication-synchronization-queues-semaphores-mutexes" class="level2">
+<h2 class="anchored" data-anchor-id="communication-synchronization-queues-semaphores-mutexes">3. Communication &amp; Synchronization: Queues, Semaphores &amp; Mutexes</h2>
+<p>Tasks must coordinate and share data safely without corrupting memory:</p>
+<pre class="text"><code> 1. QUEUE (Data Passing)               2. SEMAPHORE (Signaling)             3. MUTEX (Resource Lock)
+ +-----------------------------+      +-----------------------------+      +-----------------------------+
+ | Task A -&gt; [ITEM 1][ITEM 2]  |      | ISR -&gt; [Give Semaphore]     |      | Task A [Take Mutex] -&gt; WORK |
+ |                |            |      |            |                |      | Task B [BLOCKED WAITING]    |
+ |                v            |      |            v                |      | Task A [Give Mutex]         |
+ |           -&gt; Task B (Read)  |      | Task B [Wakes Up Instantly] |      | Task B [Unblocks &amp; Runs]    |
+ +-----------------------------+      +-----------------------------+      +-----------------------------+</code></pre>
+<section id="queues-thread-safe-fifo-buffer" class="level3">
+<h3 class="anchored" data-anchor-id="queues-thread-safe-fifo-buffer">3.1 Queues (Thread-Safe FIFO Buffer)</h3>
+<ul>
+<li>Passes data safely between tasks by value (<strong>pass-by-copy</strong>).</li>
+<li>If a task tries to read from an empty queue, it enters the <strong>Blocked state</strong> and sleeps until data arrives!</li>
+</ul>
+</section>
+<section id="semaphores-event-signaling" class="level3">
+<h3 class="anchored" data-anchor-id="semaphores-event-signaling">3.2 Semaphores (Event Signaling)</h3>
+<ul>
+<li>A flag used to signal that an event occurred (e.g.&nbsp;an ISR signals a worker task).</li>
+</ul>
+</section>
+<section id="mutexes-priority-inheritance" class="level3">
+<h3 class="anchored" data-anchor-id="mutexes-priority-inheritance">3.3 Mutexes &amp; Priority Inheritance</h3>
+<ul>
+<li>A specialized token used strictly to protect shared resources (like serial ports or I2C buses).</li>
+<li>Supports <strong>Priority Inheritance</strong>: if a high-priority task needs a mutex held by a low-priority task, the low-priority task’s priority is temporarily elevated to prevent intermediate tasks from starving it!</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="mini-project-1-dual-task-freertos-sensor-pipeline" class="level2">
+<h2 class="anchored" data-anchor-id="mini-project-1-dual-task-freertos-sensor-pipeline">4. Mini-Project 1: Dual-Task FreeRTOS Sensor Pipeline 🔄📦</h2>
+<section id="objective" class="level3">
+<h3 class="anchored" data-anchor-id="objective">🎯 Objective</h3>
+<p>In bare-metal superloops, reading an ADC sensor and formatting strings for serial printing wastes precious CPU time in blocking loops. In this project, you will build a <strong>FreeRTOS Producer-Consumer Pipeline</strong> on the <strong>STM32 Nucleo-C031C6</strong>, where a high-priority periodic task samples an analog channel and passes values safely through an <code>xQueue</code> to an asynchronous logging task.</p>
+</section>
+<section id="hardware-setup-wokwi" class="level3">
+<h3 class="anchored" data-anchor-id="hardware-setup-wokwi">🛠️ Hardware Setup (Wokwi)</h3>
+<p>The circuit connects an analog potentiometer sensor and an alarm indicator LED: * <strong>Analog Telemetry Sensor:</strong> 1x Potentiometer on <code>A0</code> (<code>PA0</code>). * <strong>Threshold Alert LED:</strong> 1x LED with 220Ω resistor on <code>D13</code> (<code>PA5</code>). * <strong>Serial Diagnostic Terminal:</strong> USB Virtual COM Port at <strong>115200 baud</strong>.</p>
+</section>
+<section id="pin-wiring-table" class="level3">
+<h3 class="anchored" data-anchor-id="pin-wiring-table">Pin Wiring Table</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 23%">
+<col style="width: 23%">
+<col style="width: 29%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Component</th>
+<th style="text-align: left;">Pin / Terminal</th>
+<th style="text-align: center;">STM32 / Board Pin</th>
+<th style="text-align: left;">Electrical Function</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Potentiometer</strong></td>
+<td style="text-align: left;">VCC / GND</td>
+<td style="text-align: center;"><code>3.3V</code> / <code>GND</code></td>
+<td style="text-align: left;">Power Reference Rails</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Potentiometer</strong></td>
+<td style="text-align: left;">SIG (Wiper)</td>
+<td style="text-align: center;"><code>A0</code> (<code>PA0</code>)</td>
+<td style="text-align: left;">Analog telemetry input</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Alert LED</strong></td>
+<td style="text-align: left;">Anode (<code>PA5</code>)</td>
+<td style="text-align: center;"><code>D13</code></td>
+<td style="text-align: left;">Alert indicator (Lit when sensor exceeds 600)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Alert LED</strong></td>
+<td style="text-align: left;">Cathode</td>
+<td style="text-align: center;"><code>GND</code></td>
+<td style="text-align: left;">Ground Reference</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="problem-statement-logic-flow" class="level3">
+<h3 class="anchored" data-anchor-id="problem-statement-logic-flow">📝 Problem Statement &amp; Logic Flow</h3>
+<ol type="1">
+<li><strong>Queue Allocation:</strong> Create a FreeRTOS Queue capable of holding 5 integer samples: <code>xSensorQueue = xQueueCreate(5, sizeof(int));</code>.</li>
+<li><strong>Task 1: Producer Task (Priority 2 - High):</strong>
+<ul>
+<li>Runs strictly every <strong>50 ms</strong> using non-blocking RTOS delay: <code>vTaskDelay(pdMS_TO_TICKS(50))</code>.</li>
+<li>Samples analog pin <code>A0</code> and pushes the sample into <code>xSensorQueue</code>.</li>
+</ul></li>
+<li><strong>Task 2: Consumer Task (Priority 1 - Low):</strong>
+<ul>
+<li>Blocks waiting for incoming queue data using <code>xQueueReceive(xSensorQueue, &amp;val, portMAX_DELAY)</code>. Consumes <strong>0% CPU</strong> while the queue is empty!</li>
+<li>When data arrives, evaluate threshold:
+<ul>
+<li>If reading <span class="math inline">\(&gt; 600\)</span>: Turn LED on <code>D13</code> <strong>HIGH</strong> and log alert.</li>
+<li>Else: Turn LED <strong>LOW</strong> and log normal telemetry.</li>
+</ul></li>
+</ul></li>
+<li><strong>RTOS Kernel:</strong> Hand over execution to FreeRTOS with <code>vTaskStartScheduler()</code>.</li>
+</ol>
+<pre class="text"><code>[STATUS]: Normal Telemetry: 320
+[STATUS]: Normal Telemetry: 450
+[ALARM]: HIGH TEMP DETECTED: 720 (Alert LED ON)</code></pre>
+</section>
+<section id="interactive-simulation" class="level3">
+<h3 class="anchored" data-anchor-id="interactive-simulation">Interactive Simulation</h3>
+<div class="simulation-container">
+<iframe src="https://wokwi.com/projects/479963095271968769?embed=1" title="FreeRTOS Pipeline Simulation Workspace" loading="lazy" allowfullscreen="">
+</iframe>
+<div class="sim-info-bar">
+<p><span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span> <span>Click Play, wire Potentiometer to A0 and Alert LED to D13</span></p>
+</div>
+</div>
+</section>
+<section id="implementation-code-high-level-framework-vs.-bare-metal-embedded-c" class="level3">
+<h3 class="anchored" data-anchor-id="implementation-code-high-level-framework-vs.-bare-metal-embedded-c">Implementation Code: High-Level Framework vs.&nbsp;Bare-Metal Embedded C</h3>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="">🔷 High-Level Framework (Running in Simulation)</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">🔶 Equivalent Native FreeRTOS Embedded C (Direct RTOS API &amp; Register Access)</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Mini-Project 1: FreeRTOS Producer-Consumer Pipeline (Nucleo-C031C6)</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;STM32FreeRTOS.h&gt;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#define SENSOR_PIN </span>A0</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#define ALERT_LED  </span><span class="dv">13</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="dt">QueueHandle_t</span> xSensorQueue<span class="op">;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Task 1: High-Priority Producer (Periodic 50 ms)</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> vProducerTask<span class="op">(</span><span class="dt">void</span> <span class="op">*</span>pvParameters<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  <span class="op">(</span><span class="dt">void</span><span class="op">)</span>pvParameters<span class="op">;</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> <span class="op">(;;)</span> <span class="op">{</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> sensorReading <span class="op">=</span> analogRead<span class="op">(</span>SENSOR_PIN<span class="op">);</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Send to queue with timeout of 0 ticks (non-blocking)</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    xQueueSend<span class="op">(</span>xSensorQueue<span class="op">,</span> <span class="op">&amp;</span>sensorReading<span class="op">,</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    vTaskDelay<span class="op">(</span>pdMS_TO_TICKS<span class="op">(</span><span class="dv">50</span><span class="op">));</span> <span class="co">// Yield CPU to lower-priority tasks</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="co">// Task 2: Low-Priority Consumer (Blocks until queue has data)</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> vConsumerTask<span class="op">(</span><span class="dt">void</span> <span class="op">*</span>pvParameters<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>  <span class="op">(</span><span class="dt">void</span><span class="op">)</span>pvParameters<span class="op">;</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>  <span class="dt">int</span> receivedReading <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> <span class="op">(;;)</span> <span class="op">{</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Blocks indefinitely (0% CPU consumption while waiting)</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>xQueueReceive<span class="op">(</span>xSensorQueue<span class="op">,</span> <span class="op">&amp;</span>receivedReading<span class="op">,</span> portMAX_DELAY<span class="op">)</span> <span class="op">==</span> pdTRUE<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> <span class="op">(</span>receivedReading <span class="op">&gt;</span> <span class="dv">600</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>        digitalWrite<span class="op">(</span>ALERT_LED<span class="op">,</span> HIGH<span class="op">);</span></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>        Serial<span class="op">.</span>print<span class="op">(</span><span class="st">"[ALARM]: HIGH TEMP DETECTED: "</span><span class="op">);</span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>      <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>        digitalWrite<span class="op">(</span>ALERT_LED<span class="op">,</span> LOW<span class="op">);</span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>        Serial<span class="op">.</span>print<span class="op">(</span><span class="st">"[STATUS]: Normal Telemetry: "</span><span class="op">);</span></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>      <span class="op">}</span></span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>      Serial<span class="op">.</span>println<span class="op">(</span>receivedReading<span class="op">);</span></span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setup<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>begin<span class="op">(</span><span class="dv">115200</span><span class="op">);</span></span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>  pinMode<span class="op">(</span>ALERT_LED<span class="op">,</span> OUTPUT<span class="op">);</span></span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>  digitalWrite<span class="op">(</span>ALERT_LED<span class="op">,</span> LOW<span class="op">);</span></span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 1. Create a queue holding up to 5 integers</span></span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>  xSensorQueue <span class="op">=</span> xQueueCreate<span class="op">(</span><span class="dv">5</span><span class="op">,</span> <span class="kw">sizeof</span><span class="op">(</span><span class="dt">int</span><span class="op">));</span></span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>xSensorQueue <span class="op">!=</span> NULL<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2. Spawn tasks: Producer (Priority 2), Consumer (Priority 1)</span></span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>    xTaskCreate<span class="op">(</span>vProducerTask<span class="op">,</span> <span class="st">"Producer"</span><span class="op">,</span> <span class="dv">128</span><span class="op">,</span> NULL<span class="op">,</span> <span class="dv">2</span><span class="op">,</span> NULL<span class="op">);</span></span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a>    xTaskCreate<span class="op">(</span>vConsumerTask<span class="op">,</span> <span class="st">"Consumer"</span><span class="op">,</span> <span class="dv">128</span><span class="op">,</span> NULL<span class="op">,</span> <span class="dv">1</span><span class="op">,</span> NULL<span class="op">);</span></span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a>    Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"--- FreeRTOS Producer-Consumer Scheduler Started ---"</span><span class="op">);</span></span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 3. Start FreeRTOS Kernel</span></span>
+<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a>    vTaskStartScheduler<span class="op">();</span></span>
+<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> loop<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Handed over to FreeRTOS; loop() is never executed</span></span>
+<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Mini-Project 1: Native FreeRTOS Producer-Consumer in C</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Target: STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"FreeRTOS.h"</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"task.h"</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"queue.h"</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdint.h&gt;</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOA_BASE  </span><span class="op">(</span><span class="bn">0x50000000</span><span class="bu">UL</span><span class="op">)</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#define GPIOA_BSRR  </span><span class="op">(*(</span><span class="dt">volatile</span><span class="pp"> </span><span class="dt">uint32_t</span><span class="pp"> </span><span class="op">*)(</span><span class="pp">GPIOA_BASE </span><span class="op">+</span><span class="pp"> </span><span class="bn">0x18</span><span class="bu">UL</span><span class="op">))</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="dt">static</span> QueueHandle_t xQueueHandle <span class="op">=</span> NULL<span class="op">;</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> ProducerTask<span class="op">(</span><span class="dt">void</span> <span class="op">*</span>argument<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">uint16_t</span> sample <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    TickType_t xLastWakeTime <span class="op">=</span> xTaskGetTickCount<span class="op">();</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(;;)</span> <span class="op">{</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>        sample <span class="op">=</span> <span class="op">(</span><span class="dt">uint16_t</span><span class="op">)(</span>rand<span class="op">()</span> <span class="op">%</span> <span class="dv">1024</span><span class="op">);</span> <span class="co">// Simulated ADC sample</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>        xQueueSend<span class="op">(</span>xQueueHandle<span class="op">,</span> <span class="op">&amp;</span>sample<span class="op">,</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>        vTaskDelayUntil<span class="op">(&amp;</span>xLastWakeTime<span class="op">,</span> pdMS_TO_TICKS<span class="op">(</span><span class="dv">50</span><span class="op">));</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> ConsumerTask<span class="op">(</span><span class="dt">void</span> <span class="op">*</span>argument<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>    <span class="dt">uint16_t</span> received <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(;;)</span> <span class="op">{</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>xQueueReceive<span class="op">(</span>xQueueHandle<span class="op">,</span> <span class="op">&amp;</span>received<span class="op">,</span> portMAX_DELAY<span class="op">)</span> <span class="op">==</span> pdTRUE<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>received <span class="op">&gt;</span> <span class="dv">600</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>                GPIOA_BSRR <span class="op">=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="dv">5</span><span class="op">);</span>        <span class="co">// Set PA5 HIGH (Overheat)</span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>                GPIOA_BSRR <span class="op">=</span> <span class="op">(</span><span class="dv">1</span><span class="bu">UL</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">5</span> <span class="op">+</span> <span class="dv">16</span><span class="op">));</span> <span class="co">// Set PA5 LOW (Normal)</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">(</span><span class="dt">void</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>    xQueueHandle <span class="op">=</span> xQueueCreate<span class="op">(</span><span class="dv">5</span><span class="op">,</span> <span class="kw">sizeof</span><span class="op">(</span><span class="dt">uint16_t</span><span class="op">));</span></span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>xQueueHandle <span class="op">!=</span> NULL<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>        xTaskCreate<span class="op">(</span>ProducerTask<span class="op">,</span> <span class="st">"Prod"</span><span class="op">,</span> <span class="dv">128</span><span class="op">,</span> NULL<span class="op">,</span> <span class="dv">2</span><span class="op">,</span> NULL<span class="op">);</span></span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a>        xTaskCreate<span class="op">(</span>ConsumerTask<span class="op">,</span> <span class="st">"Cons"</span><span class="op">,</span> <span class="dv">128</span><span class="op">,</span> NULL<span class="op">,</span> <span class="dv">1</span><span class="op">,</span> NULL<span class="op">);</span></span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a>        vTaskStartScheduler<span class="op">();</span></span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(</span><span class="dv">1</span><span class="op">);</span></span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-caution callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>📌 Coming Up
+<span class="screen-reader-only">Caution</span>⚠️ Code Verification &amp; Assistance
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>This module is part of the CS2101 syllabus outline. Detailed lecture notes, integrated interactive simulations, and question banks will be added here.</p>
+<p>All high-level framework and bare-metal implementation codes are verified for the target microcontroller (<strong>STM32 Nucleo-C031C6</strong> / ARM Cortex-M0+). If you encounter any compilation errors, unexpected simulation behavior, or discrepancies with this code, Please report to the Course instructor or the TA via email.</p>
 </div>
 </div>
-<p><a href="./index.html" class="btn btn-outline-secondary mt-4">← Back to Main Page</a></p>
+</section>
+<section id="how-mini-project-1-applies-week-9-concepts" class="level3">
+<h3 class="anchored" data-anchor-id="how-mini-project-1-applies-week-9-concepts">🔍 How Mini-Project 1 Applies Week 9 Concepts</h3>
+<section id="hardware-circuit-level-concept-mapping" class="level4">
+<h4 class="anchored" data-anchor-id="hardware-circuit-level-concept-mapping">1. Hardware &amp; Circuit-Level Concept Mapping</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Circuit Component</th>
+<th style="text-align: left;">Week 9 Theoretical Concept</th>
+<th style="text-align: left;">Technical Function in System</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Potentiometer on A0</strong></td>
+<td style="text-align: left;"><strong>Real-Time Data Acquisition Channel</strong></td>
+<td style="text-align: left;">Generates raw analog telemetry digitized by the SAR ADC without CPU polling overhead.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Alert LED on D13</strong></td>
+<td style="text-align: left;"><strong>Event-Driven Visual Actuator</strong></td>
+<td style="text-align: left;">Driven directly by the Consumer task upon receiving a threshold-violating queue message.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="firmware-code-to-concept-breakdown" class="level4">
+<h4 class="anchored" data-anchor-id="firmware-code-to-concept-breakdown">2. Firmware Code-to-Concept Breakdown</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Code Statement (Framework / Bare-Metal)</th>
+<th style="text-align: left;">Week 9 Theoretical Concept</th>
+<th style="text-align: left;">Deep-Dive Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>xQueueSend(xSensorQueue, ...)</code></td>
+<td style="text-align: left;"><strong>Thread-Safe Inter-Task IPC</strong></td>
+<td style="text-align: left;">Copies data into a kernel-managed FIFO ring buffer with atomic interrupt masking, preventing memory corruption.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>xQueueReceive(..., portMAX_DELAY)</code></td>
+<td style="text-align: left;"><strong>Blocked State Zero-Power Yield</strong></td>
+<td style="text-align: left;">Places Consumer task into the Blocked state. The scheduler removes it from the Ready list, saving 100% of CPU cycles until data arrives.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+</section>
+<section id="mini-project-2-mutex-protected-shared-serial-output" class="level2">
+<h2 class="anchored" data-anchor-id="mini-project-2-mutex-protected-shared-serial-output">5. Mini-Project 2: Mutex-Protected Shared Serial Output 🔒🛡️</h2>
+<section id="objective-1" class="level3">
+<h3 class="anchored" data-anchor-id="objective-1">🎯 Objective</h3>
+<p>When multiple asynchronous tasks simultaneously write multi-byte strings to a single shared peripheral (such as a UART port or SPI bus), their data streams collide and produce garbled, unreadable console output. In this project, you will use a <strong>FreeRTOS Mutex</strong> on the <strong>STM32 Nucleo-C031C6</strong> to guarantee mutual exclusion and thread-safe serial logging.</p>
+</section>
+<section id="hardware-setup-wokwi-1" class="level3">
+<h3 class="anchored" data-anchor-id="hardware-setup-wokwi-1">🛠️ Hardware Setup (Wokwi)</h3>
+<ul>
+<li><strong>Target Board:</strong> <code>board-st-nucleo-c031c6</code></li>
+<li><strong>Diagnostic Console:</strong> Built-in ST-LINK Virtual COM Port over USB at <strong>115200 baud</strong>.</li>
+</ul>
+</section>
+<section id="pin-wiring-table-1" class="level3">
+<h3 class="anchored" data-anchor-id="pin-wiring-table-1">Pin Wiring Table</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 23%">
+<col style="width: 23%">
+<col style="width: 29%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Component</th>
+<th style="text-align: left;">Pin / Terminal</th>
+<th style="text-align: center;">Board Connection</th>
+<th style="text-align: left;">Electrical Function</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Serial Terminal</strong></td>
+<td style="text-align: left;">USB VCP</td>
+<td style="text-align: center;">Virtual COM Port</td>
+<td style="text-align: left;">Diagnostic stream (115200 baud, 8-N-1)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Onboard User LED</strong></td>
+<td style="text-align: left;">Anode (<code>PA5</code>)</td>
+<td style="text-align: center;"><code>D13</code></td>
+<td style="text-align: left;">Mutex activity indicator</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="problem-statement-logic-flow-1" class="level3">
+<h3 class="anchored" data-anchor-id="problem-statement-logic-flow-1">📝 Problem Statement &amp; Logic Flow</h3>
+<ol type="1">
+<li><strong>Mutex Instantiation:</strong> Create a FreeRTOS Mutex handle: <code>xSerialMutex = xSemaphoreCreateMutex();</code>.</li>
+<li><strong>Task 1: High-Priority Emergency Reporter (Priority 3):</strong>
+<ul>
+<li>Runs periodically every <strong>150 ms</strong>.</li>
+<li>Acquires the mutex token: <code>xSemaphoreTake(xSerialMutex, portMAX_DELAY)</code>.</li>
+<li>Transmits: <code>"[HIGH PRIORITY]: Critical Emergency Telemetry Packet Sent."</code>.</li>
+<li>Releases mutex: <code>xSemaphoreGive(xSerialMutex)</code>.</li>
+</ul></li>
+<li><strong>Task 2: Low-Priority Routine Logger (Priority 1):</strong>
+<ul>
+<li>Runs periodically every <strong>1000 ms</strong>.</li>
+<li>Acquires mutex, transmits heartbeat message, and releases mutex.</li>
+</ul></li>
+<li><strong>Collision Verification:</strong> Verify that log lines from Task 1 and Task 2 are printed cleanly without mid-sentence race conditions or character interleaving.</li>
+</ol>
+<pre class="text"><code>[LOW PRIORITY]: Routine System Heartbeat Log.
+[HIGH PRIORITY]: Critical Emergency Telemetry Packet Sent.
+[HIGH PRIORITY]: Critical Emergency Telemetry Packet Sent.</code></pre>
+</section>
+<section id="interactive-simulation-1" class="level3">
+<h3 class="anchored" data-anchor-id="interactive-simulation-1">Interactive Simulation</h3>
+<div class="simulation-container">
+<iframe src="https://wokwi.com/projects/479963095271968769?embed=1" title="RTOS Mutex Simulation Workspace" loading="lazy" allowfullscreen="">
+</iframe>
+<div class="sim-info-bar">
+<p><span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span> <span>Click Play to practice concurrent thread logging with FreeRTOS Mutex</span></p>
+</div>
+</div>
+</section>
+<section id="implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1" class="level3">
+<h3 class="anchored" data-anchor-id="implementation-code-high-level-framework-vs.-bare-metal-embedded-c-1">Implementation Code: High-Level Framework vs.&nbsp;Bare-Metal Embedded C</h3>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">🔷 High-Level Framework (Running in Simulation)</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">🔶 Equivalent Native FreeRTOS Embedded C (Direct RTOS API &amp; Register Access)</a></li></ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Mini-Project 2: FreeRTOS Mutex Protection (Nucleo-C031C6)</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;STM32FreeRTOS.h&gt;</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="dt">SemaphoreHandle_t</span> xSerialMutex<span class="op">;</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co">// High-Priority Emergency Task (Priority 3)</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> vHighPriorityTask<span class="op">(</span><span class="dt">void</span> <span class="op">*</span>pvParameters<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="op">(</span><span class="dt">void</span><span class="op">)</span>pvParameters<span class="op">;</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> <span class="op">(;;)</span> <span class="op">{</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>xSemaphoreTake<span class="op">(</span>xSerialMutex<span class="op">,</span> portMAX_DELAY<span class="op">)</span> <span class="op">==</span> pdTRUE<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>      Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"[HIGH PRIORITY]: Critical Emergency Telemetry Packet Sent."</span><span class="op">);</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>      xSemaphoreGive<span class="op">(</span>xSerialMutex<span class="op">);</span> <span class="co">// Release lock</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    vTaskDelay<span class="op">(</span>pdMS_TO_TICKS<span class="op">(</span><span class="dv">150</span><span class="op">));</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a><span class="co">// Low-Priority Routine Logger (Priority 1)</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> vLowPriorityTask<span class="op">(</span><span class="dt">void</span> <span class="op">*</span>pvParameters<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>  <span class="op">(</span><span class="dt">void</span><span class="op">)</span>pvParameters<span class="op">;</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> <span class="op">(;;)</span> <span class="op">{</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>xSemaphoreTake<span class="op">(</span>xSerialMutex<span class="op">,</span> portMAX_DELAY<span class="op">)</span> <span class="op">==</span> pdTRUE<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>      Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"[LOW PRIORITY]: Routine System Heartbeat Log."</span><span class="op">);</span></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>      xSemaphoreGive<span class="op">(</span>xSerialMutex<span class="op">);</span> <span class="co">// Release lock</span></span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>    vTaskDelay<span class="op">(</span>pdMS_TO_TICKS<span class="op">(</span><span class="dv">1000</span><span class="op">));</span></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setup<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a>  Serial<span class="op">.</span>begin<span class="op">(</span><span class="dv">115200</span><span class="op">);</span></span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 1. Create Mutex</span></span>
+<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a>  xSerialMutex <span class="op">=</span> xSemaphoreCreateMutex<span class="op">();</span></span>
+<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-38"><a href="#cb9-38" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="op">(</span>xSerialMutex <span class="op">!=</span> NULL<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-39"><a href="#cb9-39" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2. Create tasks with differing priorities</span></span>
+<span id="cb9-40"><a href="#cb9-40" aria-hidden="true" tabindex="-1"></a>    xTaskCreate<span class="op">(</span>vHighPriorityTask<span class="op">,</span> <span class="st">"HighTask"</span><span class="op">,</span> <span class="dv">128</span><span class="op">,</span> NULL<span class="op">,</span> <span class="dv">3</span><span class="op">,</span> NULL<span class="op">);</span></span>
+<span id="cb9-41"><a href="#cb9-41" aria-hidden="true" tabindex="-1"></a>    xTaskCreate<span class="op">(</span>vLowPriorityTask<span class="op">,</span>  <span class="st">"LowTask"</span><span class="op">,</span>  <span class="dv">128</span><span class="op">,</span> NULL<span class="op">,</span> <span class="dv">1</span><span class="op">,</span> NULL<span class="op">);</span></span>
+<span id="cb9-42"><a href="#cb9-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-43"><a href="#cb9-43" aria-hidden="true" tabindex="-1"></a>    Serial<span class="op">.</span>println<span class="op">(</span><span class="st">"--- FreeRTOS Mutex Shared Resource System Ready ---"</span><span class="op">);</span></span>
+<span id="cb9-44"><a href="#cb9-44" aria-hidden="true" tabindex="-1"></a>    vTaskStartScheduler<span class="op">();</span></span>
+<span id="cb9-45"><a href="#cb9-45" aria-hidden="true" tabindex="-1"></a>  <span class="op">}</span></span>
+<span id="cb9-46"><a href="#cb9-46" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-47"><a href="#cb9-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-48"><a href="#cb9-48" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> loop<span class="op">()</span> <span class="op">{}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Mini-Project 2: Native FreeRTOS Mutex Architecture in C</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"FreeRTOS.h"</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"semphr.h"</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>SemaphoreHandle_t xBusMutex<span class="op">;</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> safe_uart_transmit<span class="op">(</span><span class="dt">const</span> <span class="dt">char</span> <span class="op">*</span>msg<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>xSemaphoreTake<span class="op">(</span>xBusMutex<span class="op">,</span> portMAX_DELAY<span class="op">)</span> <span class="op">==</span> pdTRUE<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Critical Section: Hardware bus is locked exclusively for this task</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">while</span> <span class="op">(*</span>msg<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Direct register transmit or HAL call</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>            msg<span class="op">++;</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>        xSemaphoreGive<span class="op">(</span>xBusMutex<span class="op">);</span> <span class="co">// Unlock bus</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-caution callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Caution</span>⚠️ Code Verification &amp; Assistance
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>All high-level framework and bare-metal implementation codes are verified for the target microcontroller (<strong>STM32 Nucleo-C031C6</strong> / ARM Cortex-M0+). If you encounter any compilation errors, unexpected simulation behavior, or discrepancies with this code, Please report to the Course instructor or the TA via email.</p>
+</div>
+</div>
+</section>
+<section id="how-mini-project-2-applies-week-9-concepts" class="level3">
+<h3 class="anchored" data-anchor-id="how-mini-project-2-applies-week-9-concepts">🔍 How Mini-Project 2 Applies Week 9 Concepts</h3>
+<section id="hardware-circuit-level-concept-mapping-1" class="level4">
+<h4 class="anchored" data-anchor-id="hardware-circuit-level-concept-mapping-1">1. Hardware &amp; Circuit-Level Concept Mapping</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Circuit Component</th>
+<th style="text-align: left;">Week 9 Theoretical Concept</th>
+<th style="text-align: left;">Technical Function in System</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>USART2 TX FIFO</strong></td>
+<td style="text-align: left;"><strong>Shared Critical Hardware Resource</strong></td>
+<td style="text-align: left;">Hardware register accessed concurrently by multiple asynchronous threads, necessitating mutual exclusion.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="firmware-code-to-concept-breakdown-1" class="level4">
+<h4 class="anchored" data-anchor-id="firmware-code-to-concept-breakdown-1">2. Firmware Code-to-Concept Breakdown</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Code Statement (Framework / Bare-Metal)</th>
+<th style="text-align: left;">Week 9 Theoretical Concept</th>
+<th style="text-align: left;">Deep-Dive Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>xSemaphoreCreateMutex()</code></td>
+<td style="text-align: left;"><strong>Mutex Token with Priority Inheritance</strong></td>
+<td style="text-align: left;">Instantiates a binary token that records the owner task. If a high-priority task blocks on it, the owner’s priority is boosted to prevent priority inversion.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>xSemaphoreTake(..., portMAX_DELAY)</code></td>
+<td style="text-align: left;"><strong>Blocking Resource Acquisition</strong></td>
+<td style="text-align: left;">Guarantees atomic ownership of the resource before proceeding into the critical print section.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="under-the-hood-bare-metal-architecture-reference" class="level3">
+<h3 class="anchored" data-anchor-id="under-the-hood-bare-metal-architecture-reference">⚙️ Under-the-Hood: Bare-Metal Architecture Reference</h3>
+<p>FreeRTOS tasks operate via private stacks allocated in SRAM. The kernel switches tasks by triggering the <strong>PendSV (Pended Servicing)</strong> exception on the ARM Cortex-M core, saving CPU registers <code>R4-R11</code> to the current Task Control Block (TCB) and loading the next task’s stack pointer:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode c code-with-copy"><code class="sourceCode c"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Native FreeRTOS API in C Firmware</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"FreeRTOS.h"</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"semphr.h"</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>SemaphoreHandle_t xHardwareMutex<span class="op">;</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> safe_peripheral_access<span class="op">(</span><span class="dt">uint8_t</span> <span class="op">*</span>buffer<span class="op">,</span> <span class="dt">uint16_t</span> len<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>xSemaphoreTake<span class="op">(</span>xHardwareMutex<span class="op">,</span> pdMS_TO_TICKS<span class="op">(</span><span class="dv">10</span><span class="op">))</span> <span class="op">==</span> pdTRUE<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Critical section: Hardware bus is locked exclusively for this task</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>        hal_spi_transmit<span class="op">(</span>buffer<span class="op">,</span> len<span class="op">);</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>        xSemaphoreGive<span class="op">(</span>xHardwareMutex<span class="op">);</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Timed out waiting for bus access</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>        handle_bus_busy_error<span class="op">();</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="hands-on-practice-challenge-for-students-to-solve" class="level2">
+<h2 class="anchored" data-anchor-id="hands-on-practice-challenge-for-students-to-solve">6. Hands-On Practice Challenge (For Students to Solve) 🎯</h2>
+<section id="objective-scenario" class="level3">
+<h3 class="anchored" data-anchor-id="objective-scenario">🎯 Objective &amp; Scenario</h3>
+<p>In modern intensive care units (ICU), patient bedside monitors must process critical ECG heart signals with millisecond determinism while simultaneously updating status displays and serial medical logs. In this challenge, you will implement a <strong>Multi-Rate ICU Patient Vital Signs Monitor</strong> using <strong>FreeRTOS</strong> on the <strong>STM32 Nucleo-C031C6</strong>.</p>
+</section>
+<section id="hardware-setup-pin-wiring-table" class="level3">
+<h3 class="anchored" data-anchor-id="hardware-setup-pin-wiring-table">🛠️ Hardware Setup &amp; Pin Wiring Table</h3>
+<p>Connect an analog ECG sensor potentiometer and a warning alarm LED:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 23%">
+<col style="width: 23%">
+<col style="width: 29%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Component</th>
+<th style="text-align: left;">Pin / Terminal</th>
+<th style="text-align: center;">Board Connection</th>
+<th style="text-align: left;">Electrical Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>ECG Pulse Simulator</strong></td>
+<td style="text-align: left;">Wiper / SIG</td>
+<td style="text-align: center;"><code>A0</code> (<code>PA0</code>)</td>
+<td style="text-align: left;">Analog ECG waveform simulator</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Arrhythmia Alarm LED</strong></td>
+<td style="text-align: left;">Anode (via 220Ω)</td>
+<td style="text-align: center;"><code>D13</code> (<code>PA5</code>)</td>
+<td style="text-align: left;">Visual cardiac alarm indicator</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Common Ground</strong></td>
+<td style="text-align: left;">Cathode / GND</td>
+<td style="text-align: center;"><code>GND</code></td>
+<td style="text-align: left;">Ground Reference</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="problem-statement-functional-requirements" class="level3">
+<h3 class="anchored" data-anchor-id="problem-statement-functional-requirements">📋 Problem Statement &amp; Functional Requirements</h3>
+<ol type="1">
+<li><strong>ECG Sampling Task (Priority 3 - Highest):</strong>
+<ul>
+<li>Runs strictly every <strong>10 ms</strong> using <code>vTaskDelayUntil()</code>.</li>
+<li>Samples analog pin <code>A0</code>. If an arrhythmia waveform (<span class="math inline">\(&gt; 800\)</span>) is detected, signal a Binary Semaphore: <code>xSemaphoreGive(xArrhythmiaSemaphore);</code>.</li>
+</ul></li>
+<li><strong>Arrhythmia Alarm Task (Priority 2 - Medium):</strong>
+<ul>
+<li>Blocks waiting on the Binary Semaphore using <code>xSemaphoreTake(xArrhythmiaSemaphore, portMAX_DELAY)</code>.</li>
+<li>When unblocked: illuminate <code>D13</code>, sound alarm for 500 ms, and print <code>"[ALERT]: ARRHYTHMIA EVENT DETECTED!"</code>.</li>
+</ul></li>
+<li><strong>Telemetry Task (Priority 1 - Lowest):</strong>
+<ul>
+<li>Runs periodically every <strong>1000 ms</strong>.</li>
+<li>Logs routine patient vitals: <code>"[ICU VITALS]: Heart Rate: 72 bpm | SpO2: 98%"</code> over UART at 115200 baud.</li>
+</ul></li>
+<li><strong>Strict Determinism:</strong> The high-priority ECG task must never miss its 10 ms deadline, even when the telemetry task is transmitting long strings!</li>
+</ol>
+</section>
+<section id="starter-code-template" class="level3">
+<h3 class="anchored" data-anchor-id="starter-code-template">💻 Starter Code Template</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Student Practice Challenge: RTOS Patient Vital Signs Monitor</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Target: board-st-nucleo-c031c6</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;STM32FreeRTOS.h&gt;</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#define ECG_PIN    </span>A0</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#define ALARM_PIN  </span><span class="dv">13</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="dt">SemaphoreHandle_t</span> xArrhythmiaSemaphore<span class="op">;</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> vEcgSamplingTask<span class="op">(</span><span class="dt">void</span> <span class="op">*</span>pvParameters<span class="op">);</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> vAlarmTask<span class="op">(</span><span class="dt">void</span> <span class="op">*</span>pvParameters<span class="op">);</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> vTelemetryTask<span class="op">(</span><span class="dt">void</span> <span class="op">*</span>pvParameters<span class="op">);</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setup<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 1: Initialize Serial at 115200 baud</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 2: Configure ALARM_PIN as OUTPUT</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 3: Create binary semaphore xArrhythmiaSemaphore = xSemaphoreCreateBinary()</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 4: Launch EcgSamplingTask (Priority 3), AlarmTask (Priority 2), TelemetryTask (Priority 1)</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>  <span class="co">// </span><span class="al">TODO</span><span class="co"> 5: Start scheduler with vTaskStartScheduler()</span></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> loop<span class="op">()</span> <span class="op">{}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="verification-expected-test-cases" class="level3">
+<h3 class="anchored" data-anchor-id="verification-expected-test-cases">🧪 Verification &amp; Expected Test Cases</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 22%">
+<col style="width: 27%">
+<col style="width: 27%">
+<col style="width: 22%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Operating Condition</th>
+<th style="text-align: center;">ECG Reading (A0)</th>
+<th style="text-align: center;">Alarm LED (D13)</th>
+<th style="text-align: left;">Expected Serial Telemetry</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Normal Heartbeat</strong></td>
+<td style="text-align: center;"><span class="math inline">\(&lt; 800\)</span></td>
+<td style="text-align: center;"><strong>OFF</strong></td>
+<td style="text-align: left;"><code>[ICU VITALS]: Heart Rate: 72 bpm \| SpO2: 98%</code> (every 1s)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Arrhythmia Spike</strong></td>
+<td style="text-align: center;"><span class="math inline">\(&gt; 800\)</span></td>
+<td style="text-align: center;"><strong>ON</strong></td>
+<td style="text-align: left;"><code>[ALERT]: ARRHYTHMIA EVENT DETECTED!</code> (Instant unblock)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Continuous Baseline</strong></td>
+<td style="text-align: center;">Stable</td>
+<td style="text-align: center;">OFF</td>
+<td style="text-align: left;">Zero jitter on 10 ms ECG sampling loop</td>
+</tr>
+</tbody>
+</table>
+<details>
+<summary>
+💡 Need a Hint? Click to Reveal
+</summary>
+<ul>
+<li><p><strong>Binary Semaphore Signaling:</strong> In the ECG task:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>analogRead<span class="op">(</span>ECG_PIN<span class="op">)</span> <span class="op">&gt;</span> <span class="dv">800</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    xSemaphoreGive<span class="op">(</span>xArrhythmiaSemaphore<span class="op">);</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p><strong>Strict Periodic Timing:</strong> Use <code>vTaskDelayUntil(&amp;xLastWakeTime, pdMS_TO_TICKS(10));</code> rather than <code>vTaskDelay()</code> to avoid drift over time!</p></li>
+</ul>
+</details>
+<div class="simulation-container">
+<iframe src="https://wokwi.com/projects/479963095271968769?embed=1" title="RTOS Patient Monitor Simulation Workspace" loading="lazy" allowfullscreen="">
+</iframe>
+<div class="sim-info-bar">
+<p><span><strong>Target Board:</strong> STM32 Nucleo-C031C6 (ARM Cortex-M0+)</span> <span>Click Play to build and test your real-time ICU patient vital signs monitor</span></p>
+</div>
+</div>
+<div id="comparator-w9" class="code-comparator-widget">
+  <div class="comparator-header">
+    <div class="comparator-title">
+      <span class="icon">🔄</span>
+      <span><strong>Simultaneous Code Explorer:</strong> Arduino Framework ↔ Bare-Metal C</span>
+    </div>
+    <div class="comparator-controls">
+      <label>Load Preset:</label>
+      <select class="preset-select">
+        <option value="exti_interrupt">EXTI Hardware Interrupt (RTOS ISR Context)</option>
+        <option value="gpio_blink">GPIO Periodic Task Output</option>
+        <option value="adc_analog">ADC Sensor Task Acquisition</option>
+        <option value="uart_comm">UART Mutex-Protected Printing</option>
+        <option value="timer_pwm">Hardware Timer Tick (SysTick)</option>
+      </select>
+      <button type="button" class="btn-compare" onclick="runInteractiveTranslation('comparator-w9')">Analyze / Map Code</button>
+    </div>
+  </div>
+  <div class="comparator-panes">
+    <div class="pane">
+      <div class="pane-header">
+        <span class="badge-arduino">Arduino C++ (Framework)</span>
+        <span class="hint">Type or paste Arduino code here for live Bare-Metal translation</span>
+      </div>
+      <textarea class="code-input" spellcheck="false"></textarea>
+    </div>
+    <div class="pane">
+      <div class="pane-header">
+        <span class="badge-baremetal">Equivalent Bare-Metal C (Direct Registers)</span>
+        <span class="hint">Live Memory-Mapped Operations</span>
+      </div>
+      <pre class="code-output"><code></code></pre>
+    </div>
+  </div>
+</div>
+<hr>
+</section>
+</section>
+<section id="concept-check-practice-questions" class="level2">
+<h2 class="anchored" data-anchor-id="concept-check-practice-questions">7. Concept Check Practice Questions</h2>
+<section id="question-1-freertos-task-state-transitions" class="level3">
+<h3 class="anchored" data-anchor-id="question-1-freertos-task-state-transitions">Question 1: FreeRTOS Task State Transitions</h3>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Click to View Question &amp; Options
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>When a FreeRTOS task calls <code>vTaskDelay(pdMS_TO_TICKS(100))</code>, what state does the task enter, and how does this affect CPU utilization?</p>
+<p><strong>Options:</strong><br>
+- <strong>A)</strong> It stays in the Running state and spins in a loop, consuming 100% of CPU cycles<br>
+- <strong>B)</strong> It enters the Blocked state, allowing lower-priority ready tasks to use the CPU; it consumes 0% CPU cycles while blocked<br>
+- <strong>C)</strong> It is deleted permanently from SRAM<br>
+- <strong>D)</strong> It disables the SysTick hardware timer</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>✅ Correct Answer: B
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Explanation:</strong><br>
+Calling <code>vTaskDelay()</code> removes the task from the scheduler’s ready list and places it in the <strong>Blocked state</strong>. While blocked, the task consumes zero CPU processing time, allowing the scheduler to run lower-priority tasks or enter low-power sleep mode until the delay expires.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="question-2-resolving-priority-inversion" class="level3">
+<h3 class="anchored" data-anchor-id="question-2-resolving-priority-inversion">Question 2: Resolving Priority Inversion</h3>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Click to View Question &amp; Options
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Why must software engineers use a <strong>Mutex</strong> (<code>xSemaphoreCreateMutex</code>) rather than a simple <strong>Binary Semaphore</strong> to protect a shared communication peripheral between tasks of different priorities?</p>
+<p><strong>Options:</strong><br>
+- <strong>A)</strong> Mutexes run at twice the clock speed of binary semaphores<br>
+- <strong>B)</strong> Mutexes implement the <strong>Priority Inheritance Protocol</strong>, which temporarily elevates the priority of the task holding the mutex to prevent intermediate-priority tasks from causing priority inversion starvation<br>
+- <strong>C)</strong> Binary semaphores cannot be placed in SRAM<br>
+- <strong>D)</strong> Mutexes can only be used by one task per program</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>✅ Correct Answer: B
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Explanation:</strong><br>
+Binary semaphores have no concept of ownership or priority inheritance. If a low-priority task holds a binary semaphore, a medium-priority task can preempt it indefinitely, starving a high-priority task waiting on the semaphore. FreeRTOS Mutexes automatically elevate the owner’s priority to prevent this deadlock.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<hr>
+<div class="d-flex justify-content-between mt-4">
+<p><a href="./Week-8.html" class="seek-prev-btn">← Back to Week 8: Design Patterns &amp; Architecture</a> <a href="./Week-10.html" class="seek-next-btn">NEXT: Week 10 — Efficient Embedded Systems →</a></p>
+</div>
 
 
 </section>
+</section>
 
 </main> <!-- /main -->
+<script>
+/**
+ * Interactive Arduino ↔ Bare-Metal STM32 C Code Comparator & Live Translator
+ * Translates Arduino framework calls to equivalent STM32 Nucleo-C031C6 Bare-Metal Register operations.
+ */
+const PRESETS = {
+  gpio_blink: {
+    name: "GPIO Output: LED Blink",
+    arduino: `// Arduino Framework (High-Level)
+#define LED_PIN 13 // PA5 on Nucleo-C031C6
+
+void setup() {
+  pinMode(LED_PIN, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(LED_PIN, HIGH);
+  delay(500);
+  digitalWrite(LED_PIN, LOW);
+  delay(500);
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+
+#define RCC_IOPENR   (*(volatile uint32_t *)(0x40021000UL + 0x34UL))
+#define GPIOA_MODER  (*(volatile uint32_t *)(0x50000000UL + 0x00UL))
+#define GPIOA_BSRR   (*(volatile uint32_t *)(0x50000000UL + 0x18UL))
+
+void gpio_init(void) {
+    // 1. Enable GPIOA Peripheral Bus Clock
+    RCC_IOPENR |= (1UL << 0);
+
+    // 2. Configure PA5 as General Purpose Output ('01' in MODER)
+    GPIOA_MODER &= ~(3UL << (5 * 2));
+    GPIOA_MODER |=  (1UL << (5 * 2));
+}
+
+void delay_cycles(volatile uint32_t count) {
+    while (count--) { __asm volatile("nop"); }
+}
+
+int main(void) {
+    gpio_init();
+    while (1) {
+        // Set PA5 HIGH (bit 5 in BSRR)
+        GPIOA_BSRR = (1UL << 5);
+        delay_cycles(2400000); // ~500 ms at 48 MHz
+
+        // Reset PA5 LOW (bit 5+16 in BSRR)
+        GPIOA_BSRR = (1UL << (5 + 16));
+        delay_cycles(2400000);
+    }
+}`
+  },
+  gpio_input: {
+    name: "GPIO Input: Pushbutton with Internal Pull-Up",
+    arduino: `// Arduino Framework (High-Level)
+#define BUTTON_PIN 2  // PA10
+#define LED_PIN    13 // PA5
+
+void setup() {
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(LED_PIN, OUTPUT);
+}
+
+void loop() {
+  int buttonState = digitalRead(BUTTON_PIN);
+  if (buttonState == LOW) { // Pressed (Active-LOW)
+    digitalWrite(LED_PIN, HIGH);
+  } else {
+    digitalWrite(LED_PIN, LOW);
+  }
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+#include <stdbool.h>
+
+#define RCC_IOPENR   (*(volatile uint32_t *)(0x40021000UL + 0x34UL))
+#define GPIOA_MODER  (*(volatile uint32_t *)(0x50000000UL + 0x00UL))
+#define GPIOA_PUPDR  (*(volatile uint32_t *)(0x50000000UL + 0x0CUL))
+#define GPIOA_IDR    (*(volatile uint32_t *)(0x50000000UL + 0x10UL))
+#define GPIOA_BSRR   (*(volatile uint32_t *)(0x50000000UL + 0x18UL))
+
+void setup_pins(void) {
+    RCC_IOPENR |= (1UL << 0); // Enable GPIOA clock
+
+    // PA10 as Input ('00' in MODER) with Pull-Up ('01' in PUPDR)
+    GPIOA_MODER &= ~(3UL << (10 * 2));
+    GPIOA_PUPDR &= ~(3UL << (10 * 2));
+    GPIOA_PUPDR |=  (1UL << (10 * 2));
+
+    // PA5 as Output ('01' in MODER)
+    GPIOA_MODER &= ~(3UL << (5 * 2));
+    GPIOA_MODER |=  (1UL << (5 * 2));
+}
+
+int main(void) {
+    setup_pins();
+    while (1) {
+        // Read PA10 pin state from Input Data Register (IDR)
+        if (!(GPIOA_IDR & (1UL << 10))) {
+            GPIOA_BSRR = (1UL << 5);        // LED ON (PA5 Set)
+        } else {
+            GPIOA_BSRR = (1UL << (5 + 16)); // LED OFF (PA5 Reset)
+        }
+    }
+}`
+  },
+  exti_interrupt: {
+    name: "EXTI: Hardware Interrupt on Edge Transition",
+    arduino: `// Arduino Framework (High-Level)
+#define BUTTON_PIN 2 // PA10
+
+volatile bool flag = false;
+
+void buttonISR() {
+  flag = true;
+}
+
+void setup() {
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), buttonISR, FALLING);
+}
+
+void loop() {
+  if (flag) {
+    flag = false;
+    // Process interrupt event
+  }
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+#include <stdbool.h>
+
+#define EXTI_BASE       (0x40021800UL)
+#define EXTI_IMR1       (*(volatile uint32_t *)(EXTI_BASE + 0x00UL))
+#define EXTI_FTSR1      (*(volatile uint32_t *)(EXTI_BASE + 0x04UL))
+#define EXTI_RPR1       (*(volatile uint32_t *)(EXTI_BASE + 0x0CUL))
+#define NVIC_ISER       (*(volatile uint32_t *)(0xE000E100UL))
+
+volatile bool flag = false;
+
+void exti_init(void) {
+    // 1. Unmask Line 10 in Interrupt Mask Register (IMR1)
+    EXTI_IMR1 |= (1UL << 10);
+
+    // 2. Enable Falling Edge Trigger for Line 10
+    EXTI_FTSR1 |= (1UL << 10);
+
+    // 3. Enable EXTI line 4-15 IRQ in ARM Cortex-M0+ NVIC
+    NVIC_ISER |= (1UL << 7); // IRQ 7 = EXTI4_15_IRQn
+}
+
+void EXTI4_15_IRQHandler(void) {
+    if (EXTI_RPR1 & (1UL << 10)) {
+        EXTI_RPR1 = (1UL << 10); // Clear pending flag by writing '1'
+        flag = true;             // Atomic flag write
+    }
+}
+
+int main(void) {
+    exti_init();
+    while (1) {
+        if (flag) {
+            flag = false;
+        }
+    }
+}`
+  },
+  uart_comm: {
+    name: "UART: Hardware Serial Communication (115200 Baud)",
+    arduino: `// Arduino Framework (High-Level)
+void setup() {
+  Serial.begin(115200);
+}
+
+void loop() {
+  Serial.println("OK");
+  delay(1000);
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+
+#define USART2_BASE     (0x40004400UL)
+#define USART2_CR1      (*(volatile uint32_t *)(USART2_BASE + 0x00UL))
+#define USART2_BRR      (*(volatile uint32_t *)(USART2_BASE + 0x0CUL))
+#define USART2_ISR      (*(volatile uint32_t *)(USART2_BASE + 0x1CUL))
+#define USART2_TDR      (*(volatile uint32_t *)(USART2_BASE + 0x28UL))
+
+void usart2_init(uint32_t baud, uint32_t pclk) {
+    // 1. Set Baud Rate Register: BRR = Clock / Baud
+    USART2_BRR = pclk / baud; // 48 MHz / 115200 = 416
+
+    // 2. Enable Transmitter (TE) and USART Peripheral (UE)
+    USART2_CR1 |= (1UL << 3) | (1UL << 0);
+}
+
+void usart2_write_char(char c) {
+    // Wait for TXE (Transmit Data Register Empty) flag
+    while (!(USART2_ISR & (1UL << 7)));
+    USART2_TDR = (uint8_t)c;
+}
+
+void usart2_write_str(const char *str) {
+    while (*str) usart2_write_char(*str++);
+}
+
+int main(void) {
+    usart2_init(115200, 48000000UL);
+    while (1) {
+        usart2_write_str("OK\\r\\n");
+        for (volatile uint32_t i = 0; i < 4800000; i++); // ~1 sec delay
+    }
+}`
+  },
+  timer_pwm: {
+    name: "PWM: Hardware Timer Pulse Width Modulation",
+    arduino: `// Arduino Framework (High-Level)
+#define PWM_PIN 9 // D9
+
+void setup() {
+  pinMode(PWM_PIN, OUTPUT);
+}
+
+void loop() {
+  analogWrite(PWM_PIN, 128); // 50% Duty Cycle (128 / 255)
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+
+#define TIM1_BASE       (0x40012C00UL)
+#define TIM1_CR1        (*(volatile uint32_t *)(TIM1_BASE + 0x00UL))
+#define TIM1_CCMR1      (*(volatile uint32_t *)(TIM1_BASE + 0x18UL))
+#define TIM1_CCER       (*(volatile uint32_t *)(TIM1_BASE + 0x20UL))
+#define TIM1_ARR        (*(volatile uint32_t *)(TIM1_BASE + 0x2CUL))
+#define TIM1_CCR1       (*(volatile uint32_t *)(TIM1_BASE + 0x34UL))
+
+void tim1_pwm_init(void) {
+    // 1. Auto-Reload Register: Period = 1000 counts
+    TIM1_ARR = 999;
+
+    // 2. Capture/Compare Register: Duty Cycle = 500 counts (50%)
+    TIM1_CCR1 = 500;
+
+    // 3. Configure Channel 1 as PWM Mode 1 (OC1M = '110')
+    TIM1_CCMR1 |= (6UL << 4);
+
+    // 4. Enable Output Channel 1 (CC1E)
+    TIM1_CCER |= (1UL << 0);
+
+    // 5. Start Timer Counter (CEN)
+    TIM1_CR1 |= (1UL << 0);
+}
+
+int main(void) {
+    tim1_pwm_init();
+    while (1) {
+        // Hardware timer runs autonomously with zero CPU cycles
+    }
+}`
+  },
+  adc_analog: {
+    name: "ADC: Analog Transducer Conversion",
+    arduino: `// Arduino Framework (High-Level)
+#define SENSOR_PIN A0 // PA0
+
+void setup() {
+  Serial.begin(115200);
+}
+
+void loop() {
+  int raw = analogRead(SENSOR_PIN);
+  float voltage = (raw * 3.3f) / 1023.0f;
+  delay(250);
+}`,
+    baremetal: `// Equivalent Bare-Metal Embedded C (Direct STM32 Register Access)
+#include <stdint.h>
+
+#define ADC1_BASE       (0x40012400UL)
+#define ADC1_ISR        (*(volatile uint32_t *)(ADC1_BASE + 0x00UL))
+#define ADC1_CR         (*(volatile uint32_t *)(ADC1_BASE + 0x08UL))
+#define ADC1_CHSELR     (*(volatile uint32_t *)(ADC1_BASE + 0x28UL))
+#define ADC1_DR         (*(volatile uint32_t *)(ADC1_BASE + 0x40UL))
+
+void adc_init(void) {
+    // 1. Select ADC Channel 0 (PA0)
+    ADC1_CHSELR = (1UL << 0);
+
+    // 2. Enable ADC Peripheral (ADEN = 1)
+    ADC1_CR |= (1UL << 0);
+    while (!(ADC1_ISR & (1UL << 0))); // Wait for ADRDY
+}
+
+uint16_t adc_read_channel0(void) {
+    // Start conversion (ADSTART = 1)
+    ADC1_CR |= (1UL << 2);
+
+    // Poll End-Of-Conversion (EOC) flag
+    while (!(ADC1_ISR & (1UL << 2)));
+
+    // Return 12-bit conversion result
+    return (uint16_t)ADC1_DR;
+}
+
+int main(void) {
+    adc_init();
+    while (1) {
+        uint16_t sample = adc_read_channel0();
+        // Process analog sample in millivolts: (sample * 3300) / 4095
+    }
+}`
+  }
+};
+
+/**
+ * Intelligent Real-Time Code Translator
+ * Takes arbitrary Arduino C++ code and generates structured STM32 Bare-Metal Register operations.
+ */
+function translateArduinoToBareMetal(code) {
+  if (!code || !code.trim()) {
+    return "// Paste or type standard Arduino code on the left to see\n// real-time equivalent Bare-Metal STM32 C registers here!";
+  }
+
+  let inits = [];
+  let loopBody = [];
+  let defines = new Set();
+  let helperFuncs = [];
+
+  // Always include standard base headers
+  defines.add('#include <stdint.h>');
+  defines.add('#include <stdbool.h>');
+  defines.add('#define RCC_IOPENR   (*(volatile uint32_t *)(0x40021000UL + 0x34UL))');
+
+  let hasGpioOutput = false;
+  let hasGpioInput = false;
+  let hasUart = false;
+  let hasAdc = false;
+  let hasTimer = false;
+  let hasDelay = false;
+
+  const lines = code.split('\n');
+
+  lines.forEach(line => {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('//')) return;
+
+    // 1. PinMode OUTPUT
+    let m = trimmed.match(/pinMode\s*\(\s*(\d+|\w+)\s*,\s*OUTPUT\s*\)/i);
+    if (m) {
+      hasGpioOutput = true;
+      let pin = isNaN(m[1]) ? "5" : m[1];
+      inits.push(`    // Configure Pin ${m[1]} as General Purpose Output`);
+      inits.push(`    RCC_IOPENR |= (1UL << 0); // Enable GPIOA clock`);
+      inits.push(`    GPIOA_MODER &= ~(3UL << (${pin} * 2));`);
+      inits.push(`    GPIOA_MODER |=  (1UL << (${pin} * 2));`);
+    }
+
+    // 2. PinMode INPUT_PULLUP
+    m = trimmed.match(/pinMode\s*\(\s*(\d+|\w+)\s*,\s*INPUT(?:_PULLUP)?\s*\)/i);
+    if (m) {
+      hasGpioInput = true;
+      let pin = isNaN(m[1]) ? "10" : m[1];
+      inits.push(`    // Configure Pin ${m[1]} as Input with Pull-Up`);
+      inits.push(`    RCC_IOPENR |= (1UL << 0); // Enable GPIOA clock`);
+      inits.push(`    GPIOA_MODER &= ~(3UL << (${pin} * 2));`);
+      inits.push(`    GPIOA_PUPDR &= ~(3UL << (${pin} * 2));`);
+      inits.push(`    GPIOA_PUPDR |=  (1UL << (${pin} * 2));`);
+    }
+
+    // 3. digitalWrite HIGH
+    m = trimmed.match(/digitalWrite\s*\(\s*(\d+|\w+)\s*,\s*HIGH\s*\)/i);
+    if (m) {
+      hasGpioOutput = true;
+      let pin = isNaN(m[1]) ? "5" : m[1];
+      loopBody.push(`        // Pin ${m[1]} HIGH via atomic Bit Set register`);
+      loopBody.push(`        GPIOA_BSRR = (1UL << ${pin});`);
+    }
+
+    // 4. digitalWrite LOW
+    m = trimmed.match(/digitalWrite\s*\(\s*(\d+|\w+)\s*,\s*LOW\s*\)/i);
+    if (m) {
+      hasGpioOutput = true;
+      let pin = isNaN(m[1]) ? "5" : m[1];
+      loopBody.push(`        // Pin ${m[1]} LOW via atomic Bit Reset register`);
+      loopBody.push(`        GPIOA_BSRR = (1UL << (${pin} + 16));`);
+    }
+
+    // 5. digitalRead
+    m = trimmed.match(/digitalRead\s*\(\s*(\d+|\w+)\s*\)/i);
+    if (m) {
+      hasGpioInput = true;
+      let pin = isNaN(m[1]) ? "10" : m[1];
+      loopBody.push(`        // Sample Pin ${m[1]} from Input Data Register (IDR)`);
+      loopBody.push(`        bool pinState = ((GPIOA_IDR & (1UL << ${pin})) != 0);`);
+    }
+
+    // 6. Serial.begin
+    m = trimmed.match(/Serial\.begin\s*\(\s*(\d+)\s*\)/i);
+    if (m) {
+      hasUart = true;
+      let baud = m[1];
+      inits.push(`    // Initialize USART2 at ${baud} baud`);
+      inits.push(`    USART2_BRR = 48000000UL / ${baud}UL;`);
+      inits.push(`    USART2_CR1 |= (1UL << 3) | (1UL << 0); // TE + UE`);
+    }
+
+    // 7. Serial.print / println
+    m = trimmed.match(/Serial\.print(?:ln)?\s*\(\s*(.*?)\s*\)/i);
+    if (m) {
+      hasUart = true;
+      let arg = m[1];
+      loopBody.push(`        // Transmit string over USART2`);
+      loopBody.push(`        usart2_print(${arg});`);
+    }
+
+    // 8. analogRead
+    m = trimmed.match(/analogRead\s*\(\s*(\w+)\s*\)/i);
+    if (m) {
+      hasAdc = true;
+      loopBody.push(`        // Trigger ADC1 conversion and wait for End-Of-Conversion (EOC)`);
+      loopBody.push(`        ADC1_CR |= (1UL << 2);`);
+      loopBody.push(`        while (!(ADC1_ISR & (1UL << 2)));`);
+      loopBody.push(`        uint16_t adc_val = (uint16_t)ADC1_DR;`);
+    }
+
+    // 9. analogWrite / PWM
+    m = trimmed.match(/analogWrite\s*\(\s*(\w+)\s*,\s*(\d+|\w+)\s*\)/i);
+    if (m) {
+      hasTimer = true;
+      loopBody.push(`        // Update Timer Compare Register (Duty Cycle)`);
+      loopBody.push(`        TIM1_CCR1 = ${m[2]};`);
+    }
+
+    // 10. delay
+    m = trimmed.match(/delay\s*\(\s*(\d+|\w+)\s*\)/i);
+    if (m) {
+      hasDelay = true;
+      let ms = m[1];
+      loopBody.push(`        delay_ms(${ms});`);
+    }
+  });
+
+  if (hasGpioOutput || hasGpioInput) {
+    defines.add('#define GPIOA_MODER  (*(volatile uint32_t *)(0x50000000UL + 0x00UL))');
+    defines.add('#define GPIOA_PUPDR  (*(volatile uint32_t *)(0x50000000UL + 0x0CUL))');
+    defines.add('#define GPIOA_IDR    (*(volatile uint32_t *)(0x50000000UL + 0x10UL))');
+    defines.add('#define GPIOA_BSRR   (*(volatile uint32_t *)(0x50000000UL + 0x18UL))');
+  }
+
+  if (hasUart) {
+    defines.add('#define USART2_BASE  (0x40004400UL)');
+    defines.add('#define USART2_CR1   (*(volatile uint32_t *)(USART2_BASE + 0x00UL))');
+    defines.add('#define USART2_BRR   (*(volatile uint32_t *)(USART2_BASE + 0x0CUL))');
+    defines.add('#define USART2_ISR   (*(volatile uint32_t *)(USART2_BASE + 0x1CUL))');
+    defines.add('#define USART2_TDR   (*(volatile uint32_t *)(USART2_BASE + 0x28UL))');
+
+    helperFuncs.push(`void usart2_print(const char *s) {
+    while (*s) {
+        while (!(USART2_ISR & (1UL << 7))); // Wait for TXE
+        USART2_TDR = (uint8_t)*s++;
+    }
+}`);
+  }
+
+  if (hasAdc) {
+    defines.add('#define ADC1_BASE    (0x40012400UL)');
+    defines.add('#define ADC1_ISR     (*(volatile uint32_t *)(ADC1_BASE + 0x00UL))');
+    defines.add('#define ADC1_CR      (*(volatile uint32_t *)(ADC1_BASE + 0x08UL))');
+    defines.add('#define ADC1_DR      (*(volatile uint32_t *)(ADC1_BASE + 0x40UL))');
+  }
+
+  if (hasTimer) {
+    defines.add('#define TIM1_BASE    (0x40012C00UL)');
+    defines.add('#define TIM1_CR1     (*(volatile uint32_t *)(TIM1_BASE + 0x00UL))');
+    defines.add('#define TIM1_CCR1    (*(volatile uint32_t *)(TIM1_BASE + 0x34UL))');
+  }
+
+  if (hasDelay) {
+    helperFuncs.push(`void delay_ms(volatile uint32_t ms) {
+    while (ms--) {
+        for (volatile uint32_t i = 0; i < 4800; i++) { __asm volatile("nop"); }
+    }
+}`);
+  }
+
+  let result = [];
+  result.push("// ============================================================================");
+  result.push("// Equivalent Bare-Metal Embedded C (Direct STM32 Nucleo-C031C6 Registers)");
+  result.push("// Generated in real-time from your Arduino code");
+  result.push("// ============================================================================");
+  result.push(Array.from(defines).join('\n'));
+  result.push("");
+
+  if (helperFuncs.length > 0) {
+    result.push(helperFuncs.join('\n\n'));
+    result.push("");
+  }
+
+  result.push("int main(void) {");
+  if (inits.length > 0) {
+    result.push("    // --- Peripherals & Pin Initialization ---");
+    result.push(inits.join('\n'));
+    result.push("");
+  }
+
+  result.push("    // --- Superloop Execution ---");
+  result.push("    while (1) {");
+  if (loopBody.length > 0) {
+    result.push(loopBody.join('\n'));
+  } else {
+    result.push("        // Active runtime processing");
+  }
+  result.push("    }");
+  result.push("}");
+
+  return result.join('\n');
+}
+
+function initCodeComparator(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const select = container.querySelector('.preset-select');
+  const input = container.querySelector('.code-input');
+  const output = container.querySelector('.code-output code');
+
+  if (!select || !input || !output) return;
+
+  function loadPreset() {
+    const val = select.value;
+    if (PRESETS[val]) {
+      input.value = PRESETS[val].arduino;
+      output.textContent = PRESETS[val].baremetal;
+    }
+  }
+
+  function handleLiveInput() {
+    output.textContent = translateArduinoToBareMetal(input.value);
+  }
+
+  select.addEventListener('change', loadPreset);
+  input.addEventListener('input', handleLiveInput);
+  loadPreset();
+}
+
+function runInteractiveTranslation(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const input = container.querySelector('.code-input');
+  const output = container.querySelector('.code-output code');
+  if (input && output) {
+    output.textContent = translateArduinoToBareMetal(input.value);
+  }
+}
+
+function setupAllComparators() {
+  document.querySelectorAll('.code-comparator-widget').forEach((el, idx) => {
+    if (!el.id) el.id = 'comparator-' + idx;
+    initCodeComparator(el.id);
+  });
+}
+
+// Ensure execution whether DOM is loading or already ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupAllComparators);
+} else {
+  setupAllComparators();
+}
+</script>
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
@@ -953,6 +2558,19 @@ ul.task-list li input[type="checkbox"] {
   window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
   </script>
 </div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>CS2101: Embedded C Programming — IIT Madras</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+<p>Made by TA: Krishna Gorai</p>
+</div>
+  </div>
+</footer>
 
 
 
