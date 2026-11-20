@@ -50,6 +50,10 @@ website:
       - text: "Week-12"
         href: Week-12.qmd
 
+  page-footer:
+    left: "CS2101: Embedded C Programming — IIT Madras"
+    right: "Made by TA: Krishna Gorai"
+
 format:
   html:
     toc: true

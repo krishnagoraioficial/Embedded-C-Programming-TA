@@ -2,6 +2,18 @@
 title: "Embedded C Programming"
 ---
 
+<div style="font-size: 0.82rem; color: #6c757d; margin-top: -10px; margin-bottom: 15px;">
+  Made by TA: Krishna Gorai
+</div>
+
+::: {.callout-note appearance="simple"}
+### 📢 Student Notice & Issue Reporting
+Welcome to the student companion site for **CS2101: Embedded C Programming** (IIT Madras BS in Electronic Systems). This platform is written entirely from the **student's learning perspective** to simplify hardware architectures, provide side-by-side bare-metal register comparisons, and offer interactive online simulations.
+
+If you encounter any issues, code discrepancies, simulation bugs, or typographical errors anywhere on this site, please email the **Teaching Assistant (TA)** directly at:  
+👉 **`25f1100001@es.study.iitm.ac.in`** (or the Course Instructor at `subendu@study.iitm.ac.in`) with the week number and problem title so it can be corrected promptly.
+:::
+
 ## About the Course
 
 - **Course ID:** CS2101
@@ -9,7 +21,7 @@ title: "Embedded C Programming"
 - **Course Type:** Foundation Level (BS Degree in Electronic Systems)
 - **Faculty:** Prof. Nitin Chandrachoodan (IIT Madras)
 - **Course Instructor:** [subendu@study.iitm.ac.in](mailto:subendu@study.iitm.ac.in)
-- **Teaching Assistant (TA):** [25f1100001@es.study.iitm.ac.in](mailto:25f1100001@es.study.iitm.ac.in)
+- **Teaching Assistant (TA):** Krishna Gorai ([25f1100001@es.study.iitm.ac.in](mailto:25f1100001@es.study.iitm.ac.in))
 - **Pre-requisites:** CS1101 — Introduction to C Programming
 - **Co-requisites:** None
 - **Official Course Outline:** [study.iitm.ac.in/es/course_pages/CS2101.html](https://study.iitm.ac.in/es/course_pages/CS2101.html)
@@ -43,6 +55,7 @@ Prof. Nitin Chandrachoodan received his B.Tech in Electronics and Communication 
 
 #### Teaching Assistant (TA)
 
+- **Name:** Krishna Gorai
 - ✉️ **Email:** [25f1100001@es.study.iitm.ac.in](mailto:25f1100001@es.study.iitm.ac.in)
 
 ---
@@ -75,6 +88,7 @@ Prof. Nitin Chandrachoodan received his B.Tech in Electronics and Communication 
 
 ---
 
-<div class="d-flex justify-content-end mt-4">
+<div class="d-flex justify-content-between align-items-center mt-4">
+  <span style="font-size: 0.8rem; color: #888;">Made by TA: Krishna Gorai</span>
   <a href="Week-1.qmd" class="seek-next-btn">NEXT: Week 1 — Introduction →</a>
 </div>

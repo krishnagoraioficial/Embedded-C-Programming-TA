@@ -285,6 +285,12 @@ void dma1_adc_init(uint16_t *buffer, uint16_t size) {
 
 :::
 
+
+::: {.callout-caution appearance="simple"}
+#### ⚠️ Code Verification & Assistance
+All high-level framework and bare-metal implementation codes are verified for the target microcontroller (**STM32 Nucleo-C031C6** / ARM Cortex-M0+). If you encounter any compilation errors, unexpected simulation behavior, or discrepancies with this code, Please report to the Course instructor or the TA via email.
+:::
+
 ### 🔍 How Mini-Project 1 Applies Week 10 Concepts
 
 #### 1. Hardware & Circuit-Level Concept Mapping
@@ -431,6 +437,12 @@ void enter_cortex_sleep(void) {
 }
 ```
 
+:::
+
+
+::: {.callout-caution appearance="simple"}
+#### ⚠️ Code Verification & Assistance
+All high-level framework and bare-metal implementation codes are verified for the target microcontroller (**STM32 Nucleo-C031C6** / ARM Cortex-M0+). If you encounter any compilation errors, unexpected simulation behavior, or discrepancies with this code, Please report to the Course instructor or the TA via email.
 :::
 
 ### 🔍 How Mini-Project 2 Applies Week 10 Concepts

@@ -293,6 +293,12 @@ void safety_interlock_evaluate(uint16_t raw_a, uint16_t raw_b) {
 
 :::
 
+
+::: {.callout-caution appearance="simple"}
+#### ⚠️ Code Verification & Assistance
+All high-level framework and bare-metal implementation codes are verified for the target microcontroller (**STM32 Nucleo-C031C6** / ARM Cortex-M0+). If you encounter any compilation errors, unexpected simulation behavior, or discrepancies with this code, Please report to the Course instructor or the TA via email.
+:::
+
 ### 🔍 How Mini-Project 1 Applies Week 12 Concepts
 
 #### 1. Hardware & Circuit-Level Concept Mapping
@@ -456,6 +462,12 @@ void kick_watchdog_safe(uint8_t health_flags) {
 }
 ```
 
+:::
+
+
+::: {.callout-caution appearance="simple"}
+#### ⚠️ Code Verification & Assistance
+All high-level framework and bare-metal implementation codes are verified for the target microcontroller (**STM32 Nucleo-C031C6** / ARM Cortex-M0+). If you encounter any compilation errors, unexpected simulation behavior, or discrepancies with this code, Please report to the Course instructor or the TA via email.
 :::
 
 ### 🔍 How Mini-Project 2 Applies Week 12 Concepts
